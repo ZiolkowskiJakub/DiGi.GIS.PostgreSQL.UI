@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:DiGi.GIS.PostgreSQL.UI.Windows"
         mc:Ignorable="d"
-        Title="GIS PostgreSQL" Height="450" Width="400"
+        Title="GIS PostgreSQL" Height="450" Width="500"
         ResizeMode="NoResize"
         WindowStyle="SingleBorderWindow" Initialized="Window_Initialized">
     <Grid>
@@ -33,7 +33,7 @@
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
 
-                            <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="100" IsReadOnly="True">
+                            <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="150" IsReadOnly="True">
                                 <DataGridTextColumn.ElementStyle>
                                     <Style TargetType="TextBlock">
                                         <Setter Property="FontWeight" Value="Bold"/>
@@ -43,7 +43,7 @@
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
 
-                            <DataGridTemplateColumn Header="Action" Width="100">
+                            <DataGridTemplateColumn Header="Action" Width="80">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <Button Content="{Binding ToggleText}" Command="{Binding ToggleCommandAsync}" Margin="2" HorizontalAlignment="Center" MinWidth="80"/>

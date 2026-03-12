@@ -27,6 +27,9 @@
     <Reference Include="DiGi.PostgreSQL">
       <HintPath>..\..\DiGi.PostgreSQL\bin\DiGi.PostgreSQL.dll</HintPath>
     </Reference>
+    <Reference Include="DiGi.UI.Windows">
+      <HintPath>..\..\DiGi.UI.Windows\bin\DiGi.UI.Windows.dll</HintPath>
+    </Reference>
     <Reference Include="DiGi.UI.WPF.Core">
       <HintPath>..\..\DiGi.UI.WPF\bin\DiGi.UI.WPF.Core.dll</HintPath>
     </Reference>

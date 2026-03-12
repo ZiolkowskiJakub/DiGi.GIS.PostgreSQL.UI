@@ -7,7 +7,7 @@ namespace DiGi.GIS.PostgreSQL.UI
     /// </summary>
     public partial class App : Application
     {
-        private Classes.TrayApplicationContext? trayApplicationContext;
+        private Classes.GISPostgreSQLTrayApplicationContext? gISPostgreSQLTrayApplicationContext;
 
         protected override void OnStartup(StartupEventArgs e)
         {
@@ -16,7 +16,7 @@ namespace DiGi.GIS.PostgreSQL.UI
             // Prevent application from shutting down when all windows are closed
             ShutdownMode = ShutdownMode.OnExplicitShutdown;
 
-            trayApplicationContext = new Classes.TrayApplicationContext();
+            gISPostgreSQLTrayApplicationContext = new Classes.GISPostgreSQLTrayApplicationContext();
         }
     }
 }

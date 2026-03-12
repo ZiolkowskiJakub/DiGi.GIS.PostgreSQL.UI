@@ -1,6 +1,7 @@
 ﻿using DiGi.GIS.PostgreSQL.Classes;
 using DiGi.GIS.PostgreSQL.UI.Enums;
 using DiGi.UI.WPF.Core.Classes;
+using DiGi.UI.WPF.Core.Interfaces;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Windows;
@@ -27,7 +28,7 @@ namespace DiGi.GIS.PostgreSQL.UI.Windows
             
             InitializeComponent();
 
-            List<VisualCancelableTask>? visualCancelableTasks = Create.VisualCancelableTasks(gISPostgreSQLConverterManager);
+            List<IVisualCancelableTask>? visualCancelableTasks = Create.VisualCancelableTasks(gISPostgreSQLConverterManager);
             if (visualCancelableTasks is not null)
             {
                 VisualCancelableTasks = [.. visualCancelableTasks];
@@ -49,7 +50,7 @@ namespace DiGi.GIS.PostgreSQL.UI.Windows
             }
         }
         
-        public ObservableCollection<VisualCancelableTask>? VisualCancelableTasks { get; set; }
+        public ObservableCollection<IVisualCancelableTask>? VisualCancelableTasks { get; set; }
 
         private void Window_Initialized(object sender, System.EventArgs e)
         {

@@ -1,11 +1,20 @@
-﻿using System.Windows;
+﻿using DiGi.GIS.PostgreSQL.Classes;
+using DiGi.GIS.PostgreSQL.UI.Enums;
+using System;
+using System.Drawing;
+using System.Windows;
+using System.Windows.Forms;
 
 namespace DiGi.GIS.PostgreSQL.UI.Classes
 {
     public class TrayApplicationContext : ApplicationContext
     {
+        private readonly Mode mode = Mode.ServerAndCient;
+
+        private readonly GISPostgreSQLConverterManager? gISPostgreSQLConverterManager;
+
         private readonly NotifyIcon notifyIcon;
-        private MainWindow? mainWindow;
+        private Windows.MainWindow? mainWindow;
         private bool isClosingFromMenu = false;
 
         public TrayApplicationContext()
@@ -26,6 +35,9 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
                 Text = "GIS PostgreSQL UI"
             };
 
+            // 3. Set GISPostgreSQLConverterManager
+            gISPostgreSQLConverterManager = PostgreSQL.Create.GISPostgreSQLConverterManager();
+
             notifyIcon.DoubleClick += (s, e) => ShowWindow();
         }
 
@@ -33,11 +45,13 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
         {
             if (mainWindow == null)
             {
-                mainWindow = new ();
+                mainWindow = new(mode, gISPostgreSQLConverterManager)
+                {
+                    WindowStartupLocation = WindowStartupLocation.Manual,
+                };
 
                 // Set window startup position manually near the tray
-                mainWindow.WindowStartupLocation = WindowStartupLocation.Manual;
-                //PositionWindowAboveTray(mainWindow);
+                //mainWindow.PositionWindowAboveTray(mainWindow);
 
                 // Subscribing to lifecycle events
                 mainWindow.Closing += OnWindowClosing;
@@ -56,16 +70,16 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
             }
         }
 
-        private void PositionWindowAboveTray(MainWindow mainWindow)
-        {
-            // Get working area (excluding taskbar)
-            Rect desktopWorkingArea = SystemParameters.WorkArea;
+        //private void PositionWindowAboveTray(Windows.MainWindow mainWindow)
+        //{
+        //    // Get working area (excluding taskbar)
+        //    Rect desktopWorkingArea = SystemParameters.WorkArea;
 
-            // Basic alignment: bottom right corner
-            // You might need to adjust these offsets based on your window size
-            mainWindow.Left = desktopWorkingArea.Right - mainWindow.Width - 10;
-            mainWindow.Top = desktopWorkingArea.Bottom - mainWindow.Height - 10;
-        }
+        //    // Basic alignment: bottom right corner
+        //    // You might need to adjust these offsets based on your window size
+        //    mainWindow.Left = desktopWorkingArea.Right - mainWindow.Width - 10;
+        //    mainWindow.Top = desktopWorkingArea.Bottom - mainWindow.Height - 10;
+        //}
 
         private void OnWindowDeactivated(object? sender, EventArgs e)
         {
@@ -80,7 +94,7 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
             if (!isClosingFromMenu)
             {
                 // We let the window close naturally (no e.Cancel = true),
-                // but we must detach events and null the reference 
+                // but we must detach events and null the reference
                 // to avoid InvalidOperationException.
                 DetachWindowEvents();
                 mainWindow = null;
@@ -106,10 +120,7 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
             notifyIcon.Dispose();
 
             // Shutdown the WPF Application
-            if (mainWindow != null)
-            {
-                mainWindow.Close();
-            }
+            mainWindow?.Close();
 
             System.Windows.Application.Current.Shutdown();
         }

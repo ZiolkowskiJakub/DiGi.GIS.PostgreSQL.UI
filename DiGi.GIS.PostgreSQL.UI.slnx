@@ -1,3 +1,8 @@
 <Solution>
-  <Project Path="DiGi.GIS.PostgreSQL.UI/DiGi.GIS.PostgreSQL.UI.csproj" />
+  <Folder Name="/Solution Items/">
+    <File Path=".editorconfig" />
+    <File Path="Directory.Build.props" />
+  </Folder>
+  <Project Path="DiGi.GIS.PostgreSQL.UI.Application/DiGi.GIS.PostgreSQL.UI.Application.csproj" />
+  <Project Path="DiGi.GIS.PostgreSQL.UI/DiGi.GIS.PostgreSQL.UI.csproj" Id="ce9ceaa3-e36d-4adf-b898-6577158f24aa" />
 </Solution>

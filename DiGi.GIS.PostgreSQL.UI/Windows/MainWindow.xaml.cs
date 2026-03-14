@@ -28,10 +28,10 @@ namespace DiGi.GIS.PostgreSQL.UI.Windows
             
             InitializeComponent();
 
-            List<IVisualCancelableTask>? visualCancelableTasks = Create.VisualCancelableTasks(gISPostgreSQLConverterManager);
-            if (visualCancelableTasks is not null)
+            List<IVisualBackgroundTask>? visualBackgroundTasks = Create.VisualBackgroundTasks(gISPostgreSQLConverterManager);
+            if (visualBackgroundTasks is not null)
             {
-                VisualCancelableTasks = [.. visualCancelableTasks];
+                VisualBackgroundTasks = [.. visualBackgroundTasks];
             }
 
             DataContext = this;
@@ -50,7 +50,7 @@ namespace DiGi.GIS.PostgreSQL.UI.Windows
             }
         }
         
-        public ObservableCollection<IVisualCancelableTask>? VisualCancelableTasks { get; set; }
+        public ObservableCollection<IVisualBackgroundTask>? VisualBackgroundTasks { get; set; }
 
         private void Window_Initialized(object sender, System.EventArgs e)
         {

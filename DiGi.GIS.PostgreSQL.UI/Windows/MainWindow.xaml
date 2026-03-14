@@ -15,7 +15,7 @@
             </TabItem>
             <TabItem x:Name="TabItem_Server" Header="Server">
                 <Grid Background="#FFE5E5E5">
-                    <DataGrid ItemsSource="{Binding VisualCancelableTasks}" AutoGenerateColumns="False" CanUserAddRows="False" SelectionUnit="FullRow" SelectionMode="Single">
+                    <DataGrid ItemsSource="{Binding VisualBackgroundTasks}" AutoGenerateColumns="False" CanUserAddRows="False" SelectionUnit="FullRow" SelectionMode="Single" HeadersVisibility="Column">
                         <DataGrid.Resources>
                             <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}" Color="Transparent" />
                             <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightBrushKey}" Color="Transparent" />

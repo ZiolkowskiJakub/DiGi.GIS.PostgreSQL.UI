@@ -13,6 +13,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Resources\DiGi.GIS.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.5" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.5" />
     <PackageReference Include="NetTopologySuite" Version="2.6.0" />
     <PackageReference Include="Npgsql" Version="10.0.1" />
   </ItemGroup>
@@ -24,6 +30,9 @@
     <Reference Include="DiGi.GIS.PostgreSQL">
       <HintPath>..\..\DiGi.GIS.PostgreSQL\bin\DiGi.GIS.PostgreSQL.dll</HintPath>
     </Reference>
+    <Reference Include="DiGi.GIS.PostgreSQL.WebAPI">
+      <HintPath>..\..\DiGi.GIS.PostgreSQL.WebAPI\bin\DiGi.GIS.PostgreSQL.WebAPI.dll</HintPath>
+    </Reference>
     <Reference Include="DiGi.PostgreSQL">
       <HintPath>..\..\DiGi.PostgreSQL\bin\DiGi.PostgreSQL.dll</HintPath>
     </Reference>
@@ -33,6 +42,12 @@
     <Reference Include="DiGi.UI.WPF">
       <HintPath>..\..\DiGi.UI.WPF\bin\DiGi.UI.WPF.dll</HintPath>
     </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Resources\DiGi.GIS.ico">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
   </ItemGroup>
 
 </Project>

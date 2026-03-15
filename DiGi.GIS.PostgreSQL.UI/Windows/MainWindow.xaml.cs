@@ -1,5 +1,6 @@
 ﻿using DiGi.GIS.PostgreSQL.Classes;
 using DiGi.GIS.PostgreSQL.UI.Enums;
+using DiGi.GIS.PostgreSQL.WebAPI.Classes;
 using DiGi.UI.WPF.Interfaces;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -7,32 +8,37 @@ using System.Windows;
 
 namespace DiGi.GIS.PostgreSQL.UI.Windows
 {
-    /// <summary>
-    /// Interaction logic for MainWindow.xaml
-    /// </summary>
     public partial class MainWindow : Window
     {
+        private readonly GISPostgreSQLWebAPIManager? gISPostgreSQLWebAPIManager;
         private readonly GISPostgreSQLConverterManager? gISPostgreSQLConverterManager;
         private readonly Mode? mode;
 
-        public MainWindow()
-        {
-            InitializeComponent();
-        }
-
-        public MainWindow(Mode mode, GISPostgreSQLConverterManager? gISPostgreSQLConverterManager)
+        public MainWindow(Mode mode, GISPostgreSQLConverterManager? gISPostgreSQLConverterManager, GISPostgreSQLWebAPIManager? gISPostgreSQLWebAPIManager)
         {
             this.gISPostgreSQLConverterManager = gISPostgreSQLConverterManager;
+            this.gISPostgreSQLWebAPIManager = gISPostgreSQLWebAPIManager;
             this.mode = mode;
-            
-            InitializeComponent();
 
-            List<IVisualBackgroundTask>? visualBackgroundTasks = Create.VisualBackgroundTasks(gISPostgreSQLConverterManager);
+
+            // Initialize collections before InitializeComponent to avoid binding errors
+            List<IVisualBackgroundTask>? visualBackgroundTasks;
+
+            visualBackgroundTasks = Create.VisualBackgroundTasks(gISPostgreSQLConverterManager, gISPostgreSQLWebAPIManager, Mode.Client);
             if (visualBackgroundTasks is not null)
             {
-                VisualBackgroundTasks = [.. visualBackgroundTasks];
+                VisualBackgroundTasks_Client = [.. visualBackgroundTasks];
             }
 
+            visualBackgroundTasks = Create.VisualBackgroundTasks(gISPostgreSQLConverterManager, gISPostgreSQLWebAPIManager, Mode.Server);
+            if (visualBackgroundTasks is not null)
+            {
+                VisualBackgroundTasks_Server = [.. visualBackgroundTasks];
+            }
+
+            InitializeComponent();
+
+            // Setting the DataContext for bindings to work
             DataContext = this;
         }
 
@@ -40,7 +46,7 @@ namespace DiGi.GIS.PostgreSQL.UI.Windows
         {
             get
             {
-                if(mode is null || !mode.HasValue)
+                if (mode is null || !mode.HasValue)
                 {
                     return Mode.Client;
                 }
@@ -48,12 +54,14 @@ namespace DiGi.GIS.PostgreSQL.UI.Windows
                 return gISPostgreSQLConverterManager is null ? Mode.Client : Mode.ServerAndCient;
             }
         }
-        
-        public ObservableCollection<IVisualBackgroundTask>? VisualBackgroundTasks { get; set; }
+
+        // Explicit typing as requested
+        public ObservableCollection<IVisualBackgroundTask>? VisualBackgroundTasks_Client { get; set; }
+        public ObservableCollection<IVisualBackgroundTask>? VisualBackgroundTasks_Server { get; set; }
 
         private void Window_Initialized(object sender, System.EventArgs e)
         {
-            if(Mode == Mode.Client)
+            if (Mode == Mode.Client)
             {
                 TabItem_Server.Visibility = Visibility.Hidden;
             }

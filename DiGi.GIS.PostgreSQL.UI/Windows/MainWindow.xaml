@@ -4,55 +4,23 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:DiGi.GIS.PostgreSQL.UI.Windows"
+        xmlns:controls="clr-namespace:DiGi.UI.WPF.Controls;assembly=DiGi.UI.WPF"
         mc:Ignorable="d"
         Title="GIS PostgreSQL" Height="450" Width="500"
         ResizeMode="NoResize"
-        WindowStyle="SingleBorderWindow" Initialized="Window_Initialized">
+        WindowStyle="SingleBorderWindow" Initialized="Window_Initialized"
+        Icon="pack://application:,,,/DiGi.GIS.PostgreSQL.UI;component/Resources/DiGi.GIS.ico">
     <Grid>
-        <TabControl Margin="5,5,5,5">
+        <TabControl Margin="5,5,5,5" Grid.ColumnSpan="2">
             <TabItem x:Name="TabItem_Client" Header="Client">
-                <Grid Background="#FFE5E5E5" />
+                <Grid Background="#FFE5E5E5">
+                    <controls:VisualBackgroundTasksControl x:Name="VisualBackgroundTasksControl_Client" VisualBackgroundTasks="{Binding VisualBackgroundTasks_Client}" />
+                </Grid>
             </TabItem>
+
             <TabItem x:Name="TabItem_Server" Header="Server">
                 <Grid Background="#FFE5E5E5">
-                    <DataGrid ItemsSource="{Binding VisualBackgroundTasks}" AutoGenerateColumns="False" CanUserAddRows="False" SelectionUnit="FullRow" SelectionMode="Single" HeadersVisibility="Column">
-                        <DataGrid.Resources>
-                            <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}" Color="Transparent" />
-                            <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightBrushKey}" Color="Transparent" />
-                            <SolidColorBrush x:Key="{x:Static SystemColors.HighlightTextBrushKey}" Color="Black" />
-                            <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightTextBrushKey}" Color="Black" />
-                        </DataGrid.Resources>
-                        <DataGrid.Columns>
-
-                            <DataGridTextColumn Header="Task Name" Binding="{Binding Name}" Width="*" IsReadOnly="True">
-                                <DataGridTextColumn.ElementStyle>
-                                    <Style TargetType="TextBlock">
-                                        <Setter Property="HorizontalAlignment" Value="Center"/>
-                                        <Setter Property="VerticalAlignment" Value="Center"/>
-                                    </Style>
-                                </DataGridTextColumn.ElementStyle>
-                            </DataGridTextColumn>
-
-                            <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="150" IsReadOnly="True">
-                                <DataGridTextColumn.ElementStyle>
-                                    <Style TargetType="TextBlock">
-                                        <Setter Property="FontWeight" Value="Bold"/>
-                                        <Setter Property="HorizontalAlignment" Value="Center"/>
-                                        <Setter Property="VerticalAlignment" Value="Center"/>
-                                    </Style>
-                                </DataGridTextColumn.ElementStyle>
-                            </DataGridTextColumn>
-
-                            <DataGridTemplateColumn Header="Action" Width="80">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <Button Content="{Binding ToggleText}" Command="{Binding ToggleCommandAsync}" Margin="2" HorizontalAlignment="Center" MinWidth="80"/>
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-
-                        </DataGrid.Columns>
-                    </DataGrid>
+                    <controls:VisualBackgroundTasksControl x:Name="VisualBackgroundTasksControl_Server" VisualBackgroundTasks="{Binding VisualBackgroundTasks_Server}" />
                 </Grid>
             </TabItem>
         </TabControl>

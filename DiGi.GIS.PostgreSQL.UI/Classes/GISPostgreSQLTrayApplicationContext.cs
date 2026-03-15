@@ -1,6 +1,7 @@
 ﻿using DiGi.GIS.PostgreSQL.Classes;
 using DiGi.GIS.PostgreSQL.UI.Enums;
 using DiGi.GIS.PostgreSQL.UI.Windows;
+using DiGi.GIS.PostgreSQL.WebAPI.Classes;
 
 namespace DiGi.GIS.PostgreSQL.UI.Classes
 {
@@ -10,15 +11,19 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
 
         private readonly GISPostgreSQLConverterManager? gISPostgreSQLConverterManager;
 
+        private readonly GISPostgreSQLWebAPIManager? gISPostgreSQLWebAPIManager;
+
         public GISPostgreSQLTrayApplicationContext()
-            :base("GIS PostgreSQL")
+            : base("GIS PostgreSQL")
         {
             gISPostgreSQLConverterManager = PostgreSQL.Create.GISPostgreSQLConverterManager();
+
+            gISPostgreSQLWebAPIManager = WebAPI.Create.GISPostgreSQLWebAPIManager();
         }
 
         protected override MainWindow GetWindow()
         {
-            return new(mode, gISPostgreSQLConverterManager);
+            return new(mode, gISPostgreSQLConverterManager, gISPostgreSQLWebAPIManager);
         }
     }
 }

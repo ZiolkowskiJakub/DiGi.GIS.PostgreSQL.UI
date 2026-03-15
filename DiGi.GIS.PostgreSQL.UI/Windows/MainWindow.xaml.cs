@@ -1,7 +1,6 @@
 ﻿using DiGi.GIS.PostgreSQL.Classes;
 using DiGi.GIS.PostgreSQL.UI.Enums;
-using DiGi.UI.WPF.Core.Classes;
-using DiGi.UI.WPF.Core.Interfaces;
+using DiGi.UI.WPF.Interfaces;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Windows;

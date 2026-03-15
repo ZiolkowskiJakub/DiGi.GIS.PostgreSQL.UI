@@ -1,10 +1,6 @@
 ﻿using DiGi.GIS.PostgreSQL.Classes;
 using DiGi.GIS.PostgreSQL.UI.Enums;
 using DiGi.GIS.PostgreSQL.UI.Windows;
-using System;
-using System.Drawing;
-using System.Windows;
-using System.Windows.Forms;
 
 namespace DiGi.GIS.PostgreSQL.UI.Classes
 {

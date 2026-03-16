@@ -10,8 +10,8 @@ namespace DiGi.GIS.PostgreSQL.UI.Windows
 {
     public partial class MainWindow : Window
     {
-        private readonly GISPostgreSQLWebAPIManager? gISPostgreSQLWebAPIManager;
         private readonly GISPostgreSQLConverterManager? gISPostgreSQLConverterManager;
+        private readonly GISPostgreSQLWebAPIManager? gISPostgreSQLWebAPIManager;
         private readonly Mode? mode;
 
         public MainWindow(Mode mode, GISPostgreSQLConverterManager? gISPostgreSQLConverterManager, GISPostgreSQLWebAPIManager? gISPostgreSQLWebAPIManager)

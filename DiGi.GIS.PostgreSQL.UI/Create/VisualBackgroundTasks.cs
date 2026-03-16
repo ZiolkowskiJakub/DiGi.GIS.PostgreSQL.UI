@@ -1,4 +1,5 @@
 ﻿using DiGi.GIS.PostgreSQL.Classes;
+using DiGi.GIS.PostgreSQL.UI.Classes;
 using DiGi.GIS.PostgreSQL.UI.Enums;
 using DiGi.GIS.PostgreSQL.WebAPI.Classes;
 using DiGi.UI.WPF.Interfaces;
@@ -36,7 +37,7 @@ namespace DiGi.GIS.PostgreSQL.UI
             {
                 if (gISPostgreSQLWebAPIManager is not null)
                 {
-
+                    result.Add(DiGi.UI.WPF.Create.VisualBackgroundTask(new GISPostgreSQLUIAdministrativeAreal2DPostTask(gISPostgreSQLWebAPIManager), "Upload AdministrativeAreal2Ds", "Uploads AdministrativeAreal2Ds to the server"));
                 }
             }
 

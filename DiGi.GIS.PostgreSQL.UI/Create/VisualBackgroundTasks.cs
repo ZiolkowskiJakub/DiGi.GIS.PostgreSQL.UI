@@ -17,7 +17,7 @@ namespace DiGi.GIS.PostgreSQL.UI
             {
                 if (gISPostgreSQLConverterManager is not null)
                 {
-                    result.Add(DiGi.UI.WPF.Create.VisualBackgroundTask(new PostgreSQLAdministrativeAreal2DCreateDatabaseTask(gISPostgreSQLConverterManager), "Create AdministrativeAreal2D database", "Creates AdministrativeAreal2D database"));
+                    result.Add(DiGi.UI.WPF.Create.VisualBackgroundTask(new PostgreSQLAdministrativeAreal2DCreateDatabaseTask(gISPostgreSQLConverterManager), "Create Main database", "Creates main database for AdministrativeAreal2D and Biulding2D objects"));
 
                     Building2DPostgreSQLConverter? building2DPostgreSQLConverter = gISPostgreSQLConverterManager.GetPostgreSQLConverter<Building2DPostgreSQLConverter>();
                     if (building2DPostgreSQLConverter is not null)
@@ -38,6 +38,7 @@ namespace DiGi.GIS.PostgreSQL.UI
                 if (gISPostgreSQLWebAPIManager is not null)
                 {
                     result.Add(DiGi.UI.WPF.Create.VisualBackgroundTask(new GISPostgreSQLUIAdministrativeAreal2DPostTask(gISPostgreSQLWebAPIManager), "Upload AdministrativeAreal2Ds", "Uploads AdministrativeAreal2Ds to the server"));
+                    result.Add(DiGi.UI.WPF.Create.VisualBackgroundTask(new GISPostgreSQLUIBuilding2DPostTask(gISPostgreSQLWebAPIManager), "Upload Building2Ds", "Uploads Building2Ds to the server"));
                 }
             }
 

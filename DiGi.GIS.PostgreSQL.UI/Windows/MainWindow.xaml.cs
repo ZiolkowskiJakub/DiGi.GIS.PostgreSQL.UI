@@ -20,7 +20,6 @@ namespace DiGi.GIS.PostgreSQL.UI.Windows
             this.gISPostgreSQLWebAPIManager = gISPostgreSQLWebAPIManager;
             this.mode = mode;
 
-
             // Initialize collections before InitializeComponent to avoid binding errors
             List<IVisualBackgroundTask>? visualBackgroundTasks;
 
@@ -57,6 +56,7 @@ namespace DiGi.GIS.PostgreSQL.UI.Windows
 
         // Explicit typing as requested
         public ObservableCollection<IVisualBackgroundTask>? VisualBackgroundTasks_Client { get; set; }
+
         public ObservableCollection<IVisualBackgroundTask>? VisualBackgroundTasks_Server { get; set; }
 
         private void Window_Initialized(object sender, System.EventArgs e)

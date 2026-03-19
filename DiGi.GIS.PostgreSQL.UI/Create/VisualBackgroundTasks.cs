@@ -13,7 +13,7 @@ namespace DiGi.GIS.PostgreSQL.UI
         {
             List<IVisualBackgroundTask> result = [];
 
-            if(mode == Mode.Server || mode == Mode.ServerAndCient)
+            if (mode == Mode.Server || mode == Mode.ServerAndCient)
             {
                 if (gISPostgreSQLConverterManager is not null)
                 {
@@ -33,12 +33,12 @@ namespace DiGi.GIS.PostgreSQL.UI
                 }
             }
 
-            if(mode == Mode.Client || mode == Mode.ServerAndCient)
+            if (mode == Mode.Client || mode == Mode.ServerAndCient)
             {
                 if (gISPostgreSQLWebAPIManager is not null)
                 {
-                    result.Add(DiGi.UI.WPF.Create.VisualBackgroundTask(new GISPostgreSQLUIAdministrativeAreal2DPostTask(gISPostgreSQLWebAPIManager), "Upload AdministrativeAreal2Ds", "Uploads AdministrativeAreal2Ds to the server"));
-                    result.Add(DiGi.UI.WPF.Create.VisualBackgroundTask(new GISPostgreSQLUIBuilding2DPostTask(gISPostgreSQLWebAPIManager), "Upload Building2Ds", "Uploads Building2Ds to the server"));
+                    result.Add(DiGi.UI.WPF.Create.VisualBackgroundTask(new UIAdministrativeAreal2DPostTask(gISPostgreSQLWebAPIManager), "Upload AdministrativeAreal2Ds", "Uploads AdministrativeAreal2Ds to the server"));
+                    result.Add(DiGi.UI.WPF.Create.VisualBackgroundTask(new UIBuilding2DsPostTask(gISPostgreSQLWebAPIManager), "Upload Building2Ds", "Uploads Building2Ds to the server"));
                 }
             }
 

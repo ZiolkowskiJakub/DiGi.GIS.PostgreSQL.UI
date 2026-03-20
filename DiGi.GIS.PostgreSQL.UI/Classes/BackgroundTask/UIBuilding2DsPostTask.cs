@@ -94,55 +94,42 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
 
                 GISModel? gISModel = gISModelFile.Value;
 
-                HashSet<string>? references = gISModel?.GetReferences<Building2D>();
-                if (references is not null)
+                List<Building2D>? building2Ds = gISModel?.GetObjects<Building2D>();
+
+                if (building2Ds is null || building2Ds.Count == 0)
                 {
-                    List<Building2D> building2Ds = [];
+                    continue;
+                }
 
-                    foreach (string reference in references)
+                string? code_GISModel = gISModel!.Reference;
+                if (!string.IsNullOrWhiteSpace(code_GISModel))
+                {
+                    code_GISModel = code_GISModel.ToUpper();
+                    int index = code_GISModel.IndexOf('_');
+                    if (index != -1)
                     {
-                        Building2D? building2D = gISModel!.GetObject<Building2D>(reference);
-                        if (building2D is not null)
-                        {
-                            building2Ds.Add(building2D);
-                        }
+                        code_GISModel = code_GISModel[..index];
                     }
+                }
 
-                    if (building2Ds.Count == 0)
-                    {
-                        continue;
-                    }
+                Values = building2Ds;
+                Code = code_GISModel;
 
-                    string? code_GISModel = gISModel!.Reference;
-                    if (!string.IsNullOrWhiteSpace(code_GISModel))
-                    {
-                        code_GISModel = code_GISModel.ToUpper();
-                        int index = code_GISModel.IndexOf('_');
-                        if (index != -1)
-                        {
-                            code_GISModel = code_GISModel[..index];
-                        }
-                    }
+                bool succeeded = false;
+                try
+                {
+                    succeeded = await base.ExecuteAsync();
+                }
+                catch
+                {
+                    Code = code;
+                    Values = null;
+                    throw;
+                }
 
-                    Values = building2Ds;
-                    Code = code_GISModel;
-
-                    bool succeeded = false;
-                    try
-                    {
-                        succeeded = await base.ExecuteAsync();
-                    }
-                    catch
-                    {
-                        Code = code;
-                        Values = null;
-                        throw;
-                    }
-
-                    if (!succeeded)
-                    {
-                        return false;
-                    }
+                if (!succeeded)
+                {
+                    return false;
                 }
             }
 

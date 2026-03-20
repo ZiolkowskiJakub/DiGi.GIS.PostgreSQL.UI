@@ -92,27 +92,26 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
 
                 GISModel? gISModel = gISModelFile.Value;
 
-                List<AdministrativeAreal2D> administrativeAreal2Ds = [];
-
-                HashSet<string>? references = gISModel?.GetReferences<AdministrativeAreal2D>();
-                if (references is not null)
+                List<AdministrativeAreal2D>? administrativeAreal2Ds = gISModel?.GetObjects<AdministrativeAreal2D>();
+                if (administrativeAreal2Ds is null || administrativeAreal2Ds.Count == 0)
                 {
-                    foreach (string reference in references)
-                    {
-                        AdministrativeAreal2D? administrativeAreal2D = gISModel!.GetObject<AdministrativeAreal2D>(reference);
-                        if (administrativeAreal2D is not null)
-                        {
-                            administrativeAreal2Ds.Add(administrativeAreal2D);
-                        }
-                    }
+                    continue;
+                }
 
-                    Values = administrativeAreal2Ds;
+                bool succeeded = false;
+                try
+                {
+                    succeeded = await base.ExecuteAsync();
+                }
+                catch
+                {
+                    Values = null;
+                    throw;
+                }
 
-                    bool succeeded = await base.ExecuteAsync();
-                    if (!succeeded)
-                    {
-                        return false;
-                    }
+                if (!succeeded)
+                {
+                    return false;
                 }
             }
 

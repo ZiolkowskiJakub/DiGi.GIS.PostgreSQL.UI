@@ -10,9 +10,9 @@ using System.Windows;
 
 namespace DiGi.GIS.PostgreSQL.UI.Classes
 {
-    public class UIBuilding2DsPostTask : Building2DsPostTask, IGISPostgreSQLUIObject
+    public class UIOrtoDatasPostTask : OrtoDatasPostTask, IGISPostgreSQLUIObject
     {
-        public UIBuilding2DsPostTask(GISPostgreSQLWebAPIManager gISPostgreSQLWebAPIManager)
+        public UIOrtoDatasPostTask(GISPostgreSQLWebAPIManager gISPostgreSQLWebAPIManager)
             : base(gISPostgreSQLWebAPIManager)
         {
         }
@@ -88,6 +88,18 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
                     return false;
                 }
 
+                string? directory_GISModel = Path.GetDirectoryName(path_GISModel);
+                if (!Directory.Exists(directory_GISModel))
+                {
+                    return false;
+                }
+
+                string? directory_OrtoDatas = GIS.Query.OrtoDatasDirectory_Building2D(directory_GISModel);
+                if (!Directory.Exists(directory_OrtoDatas))
+                {
+                    continue;
+                }
+
                 using GISModelFile gISModelFile = new(path_GISModel);
 
                 gISModelFile.Open();
@@ -112,24 +124,36 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
                     }
                 }
 
-                Values = building2Ds;
-                Code = code_GISModel;
+                List<Building2D>? building2Ds_Split;
 
-                bool succeeded = false;
-                try
+                Core.Classes.SizeSplitter<Building2D> sizeSplitter = new(building2Ds);
+                while ((building2Ds_Split = sizeSplitter.Next(100)) is not null)
                 {
-                    succeeded = await base.ExecuteAsync();
-                }
-                catch
-                {
-                    Code = code;
-                    Values = null;
-                    throw;
-                }
+                    IEnumerable<OrtoDatas>? ortoDatas_Building2D = GIS.Query.OrtoDatasDictionary(directory_OrtoDatas, building2Ds_Split)?.Values;
+                    if (ortoDatas_Building2D is null)
+                    {
+                        continue;
+                    }
 
-                if (!succeeded)
-                {
-                    return false;
+                    Values = ortoDatas_Building2D;
+                    Code = code_GISModel;
+
+                    bool succeeded = false;
+                    try
+                    {
+                        succeeded = await base.ExecuteAsync();
+                    }
+                    catch
+                    {
+                        Code = code;
+                        Values = null;
+                        throw;
+                    }
+
+                    if (!succeeded)
+                    {
+                        return false;
+                    }
                 }
             }
 

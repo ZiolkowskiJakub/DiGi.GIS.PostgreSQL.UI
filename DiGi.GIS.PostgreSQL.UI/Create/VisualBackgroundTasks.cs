@@ -42,6 +42,7 @@ namespace DiGi.GIS.PostgreSQL.UI
                 {
                     result.Add(DiGi.UI.WPF.Create.VisualBackgroundTask(new UIAdministrativeAreal2DPostTask(gISPostgreSQLWebAPIManager), "Upload AdministrativeAreal2Ds", "Uploads AdministrativeAreal2Ds to the server"));
                     result.Add(DiGi.UI.WPF.Create.VisualBackgroundTask(new UIBuilding2DsPostTask(gISPostgreSQLWebAPIManager), "Upload Building2Ds", "Uploads Building2Ds to the server"));
+                    result.Add(DiGi.UI.WPF.Create.VisualBackgroundTask(new UIOrtoDatasPostTask(gISPostgreSQLWebAPIManager), "Upload OrtoDatas", "Uploads OrtoDatas to the server"));
                 }
             }
 

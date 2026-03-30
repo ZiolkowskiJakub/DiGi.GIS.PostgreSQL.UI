@@ -10,9 +10,9 @@ using System.Windows;
 
 namespace DiGi.GIS.PostgreSQL.UI.Classes
 {
-    public class UIOrtoDatasPostTask : OrtoDatasPostTask, IGISPostgreSQLUIObject
+    public class UIOrtoDatasFromFilePostTask : OrtoDatasPostTask, IGISPostgreSQLUIObject
     {
-        public UIOrtoDatasPostTask(GISPostgreSQLWebAPIManager gISPostgreSQLWebAPIManager)
+        public UIOrtoDatasFromFilePostTask(GISPostgreSQLWebAPIManager gISPostgreSQLWebAPIManager)
             : base(gISPostgreSQLWebAPIManager)
         {
         }
@@ -135,18 +135,13 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
                         continue;
                     }
 
-                    Values = ortoDatas_Building2D;
-                    Code = code_GISModel;
-
                     bool succeeded = false;
                     try
                     {
-                        succeeded = await base.ExecuteAsync();
+                        succeeded = await ExecuteAsync(ortoDatas_Building2D, code_GISModel);
                     }
                     catch
                     {
-                        Code = code;
-                        Values = null;
                         throw;
                     }
 
@@ -157,8 +152,6 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
                 }
             }
 
-            Code = code;
-            Values = null;
             return true;
         }
     }

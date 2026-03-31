@@ -24,10 +24,8 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
         {
             if (Values is not null)
             {
-                return await base.ExecuteAsync();
+                return await ExecuteAsync();
             }
-
-            string? code = Code;
 
             MessageBoxResult messageBoxResult = MessageBox.Show("Do you want select single GIS Model file?", "Selection", MessageBoxButton.YesNoCancel);
             if (messageBoxResult == MessageBoxResult.Cancel)
@@ -112,18 +110,13 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
                     }
                 }
 
-                Values = building2Ds;
-                Code = code_GISModel;
-
                 bool succeeded = false;
                 try
                 {
-                    succeeded = await base.ExecuteAsync();
+                    succeeded = await ExecuteAsync(building2Ds, code_GISModel);
                 }
                 catch
                 {
-                    Code = code;
-                    Values = null;
                     throw;
                 }
 
@@ -133,8 +126,6 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
                 }
             }
 
-            Code = code;
-            Values = null;
             return true;
         }
     }

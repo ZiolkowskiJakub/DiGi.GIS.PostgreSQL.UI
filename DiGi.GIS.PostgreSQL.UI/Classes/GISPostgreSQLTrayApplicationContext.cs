@@ -7,7 +7,7 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
 {
     public class GISPostgreSQLTrayApplicationContext : DiGi.UI.Windows.Classes.TrayApplicationContext<MainWindow>
     {
-        private readonly Mode mode = Mode.ServerAndCient;
+        private readonly Mode? mode = null;
 
         private readonly GISPostgreSQLConverterManager? gISPostgreSQLConverterManager;
 
@@ -23,7 +23,7 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
 
         protected override MainWindow GetWindow()
         {
-            return new(mode, gISPostgreSQLConverterManager, gISPostgreSQLWebAPIManager);
+            return new(gISPostgreSQLConverterManager, gISPostgreSQLWebAPIManager, mode);
         }
     }
 }

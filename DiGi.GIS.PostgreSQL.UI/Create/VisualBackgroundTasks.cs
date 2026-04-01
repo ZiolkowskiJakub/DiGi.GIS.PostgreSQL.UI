@@ -40,10 +40,20 @@ namespace DiGi.GIS.PostgreSQL.UI
             {
                 if (gISPostgreSQLWebAPIManager is not null)
                 {
-                    result.Add(DiGi.UI.WPF.Create.VisualBackgroundTask(new UIAdministrativeAreal2DPostTask(gISPostgreSQLWebAPIManager), "Upload AdministrativeAreal2Ds", "Uploads AdministrativeAreal2Ds to the server"));
-                    result.Add(DiGi.UI.WPF.Create.VisualBackgroundTask(new UIBuilding2DsPostTask(gISPostgreSQLWebAPIManager), "Upload Building2Ds", "Uploads Building2Ds to the server"));
-                    result.Add(DiGi.UI.WPF.Create.VisualBackgroundTask(new UIOrtoDatasFromFilePostTask(gISPostgreSQLWebAPIManager), "Upload OrtoDatas from files", "Uploads OrtoDatas from file to the server"));
+                    result.Add(DiGi.UI.WPF.Create.VisualBackgroundTask(new UIAdministrativeAreal2DFromFilePostTask(gISPostgreSQLWebAPIManager), "Upload AdministrativeAreal2Ds from file", "Uploads AdministrativeAreal2Ds from file to the server"));
+                    result.Add(DiGi.UI.WPF.Create.VisualBackgroundTask(new UIBuilding2DsFromFilePostTask(gISPostgreSQLWebAPIManager), "Upload Building2Ds from file", "Uploads Building2Ds from file to the server"));
                     result.Add(DiGi.UI.WPF.Create.VisualBackgroundTask(new OrtoDatasFromDatabasePostTask(gISPostgreSQLWebAPIManager), "Upload OrtoDatas from database", "Uploads OrtoDatas from Building2D information stored in the database to the server"));
+                    result.Add(DiGi.UI.WPF.Create.VisualBackgroundTask(new UIYearBuiltDatasFromFilePostTask(gISPostgreSQLWebAPIManager), "Upload YearBuiltDatas from file", "Uploads YearBuiltDatas from file to the server"));
+                    
+                    result.Add(DiGi.UI.WPF.Create.VisualBackgroundTask(new UIOrtoDatasFromFilePostTask(gISPostgreSQLWebAPIManager) 
+                    { 
+                        SerializableObjectsPostOptions = new SerializableObjectsPostOptions() 
+                        { 
+                            BatchMemorySize =  10 * 1024 * 1024, // 10 MB
+                        }
+                    }, 
+                    "Upload OrtoDatas from file", "Uploads OrtoDatas from file to the server"));
+                    
                 }
             }
 

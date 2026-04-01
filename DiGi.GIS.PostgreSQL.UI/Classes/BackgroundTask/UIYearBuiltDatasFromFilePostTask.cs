@@ -3,16 +3,18 @@ using DiGi.GIS.Constants;
 using DiGi.GIS.PostgreSQL.UI.Interfaces;
 using DiGi.GIS.PostgreSQL.WebAPI.Classes;
 using Microsoft.Win32;
+using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 
 namespace DiGi.GIS.PostgreSQL.UI.Classes
 {
-    public class UIBuilding2DsPostTask : Building2DsPostTask, IGISPostgreSQLUIObject
+    public class UIYearBuiltDatasFromFilePostTask : YearBuiltDatasPostTask, IGISPostgreSQLUIObject
     {
-        public UIBuilding2DsPostTask(GISPostgreSQLWebAPIManager gISPostgreSQLWebAPIManager)
+        public UIYearBuiltDatasFromFilePostTask(GISPostgreSQLWebAPIManager gISPostgreSQLWebAPIManager)
             : base(gISPostgreSQLWebAPIManager)
         {
         }
@@ -20,12 +22,14 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
         /// <summary>
         /// Concrete implementation of the background work.
         /// </summary>
-        protected override async Task<bool> ExecuteAsync()
+        protected override async Task<bool> ExecuteAsync(IProgress<long> progress, CancellationToken cancellationToken)
         {
             if (Values is not null)
             {
-                return await ExecuteAsync();
+                return await base.ExecuteAsync(progress, cancellationToken);
             }
+
+            string? code = Code;
 
             MessageBoxResult messageBoxResult = MessageBox.Show("Do you want select single GIS Model file?", "Selection", MessageBoxButton.YesNoCancel);
             if (messageBoxResult == MessageBoxResult.Cancel)
@@ -79,25 +83,47 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
                 return true;
             }
 
+            Core.Classes.LongProgressWrapper? longProgressWrapper = Core.Create.LongProgressWrapper(progress);
+
             foreach (string path_GISModel in paths_GISModel)
             {
+                cancellationToken.ThrowIfCancellationRequested();
+
                 if (string.IsNullOrWhiteSpace(path_GISModel) || !File.Exists(path_GISModel))
                 {
                     return false;
+                }
+
+                string? directory_GISModel = Path.GetDirectoryName(path_GISModel);
+                if (!Directory.Exists(directory_GISModel))
+                {
+                    return false;
+                }
+
+                string? directory_OrtoDatas = GIS.Query.OrtoDatasDirectory_Building2D(directory_GISModel);
+                if (!Directory.Exists(directory_OrtoDatas))
+                {
+                    continue;
                 }
 
                 using GISModelFile gISModelFile = new(path_GISModel);
 
                 gISModelFile.Open();
 
+                cancellationToken.ThrowIfCancellationRequested();
+
                 GISModel? gISModel = gISModelFile.Value;
 
                 List<Building2D>? building2Ds = gISModel?.GetObjects<Building2D>();
+
+                cancellationToken.ThrowIfCancellationRequested();
 
                 if (building2Ds is null || building2Ds.Count == 0)
                 {
                     continue;
                 }
+
+                cancellationToken.ThrowIfCancellationRequested();
 
                 string? code_GISModel = gISModel!.Reference;
                 if (!string.IsNullOrWhiteSpace(code_GISModel))
@@ -110,19 +136,42 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
                     }
                 }
 
-                bool succeeded = false;
-                try
-                {
-                    succeeded = await ExecuteAsync(building2Ds, code_GISModel);
-                }
-                catch
-                {
-                    throw;
-                }
+                List<Building2D>? building2Ds_Split;
 
-                if (!succeeded)
+                Core.Classes.SizeSplitter<Building2D> sizeSplitter = new(building2Ds);
+                while ((building2Ds_Split = sizeSplitter.Next(100)) is not null)
                 {
-                    return false;
+                    cancellationToken.ThrowIfCancellationRequested();
+
+                    List<string> references = [];
+                    foreach (Building2D building2D in building2Ds_Split)
+                    {
+                        if (building2D?.Reference is string reference && !string.IsNullOrWhiteSpace(reference))
+                        {
+                            references.Add(reference);
+                        }
+                    }
+
+                    Dictionary<string, YearBuiltData>? dictionary = GIS.Query.YearBuiltDataDictionary<YearBuiltData>(gISModelFile, references);
+                    if (dictionary is null || dictionary.Count == 0)
+                    {
+                        continue;
+                    }
+
+                    bool succeeded = false;
+                    try
+                    {
+                        succeeded = await ExecuteAsync(dictionary.Values, code_GISModel, longProgressWrapper, cancellationToken);
+                    }
+                    catch
+                    {
+                        throw;
+                    }
+
+                    if (!succeeded)
+                    {
+                        return false;
+                    }
                 }
             }
 

@@ -1,4 +1,5 @@
-﻿using DiGi.GIS.Classes;
+﻿using DiGi.Core.Classes;
+using DiGi.GIS.Classes;
 using DiGi.GIS.Constants;
 using DiGi.GIS.PostgreSQL.UI.Interfaces;
 using DiGi.GIS.PostgreSQL.WebAPI.Classes;
@@ -12,9 +13,9 @@ using System.Windows;
 
 namespace DiGi.GIS.PostgreSQL.UI.Classes
 {
-    public class UIOrtoDatasFromFilePostTask : OrtoDatasPostTask, IGISPostgreSQLUIObject
+    public class UIBuilding2DsFromFilePostTask : Building2DsPostTask, IGISPostgreSQLUIObject
     {
-        public UIOrtoDatasFromFilePostTask(GISPostgreSQLWebAPIManager gISPostgreSQLWebAPIManager)
+        public UIBuilding2DsFromFilePostTask(GISPostgreSQLWebAPIManager gISPostgreSQLWebAPIManager)
             : base(gISPostgreSQLWebAPIManager)
         {
         }
@@ -26,10 +27,8 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
         {
             if (Values is not null)
             {
-                return await base.ExecuteAsync(progress, cancellationToken);
+                return await ExecuteAsync(progress, cancellationToken);
             }
-
-            string? code = Code;
 
             MessageBoxResult messageBoxResult = MessageBox.Show("Do you want select single GIS Model file?", "Selection", MessageBoxButton.YesNoCancel);
             if (messageBoxResult == MessageBoxResult.Cancel)
@@ -83,7 +82,7 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
                 return true;
             }
 
-            Core.Classes.LongProgressWrapper? longProgressWrapper = Core.Create.LongProgressWrapper(progress);
+            LongProgressWrapper? longProgressWrapper = Core.Create.LongProgressWrapper(progress);
 
             foreach (string path_GISModel in paths_GISModel)
             {
@@ -94,25 +93,13 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
                     return false;
                 }
 
-                string? directory_GISModel = Path.GetDirectoryName(path_GISModel);
-                if (!Directory.Exists(directory_GISModel))
-                {
-                    return false;
-                }
-
-                string? directory_OrtoDatas = GIS.Query.OrtoDatasDirectory_Building2D(directory_GISModel);
-                if (!Directory.Exists(directory_OrtoDatas))
-                {
-                    continue;
-                }
-
                 using GISModelFile gISModelFile = new(path_GISModel);
 
                 gISModelFile.Open();
 
-                cancellationToken.ThrowIfCancellationRequested();
-
                 GISModel? gISModel = gISModelFile.Value;
+
+                cancellationToken.ThrowIfCancellationRequested();
 
                 List<Building2D>? building2Ds = gISModel?.GetObjects<Building2D>();
 
@@ -134,33 +121,19 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
                     }
                 }
 
-                List<Building2D>? building2Ds_Split;
-
-                Core.Classes.SizeSplitter<Building2D> sizeSplitter = new(building2Ds);
-                while ((building2Ds_Split = sizeSplitter.Next(100)) is not null)
+                bool succeeded = false;
+                try
                 {
-                    cancellationToken.ThrowIfCancellationRequested();
+                    succeeded = await ExecuteAsync(building2Ds, code_GISModel, longProgressWrapper, cancellationToken);
+                }
+                catch
+                {
+                    throw;
+                }
 
-                    IEnumerable<OrtoDatas>? ortoDatas_Building2D = GIS.Query.OrtoDatasDictionary(directory_OrtoDatas, building2Ds_Split)?.Values;
-                    if (ortoDatas_Building2D is null)
-                    {
-                        continue;
-                    }
-
-                    bool succeeded = false;
-                    try
-                    {
-                        succeeded = await ExecuteAsync(ortoDatas_Building2D, code_GISModel, longProgressWrapper, cancellationToken);
-                    }
-                    catch
-                    {
-                        throw;
-                    }
-
-                    if (!succeeded)
-                    {
-                        return false;
-                    }
+                if (!succeeded)
+                {
+                    return false;
                 }
             }
 

@@ -14,11 +14,20 @@ namespace DiGi.GIS.PostgreSQL.UI.Windows
         private readonly GISPostgreSQLWebAPIManager? gISPostgreSQLWebAPIManager;
         private readonly Mode? mode;
 
-        public MainWindow(Mode mode, GISPostgreSQLConverterManager? gISPostgreSQLConverterManager, GISPostgreSQLWebAPIManager? gISPostgreSQLWebAPIManager)
+        public MainWindow(GISPostgreSQLConverterManager? gISPostgreSQLConverterManager, GISPostgreSQLWebAPIManager? gISPostgreSQLWebAPIManager, Mode? mode = null)
         {
             this.gISPostgreSQLConverterManager = gISPostgreSQLConverterManager;
             this.gISPostgreSQLWebAPIManager = gISPostgreSQLWebAPIManager;
             this.mode = mode;
+
+            if (this.mode is null)
+            {
+                this.mode = Mode.Client;
+                if (this.gISPostgreSQLConverterManager is not null && this.gISPostgreSQLConverterManager.IsAvailable<Building2DPostgreSQLConverter>())
+                {
+                    this.mode = Mode.ServerAndCient;
+                }
+            }
 
             // Initialize collections before InitializeComponent to avoid binding errors
             List<IVisualBackgroundTask>? visualBackgroundTasks;
@@ -28,6 +37,8 @@ namespace DiGi.GIS.PostgreSQL.UI.Windows
             {
                 VisualBackgroundTasks_Client = [.. visualBackgroundTasks];
             }
+
+
 
             visualBackgroundTasks = Create.VisualBackgroundTasks(gISPostgreSQLConverterManager, gISPostgreSQLWebAPIManager, Mode.Server);
             if (visualBackgroundTasks is not null)

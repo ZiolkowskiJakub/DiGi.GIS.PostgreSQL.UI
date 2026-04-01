@@ -10,9 +10,9 @@ using System.Windows;
 
 namespace DiGi.GIS.PostgreSQL.UI.Classes
 {
-    public class UIAdministrativeAreal2DPostTask : AdministrativeAreal2DsPostTask, IGISPostgreSQLUIObject
+    public class UIAdministrativeAreal2DFromFilePostTask : AdministrativeAreal2DsPostTask, IGISPostgreSQLUIObject
     {
-        public UIAdministrativeAreal2DPostTask(GISPostgreSQLWebAPIManager gISPostgreSQLWebAPIManager)
+        public UIAdministrativeAreal2DFromFilePostTask(GISPostgreSQLWebAPIManager gISPostgreSQLWebAPIManager)
             : base(gISPostgreSQLWebAPIManager)
         {
         }

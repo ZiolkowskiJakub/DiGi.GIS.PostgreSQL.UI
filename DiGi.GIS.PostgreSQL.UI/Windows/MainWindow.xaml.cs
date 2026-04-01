@@ -38,8 +38,6 @@ namespace DiGi.GIS.PostgreSQL.UI.Windows
                 VisualBackgroundTasks_Client = [.. visualBackgroundTasks];
             }
 
-
-
             visualBackgroundTasks = Create.VisualBackgroundTasks(gISPostgreSQLConverterManager, gISPostgreSQLWebAPIManager, Mode.Server);
             if (visualBackgroundTasks is not null)
             {

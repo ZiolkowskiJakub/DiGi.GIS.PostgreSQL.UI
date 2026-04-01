@@ -44,16 +44,15 @@ namespace DiGi.GIS.PostgreSQL.UI
                     result.Add(DiGi.UI.WPF.Create.VisualBackgroundTask(new UIBuilding2DsFromFilePostTask(gISPostgreSQLWebAPIManager), "Upload Building2Ds from file", "Uploads Building2Ds from file to the server"));
                     result.Add(DiGi.UI.WPF.Create.VisualBackgroundTask(new OrtoDatasFromDatabasePostTask(gISPostgreSQLWebAPIManager), "Upload OrtoDatas from database", "Uploads OrtoDatas from Building2D information stored in the database to the server"));
                     result.Add(DiGi.UI.WPF.Create.VisualBackgroundTask(new UIYearBuiltDatasFromFilePostTask(gISPostgreSQLWebAPIManager), "Upload YearBuiltDatas from file", "Uploads YearBuiltDatas from file to the server"));
-                    
-                    result.Add(DiGi.UI.WPF.Create.VisualBackgroundTask(new UIOrtoDatasFromFilePostTask(gISPostgreSQLWebAPIManager) 
-                    { 
-                        SerializableObjectsPostOptions = new SerializableObjectsPostOptions() 
-                        { 
-                            BatchMemorySize =  10 * 1024 * 1024, // 10 MB
+
+                    result.Add(DiGi.UI.WPF.Create.VisualBackgroundTask(new UIOrtoDatasFromFilePostTask(gISPostgreSQLWebAPIManager)
+                    {
+                        SerializableObjectsPostOptions = new SerializableObjectsPostOptions()
+                        {
+                            BatchMemorySize = 10 * 1024 * 1024, // 10 MB
                         }
-                    }, 
+                    },
                     "Upload OrtoDatas from file", "Uploads OrtoDatas from file to the server"));
-                    
                 }
             }
 

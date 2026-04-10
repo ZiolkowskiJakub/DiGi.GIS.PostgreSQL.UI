@@ -1,10 +1,13 @@
-﻿using DiGi.GIS.Classes;
+﻿using DiGi.Core.Classes;
+using DiGi.GIS.Classes;
 using DiGi.GIS.Constants;
 using DiGi.GIS.PostgreSQL.UI.Interfaces;
 using DiGi.GIS.PostgreSQL.WebAPI.Classes;
 using Microsoft.Win32;
+using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 
@@ -20,11 +23,11 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
         /// <summary>
         /// Concrete implementation of the background work.
         /// </summary>
-        protected override async Task<bool> ExecuteAsync()
+        protected override async Task<bool> ExecuteAsync(IProgress<long> progress, CancellationToken cancellationToken)
         {
             if (Values is not null)
             {
-                return await base.ExecuteAsync();
+                return await base.ExecuteAsync(progress, cancellationToken);
             }
 
             MessageBoxResult messageBoxResult = MessageBox.Show("Do you want select single GIS Model file?", "Selection", MessageBoxButton.YesNoCancel);
@@ -79,6 +82,8 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
                 return true;
             }
 
+            LongProgressWrapper? longProgressWrapper = Core.Create.LongProgressWrapper(progress);
+
             foreach (string path_GISModel in paths_GISModel)
             {
                 if (string.IsNullOrWhiteSpace(path_GISModel) || !File.Exists(path_GISModel))
@@ -101,7 +106,7 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
                 bool succeeded = false;
                 try
                 {
-                    succeeded = await base.ExecuteAsync();
+                    succeeded = await base.ExecuteAsync(administrativeAreal2Ds, longProgressWrapper, cancellationToken);
                 }
                 catch
                 {

@@ -94,18 +94,6 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
                     return false;
                 }
 
-                string? directory_GISModel = Path.GetDirectoryName(path_GISModel);
-                if (!Directory.Exists(directory_GISModel))
-                {
-                    return false;
-                }
-
-                string? directory_OrtoDatas = GIS.Query.OrtoDatasDirectory_Building2D(directory_GISModel);
-                if (!Directory.Exists(directory_OrtoDatas))
-                {
-                    continue;
-                }
-
                 using GISModelFile gISModelFile = new(path_GISModel);
 
                 gISModelFile.Open();

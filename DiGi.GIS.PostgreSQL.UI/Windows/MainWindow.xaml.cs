@@ -59,7 +59,7 @@ namespace DiGi.GIS.PostgreSQL.UI.Windows
                     return Mode.Client;
                 }
 
-                return gISPostgreSQLConverterManager is null ? Mode.Client : Mode.ServerAndCient;
+                return mode.Value;
             }
         }
 

@@ -42,26 +42,39 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
                 return false;
             }
 
-            DiGi.UI.WPF.Windows.ListBoxWindow listBoxWindow = new("File types")
+            List<string>? sufixes = null;
+
+            System.Windows.Application.Current.Dispatcher.Invoke(() =>
             {
-                SelectionMode = System.Windows.Controls.SelectionMode.Multiple
-            };
+                DiGi.UI.WPF.Windows.ListBoxWindow listBoxWindow = new("File types")
+                {
+                    SelectionMode = System.Windows.Controls.SelectionMode.Multiple
+                };
 
-            listBoxWindow.SetItems([FileNameSufix.OT_ADJA_A, FileNameSufix.OT_ADMS_A, FileNameSufix.OT_BUBD_A]);
+                listBoxWindow.SetItems([FileNameSufix.OT_ADJA_A, FileNameSufix.OT_ADMS_A, FileNameSufix.OT_BUBD_A]);
 
-            bool? dialogResult = listBoxWindow.ShowDialog();
-            if (dialogResult is null || !dialogResult.Value)
-            {
-                return false;
-            }
+                bool? dialogResult = listBoxWindow.ShowDialog();
+                if (dialogResult is null || !dialogResult.Value)
+                {
+                    return;
+                }
 
-            List<string>? sufixes = listBoxWindow.GetItems<string>();
+                sufixes = listBoxWindow.GetItems<string>();
+
+            });
+
             if (sufixes is null || sufixes.Count == 0)
             {
                 return false;
             }
 
-            return await GISPostgreSQLWebAPIManager.UpdateItemsAsync(path, sufixes.Contains(FileNameSufix.OT_ADJA_A), sufixes.Contains(FileNameSufix.OT_ADMS_A), sufixes.Contains(FileNameSufix.OT_BUBD_A), new PostOptions(), progress, cancellationToken);
+            SerializableObjectsPostOptions serializableObjectsPostOptions = new ()
+            {
+                Delay = TimeSpan.FromSeconds(40),
+                RequestResult = false
+            };
+
+            return await GISPostgreSQLWebAPIManager.UpdateItemsAsync(path, sufixes.Contains(FileNameSufix.OT_ADJA_A), sufixes.Contains(FileNameSufix.OT_ADMS_A), sufixes.Contains(FileNameSufix.OT_BUBD_A), serializableObjectsPostOptions, progress, cancellationToken);
         }
     }
 }

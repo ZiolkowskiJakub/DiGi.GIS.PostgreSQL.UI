@@ -9,16 +9,14 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
     {
         private readonly Mode? mode = null;
 
-        private readonly GISPostgreSQLConverterManager? gISPostgreSQLConverterManager;
+        private readonly GISPostgreSQLConverterManager? gISPostgreSQLConverterManager = PostgreSQL.Create.GISPostgreSQLConverterManager();
 
-        private readonly GISPostgreSQLWebAPIManager? gISPostgreSQLWebAPIManager;
+        private readonly GISPostgreSQLWebAPIManager? gISPostgreSQLWebAPIManager = WebAPI.Create.GISPostgreSQLWebAPIManager();
 
         public GISPostgreSQLTrayApplicationContext()
             : base("GIS PostgreSQL")
         {
-            gISPostgreSQLConverterManager = PostgreSQL.Create.GISPostgreSQLConverterManager();
 
-            gISPostgreSQLWebAPIManager = WebAPI.Create.GISPostgreSQLWebAPIManager();
         }
 
         protected override MainWindow GetWindow()

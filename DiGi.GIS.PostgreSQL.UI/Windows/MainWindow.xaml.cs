@@ -37,8 +37,8 @@ namespace DiGi.GIS.PostgreSQL.UI.Windows
             {
                 VisualBackgroundTasks_Client = [.. visualBackgroundTasks];
 
-                IVisualBackgroundTask? visualBackgroundTask = visualBackgroundTasks.Find(x => x.TypeName == typeof(OrtoDatasFromDatabasePostTask).Name);
-                visualBackgroundTask?.Start();
+                //IVisualBackgroundTask? visualBackgroundTask = visualBackgroundTasks.Find(x => x.TypeName == typeof(OrtoDatasFromDatabasePostTask).Name);
+                //visualBackgroundTask?.Start();
             }
 
             visualBackgroundTasks = Create.VisualBackgroundTasks(gISPostgreSQLConverterManager, gISPostgreSQLWebAPIManager, Mode.Server);

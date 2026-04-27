@@ -1,0 +1,221 @@
+﻿using DiGi.GIS.Classes;
+using DiGi.GIS.Constants;
+using DiGi.GIS.PostgreSQL.UI.Interfaces;
+using DiGi.GIS.PostgreSQL.WebAPI.Classes;
+using Microsoft.Win32;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Windows;
+
+namespace DiGi.GIS.PostgreSQL.UI.Classes
+{
+    public class UIOccupancyDatasFromFilePostTask : OccupancyDatasPostTask, IGISPostgreSQLUIObject
+    {
+        public UIOccupancyDatasFromFilePostTask(GISPostgreSQLWebAPIManager gISPostgreSQLWebAPIManager)
+            : base(gISPostgreSQLWebAPIManager)
+        {
+        }
+
+        /// <summary>
+        /// Concrete implementation of the background work.
+        /// </summary>
+        protected override async Task<bool> ExecuteAsync(IProgress<long> progress, CancellationToken cancellationToken)
+        {
+            if (Values is not null)
+            {
+                return await base.ExecuteAsync(progress, cancellationToken);
+            }
+
+            string? code = Code;
+
+            MessageBoxResult messageBoxResult = MessageBox.Show("Do you want select single GIS Model file?", "Selection", MessageBoxButton.YesNoCancel);
+            if (messageBoxResult == MessageBoxResult.Cancel)
+            {
+                return false;
+            }
+
+            List<string> paths_GISModel = [];
+            if (messageBoxResult == MessageBoxResult.Yes)
+            {
+                OpenFileDialog openFileDialog = new()
+                {
+                    Title = "Select GIS Model file",
+                    Filter = string.Format("{0} (*.{1})|*.{1}|All files (*.*)|*.*", FileTypeName.GISModelFile, FileExtension.GISModelFile)
+                };
+
+                bool? dialogResult = openFileDialog.ShowDialog();
+                if (dialogResult == null || !dialogResult.HasValue || !dialogResult.Value)
+                {
+                    return false;
+                }
+
+                paths_GISModel.Add(openFileDialog.FileName);
+            }
+            else
+            {
+                OpenFolderDialog openFolderDialog = new();
+                bool? dialogResult = openFolderDialog.ShowDialog();
+                if (dialogResult == null || !dialogResult.HasValue || !dialogResult.Value)
+                {
+                    return false;
+                }
+
+                string directory = openFolderDialog.FolderName;
+                if (string.IsNullOrWhiteSpace(directory) || !Directory.Exists(directory))
+                {
+                    return false;
+                }
+
+                string[] paths_Input = Directory.GetFiles(directory, "*." + FileExtension.GISModelFile, SearchOption.AllDirectories);
+                if (paths_Input == null || paths_Input.Length == 0)
+                {
+                    return false;
+                }
+
+                paths_GISModel = [.. paths_Input];
+            }
+
+            if (paths_GISModel is null || paths_GISModel.Count == 0)
+            {
+                return true;
+            }
+
+            Core.Classes.LongProgressWrapper? longProgressWrapper = Core.Create.LongProgressWrapper(progress);
+
+            foreach (string path_GISModel in paths_GISModel)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                if (string.IsNullOrWhiteSpace(path_GISModel) || !File.Exists(path_GISModel))
+                {
+                    return false;
+                }
+
+                using GISModelFile gISModelFile = new(path_GISModel);
+
+                gISModelFile.Open();
+
+                cancellationToken.ThrowIfCancellationRequested();
+
+                GISModel? gISModel = gISModelFile.Value;
+
+                if(gISModel is null)
+                {
+                    continue;
+                }
+
+                #region AdministrativeAreal2Ds
+
+                cancellationToken.ThrowIfCancellationRequested();
+
+                List<AdministrativeAreal2D>? administrativeAreal2Ds = gISModel.GetObjects<AdministrativeAreal2D>();
+
+                if(administrativeAreal2Ds is not null && administrativeAreal2Ds.Count != 0)
+                {
+                    List<OccupancyData> occupancyDatas_AdministrativeAreal2D = [];
+                    foreach (AdministrativeAreal2D administrativeAreal2D in administrativeAreal2Ds)
+                    {
+                        OccupancyCalculationResult? occupancyCalculationResult = gISModel.GetRelatedObject<OccupancyCalculationResult>(administrativeAreal2D);
+                        if (occupancyCalculationResult is null)
+                        {
+                            continue;
+                        }
+
+                        occupancyDatas_AdministrativeAreal2D.Add(new OccupancyData(administrativeAreal2D.Reference, occupancyCalculationResult.OccupancyArea, occupancyCalculationResult.Occupancy));
+                    }
+
+                    List<OccupancyData>? OccupancyDatas_Split;
+
+                    Core.Classes.SizeSplitter<OccupancyData> sizeSplitter = new(occupancyDatas_AdministrativeAreal2D);
+                    while ((OccupancyDatas_Split = sizeSplitter.Next(100)) is not null)
+                    {
+                        cancellationToken.ThrowIfCancellationRequested();
+
+                        bool succeeded = false;
+                        try
+                        {
+                            succeeded = await ExecuteAsync(OccupancyDatas_Split, longProgressWrapper, cancellationToken);
+                        }
+                        catch
+                        {
+                            throw;
+                        }
+
+                        if (!succeeded)
+                        {
+                            return false;
+                        }
+                    }
+                }
+
+                #endregion
+
+                #region Building2Ds
+
+                cancellationToken.ThrowIfCancellationRequested();
+
+                List<Building2D>? building2Ds = gISModel?.GetObjects<Building2D>();
+
+                if (building2Ds is not null && building2Ds.Count != 0)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+
+                    string? code_GISModel = gISModel!.Reference;
+                    if (!string.IsNullOrWhiteSpace(code_GISModel))
+                    {
+                        code_GISModel = code_GISModel.ToUpper();
+                        int index = code_GISModel.IndexOf('_');
+                        if (index != -1)
+                        {
+                            code_GISModel = code_GISModel[..index];
+                        }
+                    }
+
+                    List<OccupancyData> occupancyDatas_Building2D = [];
+                    foreach (Building2D building2D in building2Ds)
+                    {
+                        OccupancyCalculationResult? occupancyCalculationResult = gISModel.GetRelatedObject<OccupancyCalculationResult>(building2D);
+                        if (occupancyCalculationResult is null)
+                        {
+                            continue;
+                        }
+
+                        occupancyDatas_Building2D.Add(new OccupancyData(building2D.Reference, occupancyCalculationResult.OccupancyArea, occupancyCalculationResult.Occupancy));
+                    }
+
+                    List<OccupancyData>? OccupancyDatas_Split;
+
+                    Core.Classes.SizeSplitter<OccupancyData> sizeSplitter = new(occupancyDatas_Building2D);
+                    while ((OccupancyDatas_Split = sizeSplitter.Next(100)) is not null)
+                    {
+                        cancellationToken.ThrowIfCancellationRequested();
+
+                        bool succeeded = false;
+                        try
+                        {
+                            succeeded = await ExecuteAsync(OccupancyDatas_Split, code_GISModel, longProgressWrapper, cancellationToken);
+                        }
+                        catch
+                        {
+                            throw;
+                        }
+
+                        if (!succeeded)
+                        {
+                            return false;
+                        }
+                    }
+                }
+
+
+
+                #endregion
+            }
+
+            return true;
+        }
+    }
+}

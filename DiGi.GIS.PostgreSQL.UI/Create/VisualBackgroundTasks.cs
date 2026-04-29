@@ -37,7 +37,7 @@ namespace DiGi.GIS.PostgreSQL.UI
                         PostgreSQLOrtoDatasRefreshOptions = new PostgreSQLOrtoDatasRefreshOptions()
                         {
                             OverrideExistsing = false,
-                            UpdateSubdivisionIds = false
+                            UpdateSubdivisionIds = true
                         }
                     }, 
                     "Refresh OrtoDatas", "Refreshes OrtoDatas table in database"));

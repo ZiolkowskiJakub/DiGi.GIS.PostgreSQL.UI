@@ -1,4 +1,6 @@
-﻿using DiGi.GIS.Classes;
+﻿using DiGi.Core.Classes;
+using DiGi.Core.Interfaces;
+using DiGi.GIS.Classes;
 using DiGi.GIS.Constants;
 using DiGi.GIS.PostgreSQL.UI.Interfaces;
 using DiGi.GIS.PostgreSQL.WebAPI.Classes;
@@ -83,7 +85,7 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
                 return true;
             }
 
-            Core.Classes.LongProgressWrapper? longProgressWrapper = Core.Create.LongProgressWrapper(progress);
+            LongProgressWrapper? longProgressWrapper = Core.Create.LongProgressWrapper(progress);
 
             foreach (string path_GISModel in paths_GISModel)
             {
@@ -116,20 +118,22 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
                 if(administrativeAreal2Ds is not null && administrativeAreal2Ds.Count != 0)
                 {
                     List<OccupancyData> occupancyDatas_AdministrativeAreal2D = [];
-                    foreach (AdministrativeAreal2D administrativeAreal2D in administrativeAreal2Ds)
-                    {
-                        OccupancyCalculationResult? occupancyCalculationResult = gISModel.GetRelatedObject<OccupancyCalculationResult>(administrativeAreal2D);
-                        if (occupancyCalculationResult is null)
-                        {
-                            continue;
-                        }
 
-                        occupancyDatas_AdministrativeAreal2D.Add(new OccupancyData(administrativeAreal2D.Reference, occupancyCalculationResult.OccupancyArea, occupancyCalculationResult.Occupancy));
+                    Dictionary<IUniqueReference, OccupancyCalculationResult>? dictionary = gISModel.GetRelatedObjectDictionary<OccupancyCalculationResult>(administrativeAreal2Ds);
+                    if (dictionary is not null)
+                    {
+                        foreach (AdministrativeAreal2D administrativeAreal2D in administrativeAreal2Ds)
+                        {
+                            if (dictionary.TryGetValue(new GuidReference(administrativeAreal2D), out OccupancyCalculationResult? occupancyCalculationResult) && occupancyCalculationResult is not null)
+                            {
+                                occupancyDatas_AdministrativeAreal2D.Add(new OccupancyData(administrativeAreal2D.Reference, occupancyCalculationResult.OccupancyArea, occupancyCalculationResult.Occupancy));
+                            }
+                        }
                     }
 
                     List<OccupancyData>? OccupancyDatas_Split;
 
-                    Core.Classes.SizeSplitter<OccupancyData> sizeSplitter = new(occupancyDatas_AdministrativeAreal2D);
+                    SizeSplitter<OccupancyData> sizeSplitter = new(occupancyDatas_AdministrativeAreal2D);
                     while ((OccupancyDatas_Split = sizeSplitter.Next(100)) is not null)
                     {
                         cancellationToken.ThrowIfCancellationRequested();
@@ -175,20 +179,22 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
                     }
 
                     List<OccupancyData> occupancyDatas_Building2D = [];
-                    foreach (Building2D building2D in building2Ds)
-                    {
-                        OccupancyCalculationResult? occupancyCalculationResult = gISModel.GetRelatedObject<OccupancyCalculationResult>(building2D);
-                        if (occupancyCalculationResult is null)
-                        {
-                            continue;
-                        }
 
-                        occupancyDatas_Building2D.Add(new OccupancyData(building2D.Reference, occupancyCalculationResult.OccupancyArea, occupancyCalculationResult.Occupancy));
+                    Dictionary<IUniqueReference, OccupancyCalculationResult>? dictionary = gISModel.GetRelatedObjectDictionary<OccupancyCalculationResult>(building2Ds);
+                    if(dictionary is not null)
+                    {
+                        foreach(Building2D building2D in building2Ds)
+                        {
+                            if(dictionary.TryGetValue(new GuidReference(building2D), out OccupancyCalculationResult? occupancyCalculationResult) && occupancyCalculationResult is not null)
+                            {
+                                occupancyDatas_Building2D.Add(new OccupancyData(building2D.Reference, occupancyCalculationResult.OccupancyArea, occupancyCalculationResult.Occupancy));
+                            }
+                        }
                     }
 
                     List<OccupancyData>? OccupancyDatas_Split;
 
-                    Core.Classes.SizeSplitter<OccupancyData> sizeSplitter = new(occupancyDatas_Building2D);
+                    SizeSplitter<OccupancyData> sizeSplitter = new(occupancyDatas_Building2D);
                     while ((OccupancyDatas_Split = sizeSplitter.Next(100)) is not null)
                     {
                         cancellationToken.ThrowIfCancellationRequested();

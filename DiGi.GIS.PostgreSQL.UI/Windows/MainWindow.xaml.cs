@@ -14,6 +14,12 @@ namespace DiGi.GIS.PostgreSQL.UI.Windows
         private readonly GISPostgreSQLWebAPIManager? gISPostgreSQLWebAPIManager;
         private readonly Mode? mode;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="MainWindow"/> class.
+        /// </summary>
+        /// <param name="gISPostgreSQLConverterManager">The manager responsible for GIS PostgreSQL conversion processes.</param>
+        /// <param name="gISPostgreSQLWebAPIManager">The manager responsible for GIS PostgreSQL Web API interactions.</param>
+        /// <param name="mode">The operational mode of the application. If null, it is determined based on converter availability.</param>
         public MainWindow(GISPostgreSQLConverterManager? gISPostgreSQLConverterManager, GISPostgreSQLWebAPIManager? gISPostgreSQLWebAPIManager, Mode? mode = null)
         {
             this.gISPostgreSQLConverterManager = gISPostgreSQLConverterManager;
@@ -53,6 +59,9 @@ namespace DiGi.GIS.PostgreSQL.UI.Windows
             DataContext = this;
         }
 
+        /// <summary>
+        /// Gets the current operational mode of the application.
+        /// </summary>
         public Mode Mode
         {
             get
@@ -66,9 +75,14 @@ namespace DiGi.GIS.PostgreSQL.UI.Windows
             }
         }
 
-        // Explicit typing as requested
+        /// <summary>
+        /// Gets or sets the collection of visual background tasks associated with the client operational mode.
+        /// </summary>
         public ObservableCollection<IVisualBackgroundTask>? VisualBackgroundTasks_Client { get; set; }
 
+        /// <summary>
+        /// Gets or sets the collection of visual background tasks associated with the server operational mode.
+        /// </summary>
         public ObservableCollection<IVisualBackgroundTask>? VisualBackgroundTasks_Server { get; set; }
 
         private void Window_Initialized(object sender, System.EventArgs e)

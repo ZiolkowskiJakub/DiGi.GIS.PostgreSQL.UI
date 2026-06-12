@@ -14,8 +14,15 @@ using System.Windows;
 
 namespace DiGi.GIS.PostgreSQL.UI.Classes
 {
+    /// <summary>
+    /// Represents a task that handles the process of posting occupancy data extracted from GIS model files to the PostgreSQL database through the user interface.
+    /// </summary>
     public class UIOccupancyDatasFromFilePostTask : OccupancyDatasPostTask, IGISPostgreSQLUIObject
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="UIOccupancyDatasFromFilePostTask"/> class.
+        /// </summary>
+        /// <param name="gISPostgreSQLWebAPIManager">The manager used to interact with the GIS PostgreSQL Web API.</param>
         public UIOccupancyDatasFromFilePostTask(GISPostgreSQLWebAPIManager gISPostgreSQLWebAPIManager)
             : base(gISPostgreSQLWebAPIManager)
         {
@@ -24,6 +31,9 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
         /// <summary>
         /// Concrete implementation of the background work.
         /// </summary>
+        /// <param name="progress">The provider for reporting progress of the operation.</param>
+        /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result is true if the operation completed successfully; otherwise, false.</returns>
         protected override async Task<bool> ExecuteAsync(IProgress<long> progress, CancellationToken cancellationToken)
         {
             if (Values is not null)

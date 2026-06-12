@@ -12,8 +12,15 @@ using System.Windows;
 
 namespace DiGi.GIS.PostgreSQL.UI.Classes
 {
+    /// <summary>
+    /// Represents a task for posting orthodata from files to a PostgreSQL database, specifically designed for use within the UI layer.
+    /// </summary>
     public class UIOrtoDatasFromFilePostTask : OrtoDatasPostTask, IGISPostgreSQLUIObject
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="UIOrtoDatasFromFilePostTask"/> class.
+        /// </summary>
+        /// <param name="gISPostgreSQLWebAPIManager">The manager used to communicate with the GIS PostgreSQL Web API.</param>
         public UIOrtoDatasFromFilePostTask(GISPostgreSQLWebAPIManager gISPostgreSQLWebAPIManager)
             : base(gISPostgreSQLWebAPIManager)
         {
@@ -22,6 +29,9 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
         /// <summary>
         /// Concrete implementation of the background work.
         /// </summary>
+        /// <param name="progress">The progress reporter used to track the operation's completion percentage.</param>
+        /// <param name="cancellationToken">The cancellation token used to observe while writing the task to stop executing.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result is true if the operation succeeded; otherwise, false.</returns>
         protected override async Task<bool> ExecuteAsync(IProgress<long> progress, CancellationToken cancellationToken)
         {
             if (Values is not null)

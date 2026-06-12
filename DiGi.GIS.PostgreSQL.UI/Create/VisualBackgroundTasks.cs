@@ -9,6 +9,13 @@ namespace DiGi.GIS.PostgreSQL.UI
 {
     public static partial class Create
     {
+        /// <summary>
+        /// Creates and returns a sorted list of visual background tasks based on the specified operation mode and available managers.
+        /// </summary>
+        /// <param name="gISPostgreSQLConverterManager">The manager responsible for PostgreSQL conversion operations.</param>
+        /// <param name="gISPostgreSQLWebAPIManager">The manager responsible for interacting with the PostgreSQL Web API.</param>
+        /// <param name="mode">The operation mode (Server, Client, or both) that determines which tasks are instantiated.</param>
+        /// <returns>A list of <see cref="IVisualBackgroundTask"/> objects sorted by name, or null if not applicable.</returns>
         public static List<IVisualBackgroundTask>? VisualBackgroundTasks(GISPostgreSQLConverterManager? gISPostgreSQLConverterManager, GISPostgreSQLWebAPIManager? gISPostgreSQLWebAPIManager, Mode mode)
         {
             List<IVisualBackgroundTask> result = [];

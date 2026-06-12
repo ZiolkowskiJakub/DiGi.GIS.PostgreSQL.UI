@@ -8,8 +8,15 @@ namespace DiGi.GIS.PostgreSQL.UI
     /// </summary>
     public partial class App : Application
     {
+        /// <summary>
+        /// The application context instance for the GIS PostgreSQL tray application.
+        /// </summary>
         private Classes.GISPostgreSQLTrayApplicationContext? gISPostgreSQLTrayApplicationContext;
 
+        /// <summary>
+        /// Overrides the OnStartup method to initialize application-wide settings and exception handling.
+        /// </summary>
+        /// <param name="e">The event data for the startup event.</param>
         protected override void OnStartup(StartupEventArgs e)
         {
             // Catch exceptions from the main UI thread
@@ -29,6 +36,11 @@ namespace DiGi.GIS.PostgreSQL.UI
             gISPostgreSQLTrayApplicationContext = new Classes.GISPostgreSQLTrayApplicationContext();
         }
 
+        /// <summary>
+        /// Handles unhandled exceptions that occur on the main UI dispatcher thread.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The event arguments containing the exception details.</param>
         private void App_DispatcherUnhandledException(object sender, System.Windows.Threading.DispatcherUnhandledExceptionEventArgs e)
         {
             Exception currentException = e.Exception;
@@ -40,6 +52,11 @@ namespace DiGi.GIS.PostgreSQL.UI
             e.Handled = true;
         }
 
+        /// <summary>
+        /// Handles unhandled exceptions that occur on non-UI threads within the current application domain.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The event arguments containing the exception details.</param>
         private void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
             Exception currentException = (Exception)e.ExceptionObject;

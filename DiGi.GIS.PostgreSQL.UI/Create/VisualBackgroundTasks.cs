@@ -1,5 +1,6 @@
 ﻿using DiGi.Core;
 using DiGi.GIS.PostgreSQL.Classes;
+using DiGi.GIS.PostgreSQL.Enums;
 using DiGi.GIS.PostgreSQL.UI.Classes;
 using DiGi.GIS.PostgreSQL.UI.Enums;
 using DiGi.GIS.PostgreSQL.WebAPI.Classes;
@@ -30,10 +31,10 @@ namespace DiGi.GIS.PostgreSQL.UI
                     result.Add(DiGi.UI.WPF.Create.VisualBackgroundTask(new PostgreSQLOrtoDatasCreateDatabaseTask(gISPostgreSQLConverterManager), "Create storage database", "Creates storage database for OrtoDatas objects"));
                     result.Add(DiGi.UI.WPF.Create.VisualBackgroundTask(new OrtoDatasTask(gISPostgreSQLWebAPIManager, gISPostgreSQLConverterManager), "Bypass upload OrtoDatas from database", "Upload OrtoDatas from database. Direct update of OrtoDatas by bypassing the GIS WebAPI HTTP post."));
 
-                    UIBuildingDataUpdateTask uIPostgreSQLUpdateBuildingDataTask = new(gISPostgreSQLConverterManager);
-                    uIPostgreSQLUpdateBuildingDataTask.Starting += (sender, args) => 
+                    PostgreSQLBuildingDataUpdateTask postgreSQLBuildingDataUpdateTask = new(gISPostgreSQLConverterManager);
+                    postgreSQLBuildingDataUpdateTask.Starting += (sender, args) => 
                     {
-                        if (sender is not UIBuildingDataUpdateTask uIPostgreSQLUpdateBuildingDataTask_Temp)
+                        if (sender is not PostgreSQLBuildingDataUpdateTask postgreSQLBuildingDataUpdateTask_Temp)
                         {
                             return;
                         }
@@ -49,7 +50,7 @@ namespace DiGi.GIS.PostgreSQL.UI
 
                         if(listBoxWindow.ShowDialog() is not bool dialogResult || !dialogResult || listBoxWindow.GetItems<string>() is not List<string> texts)
                         {
-                            uIPostgreSQLUpdateBuildingDataTask_Temp.uIBuildingDataUpdateOptions.BuildingDataUpdateTypes = [];
+                            postgreSQLBuildingDataUpdateTask_Temp.uIBuildingDataUpdateOptions.BuildingDataUpdateTypes = [];
                             return;
                         }
 
@@ -59,10 +60,10 @@ namespace DiGi.GIS.PostgreSQL.UI
                             buildingDataUpdateTypes.Add(dictionary[text]);
                         }
 
-                        uIPostgreSQLUpdateBuildingDataTask_Temp.uIBuildingDataUpdateOptions.BuildingDataUpdateTypes = buildingDataUpdateTypes;
+                        postgreSQLBuildingDataUpdateTask_Temp.uIBuildingDataUpdateOptions.BuildingDataUpdateTypes = buildingDataUpdateTypes;
                     };
 
-                    result.Add(DiGi.UI.WPF.Create.VisualBackgroundTask(uIPostgreSQLUpdateBuildingDataTask, "Update building data", "Update building data base on Buidling2D and other data sources (database, OrtoDatas etc.)"));
+                    result.Add(DiGi.UI.WPF.Create.VisualBackgroundTask(postgreSQLBuildingDataUpdateTask, "Update building data", "Update building data base on Buidling2D and other data sources (database, OrtoDatas etc.)"));
 
                     Building2DPostgreSQLConverter? building2DPostgreSQLConverter = gISPostgreSQLConverterManager.GetPostgreSQLConverter<Building2DPostgreSQLConverter>();
                     if (building2DPostgreSQLConverter is not null)

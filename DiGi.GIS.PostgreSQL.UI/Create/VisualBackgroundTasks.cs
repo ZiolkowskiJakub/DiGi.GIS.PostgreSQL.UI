@@ -1,4 +1,4 @@
-﻿using DiGi.Core;
+using DiGi.Core;
 using DiGi.GIS.PostgreSQL.Classes;
 using DiGi.GIS.PostgreSQL.Enums;
 using DiGi.GIS.PostgreSQL.UI.Classes;
@@ -6,7 +6,6 @@ using DiGi.GIS.PostgreSQL.UI.Enums;
 using DiGi.GIS.PostgreSQL.WebAPI.Classes;
 using DiGi.UI.WPF.Interfaces;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace DiGi.GIS.PostgreSQL.UI
 {
@@ -32,7 +31,7 @@ namespace DiGi.GIS.PostgreSQL.UI
                     result.Add(DiGi.UI.WPF.Create.VisualBackgroundTask(new OrtoDatasTask(gISPostgreSQLWebAPIManager, gISPostgreSQLConverterManager), "Bypass upload OrtoDatas from database", "Upload OrtoDatas from database. Direct update of OrtoDatas by bypassing the GIS WebAPI HTTP post."));
 
                     PostgreSQLBuildingDataUpdateTask postgreSQLBuildingDataUpdateTask = new(gISPostgreSQLConverterManager);
-                    postgreSQLBuildingDataUpdateTask.Starting += (sender, args) => 
+                    postgreSQLBuildingDataUpdateTask.Starting += (sender, args) =>
                     {
                         if (sender is not PostgreSQLBuildingDataUpdateTask postgreSQLBuildingDataUpdateTask_Temp)
                         {
@@ -40,22 +39,22 @@ namespace DiGi.GIS.PostgreSQL.UI
                         }
 
                         Dictionary<string, BuildingDataUpdateType> dictionary = [];
-                        foreach(BuildingDataUpdateType buildingDataUpdateType in System.Enum.GetValues<BuildingDataUpdateType>())
+                        foreach (BuildingDataUpdateType buildingDataUpdateType in System.Enum.GetValues<BuildingDataUpdateType>())
                         {
                             dictionary[buildingDataUpdateType.Description() ?? buildingDataUpdateType.ToString()] = buildingDataUpdateType;
                         }
 
-                        DiGi.UI.WPF.Windows.ListBoxWindow listBoxWindow = new ("Update building data");
+                        DiGi.UI.WPF.Windows.ListBoxWindow listBoxWindow = new("Update building data");
                         listBoxWindow.SetItems(dictionary.Keys);
 
-                        if(listBoxWindow.ShowDialog() is not bool dialogResult || !dialogResult || listBoxWindow.GetItems<string>() is not List<string> texts)
+                        if (listBoxWindow.ShowDialog() is not bool dialogResult || !dialogResult || listBoxWindow.GetItems<string>() is not List<string> texts)
                         {
                             postgreSQLBuildingDataUpdateTask_Temp.uIBuildingDataUpdateOptions.BuildingDataUpdateTypes = [];
                             return;
                         }
 
                         List<BuildingDataUpdateType> buildingDataUpdateTypes = [];
-                        foreach(string text in texts) 
+                        foreach (string text in texts)
                         {
                             buildingDataUpdateTypes.Add(dictionary[text]);
                         }
@@ -100,6 +99,7 @@ namespace DiGi.GIS.PostgreSQL.UI
                     result.Add(DiGi.UI.WPF.Create.VisualBackgroundTask(new UIUpdateFromFilePostTask(gISPostgreSQLWebAPIManager), "Upload Areal2Ds from BDOT10k file", "Upload AdministrativeAreal2Ds and/or Building2Ds from BDOT10k *.zip file"));
 
                     result.Add(DiGi.UI.WPF.Create.VisualBackgroundTask(new UIAdministrativeAreal2DFromFilePostTask(gISPostgreSQLWebAPIManager), "Upload AdministrativeAreal2Ds from file", "Uploads AdministrativeAreal2Ds from file to the server"));
+                    result.Add(DiGi.UI.WPF.Create.VisualBackgroundTask(new UIEPWFileFromFilePostTask(gISPostgreSQLWebAPIManager), "Upload EPWFile from file", "Uploads EPWFile from selected file or directory to the server"));
                     result.Add(DiGi.UI.WPF.Create.VisualBackgroundTask(new UIBuilding2DsFromFilePostTask(gISPostgreSQLWebAPIManager), "Upload Building2Ds from file", "Uploads Building2Ds from file to the server"));
                     result.Add(DiGi.UI.WPF.Create.VisualBackgroundTask(new OrtoDatasFromDatabasePostTask(gISPostgreSQLWebAPIManager), "Upload OrtoDatas from database", "Uploads OrtoDatas from Building2D information stored in the database to the server"));
                     result.Add(DiGi.UI.WPF.Create.VisualBackgroundTask(new UIYearBuiltDatasFromFilePostTask(gISPostgreSQLWebAPIManager), "Upload YearBuiltDatas from file", "Uploads YearBuiltDatas from file to the server"));

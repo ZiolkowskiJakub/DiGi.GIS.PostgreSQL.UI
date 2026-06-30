@@ -1,8 +1,7 @@
-﻿using DiGi.GIS.Constants;
+using DiGi.GIS.Constants;
 using DiGi.GIS.PostgreSQL.UI.Interfaces;
 using DiGi.GIS.PostgreSQL.WebAPI;
 using DiGi.GIS.PostgreSQL.WebAPI.Classes;
-using DiGi.WebAPI.Classes;
 using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
@@ -70,7 +69,6 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
                 }
 
                 sufixes = listBoxWindow.GetItems<string>();
-
             });
 
             if (sufixes is null || sufixes.Count == 0)
@@ -78,7 +76,7 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
                 return false;
             }
 
-            SerializableObjectsPostOptions serializableObjectsPostOptions = new ()
+            SerializableObjectsPostOptions serializableObjectsPostOptions = new()
             {
                 Delay = TimeSpan.FromSeconds(40),
                 RequestResult = false

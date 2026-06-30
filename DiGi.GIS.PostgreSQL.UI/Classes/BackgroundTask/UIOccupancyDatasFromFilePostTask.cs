@@ -1,4 +1,4 @@
-﻿using DiGi.Core.Classes;
+using DiGi.Core.Classes;
 using DiGi.Core.Interfaces;
 using DiGi.GIS.Classes;
 using DiGi.GIS.Constants;
@@ -114,7 +114,7 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
 
                 GISModel? gISModel = gISModelFile.Value;
 
-                if(gISModel is null)
+                if (gISModel is null)
                 {
                     continue;
                 }
@@ -125,7 +125,7 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
 
                 List<AdministrativeAreal2D>? administrativeAreal2Ds = gISModel.GetObjects<AdministrativeAreal2D>();
 
-                if(administrativeAreal2Ds is not null && administrativeAreal2Ds.Count != 0)
+                if (administrativeAreal2Ds is not null && administrativeAreal2Ds.Count != 0)
                 {
                     List<OccupancyData> occupancyDatas_AdministrativeAreal2D = [];
 
@@ -165,7 +165,7 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
                     }
                 }
 
-                #endregion
+                #endregion AdministrativeAreal2Ds
 
                 #region Building2Ds
 
@@ -191,11 +191,11 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
                     List<OccupancyData> occupancyDatas_Building2D = [];
 
                     Dictionary<IUniqueReference, OccupancyCalculationResult>? dictionary = gISModel.GetRelatedObjectDictionary<OccupancyCalculationResult>(building2Ds);
-                    if(dictionary is not null)
+                    if (dictionary is not null)
                     {
-                        foreach(Building2D building2D in building2Ds)
+                        foreach (Building2D building2D in building2Ds)
                         {
-                            if(dictionary.TryGetValue(new GuidReference(building2D), out OccupancyCalculationResult? occupancyCalculationResult) && occupancyCalculationResult is not null)
+                            if (dictionary.TryGetValue(new GuidReference(building2D), out OccupancyCalculationResult? occupancyCalculationResult) && occupancyCalculationResult is not null)
                             {
                                 occupancyDatas_Building2D.Add(new OccupancyData(building2D.Reference, occupancyCalculationResult.OccupancyArea, occupancyCalculationResult.Occupancy));
                             }
@@ -226,9 +226,7 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
                     }
                 }
 
-
-
-                #endregion
+                #endregion Building2Ds
             }
 
             return true;

@@ -1,4 +1,4 @@
-#### [DiGi\.GIS\.PostgreSQL\.UI](index.md 'index')
+#### [DiGi\.GIS\.PostgreSQL\.UI](DiGi.GIS.PostgreSQL.UI.Overview.md 'DiGi\.GIS\.PostgreSQL\.UI\.Overview')
 
 ## DiGi\.GIS\.PostgreSQL\.UI Assembly
 

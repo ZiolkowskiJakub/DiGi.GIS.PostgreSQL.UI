@@ -3,7 +3,7 @@ using DiGi.Core.Interfaces;
 using DiGi.GIS.Classes;
 using DiGi.GIS.Constants;
 using DiGi.GIS.PostgreSQL.UI.Interfaces;
-using DiGi.GIS.PostgreSQL.WebAPI.Classes;
+using DiGi.GIS.WebAPI.Classes;
 using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
@@ -22,9 +22,9 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
         /// <summary>
         /// Initializes a new instance of the <see cref="UIOccupancyDatasFromFilePostTask"/> class.
         /// </summary>
-        /// <param name="gISPostgreSQLWebAPIManager">The manager used to interact with the GIS PostgreSQL Web API.</param>
-        public UIOccupancyDatasFromFilePostTask(GISPostgreSQLWebAPIManager gISPostgreSQLWebAPIManager)
-            : base(gISPostgreSQLWebAPIManager)
+        /// <param name="GISWebAPIManager">The manager used to interact with the GIS PostgreSQL Web API.</param>
+        public UIOccupancyDatasFromFilePostTask(GISWebAPIManager GISWebAPIManager)
+            : base(GISWebAPIManager)
         {
         }
 

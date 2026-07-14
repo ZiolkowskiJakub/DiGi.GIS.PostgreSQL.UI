@@ -1,7 +1,7 @@
 using DiGi.GIS.Constants;
 using DiGi.GIS.PostgreSQL.UI.Interfaces;
-using DiGi.GIS.PostgreSQL.WebAPI;
-using DiGi.GIS.PostgreSQL.WebAPI.Classes;
+using DiGi.GIS.WebAPI;
+using DiGi.GIS.WebAPI.Classes;
 using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
@@ -19,9 +19,9 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
         /// <summary>
         /// Initializes a new instance of the <see cref="UIUpdateFromFilePostTask"/> class.
         /// </summary>
-        /// <param name="gISPostgreSQLWebAPIManager">The manager used to handle PostgreSQL Web API communications.</param>
-        public UIUpdateFromFilePostTask(GISPostgreSQLWebAPIManager gISPostgreSQLWebAPIManager)
-            : base(gISPostgreSQLWebAPIManager)
+        /// <param name="GISWebAPIManager">The manager used to handle PostgreSQL Web API communications.</param>
+        public UIUpdateFromFilePostTask(GISWebAPIManager GISWebAPIManager)
+            : base(GISWebAPIManager)
         {
         }
 
@@ -82,7 +82,7 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
                 RequestResult = false
             };
 
-            return await GISPostgreSQLWebAPIManager.UpdateItemsAsync(path, sufixes.Contains(FileNameSufix.OT_ADJA_A), sufixes.Contains(FileNameSufix.OT_ADMS_A), sufixes.Contains(FileNameSufix.OT_BUBD_A), serializableObjectsPostOptions, progress, cancellationToken);
+            return await GISWebAPIManager.UpdateItemsAsync(path, sufixes.Contains(FileNameSufix.OT_ADJA_A), sufixes.Contains(FileNameSufix.OT_ADMS_A), sufixes.Contains(FileNameSufix.OT_BUBD_A), serializableObjectsPostOptions, progress, cancellationToken);
         }
     }
 }

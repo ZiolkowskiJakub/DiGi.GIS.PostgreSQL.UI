@@ -3,7 +3,7 @@ using DiGi.GIS.PostgreSQL.Classes;
 using DiGi.GIS.PostgreSQL.Enums;
 using DiGi.GIS.PostgreSQL.UI.Classes;
 using DiGi.GIS.PostgreSQL.UI.Enums;
-using DiGi.GIS.PostgreSQL.WebAPI.Classes;
+using DiGi.GIS.WebAPI.Classes;
 using DiGi.UI.WPF.Interfaces;
 using System.Collections.Generic;
 
@@ -15,10 +15,10 @@ namespace DiGi.GIS.PostgreSQL.UI
         /// Creates and returns a sorted list of visual background tasks based on the specified operation mode and available managers.
         /// </summary>
         /// <param name="gISPostgreSQLConverterManager">The manager responsible for PostgreSQL conversion operations.</param>
-        /// <param name="gISPostgreSQLWebAPIManager">The manager responsible for interacting with the PostgreSQL Web API.</param>
+        /// <param name="GISWebAPIManager">The manager responsible for interacting with the PostgreSQL Web API.</param>
         /// <param name="mode">The operation mode (Server, Client, or both) that determines which tasks are instantiated.</param>
         /// <returns>A list of <see cref="IVisualBackgroundTask"/> objects sorted by name, or null if not applicable.</returns>
-        public static List<IVisualBackgroundTask>? VisualBackgroundTasks(GISPostgreSQLConverterManager? gISPostgreSQLConverterManager, GISPostgreSQLWebAPIManager? gISPostgreSQLWebAPIManager, Mode mode)
+        public static List<IVisualBackgroundTask>? VisualBackgroundTasks(GISPostgreSQLConverterManager? gISPostgreSQLConverterManager, GISWebAPIManager? GISWebAPIManager, Mode mode)
         {
             List<IVisualBackgroundTask> result = [];
 
@@ -28,7 +28,7 @@ namespace DiGi.GIS.PostgreSQL.UI
                 {
                     result.Add(DiGi.UI.WPF.Create.VisualBackgroundTask(new PostgreSQLAdministrativeAreal2DCreateDatabaseTask(gISPostgreSQLConverterManager), "Create main database", "Creates main database for AdministrativeAreal2D and Biulding2D objects"));
                     result.Add(DiGi.UI.WPF.Create.VisualBackgroundTask(new PostgreSQLOrtoDatasCreateDatabaseTask(gISPostgreSQLConverterManager), "Create storage database", "Creates storage database for OrtoDatas objects"));
-                    result.Add(DiGi.UI.WPF.Create.VisualBackgroundTask(new OrtoDatasTask(gISPostgreSQLWebAPIManager, gISPostgreSQLConverterManager), "Bypass upload OrtoDatas from database", "Upload OrtoDatas from database. Direct update of OrtoDatas by bypassing the GIS WebAPI HTTP post."));
+                    result.Add(DiGi.UI.WPF.Create.VisualBackgroundTask(new OrtoDatasTask(GISWebAPIManager, gISPostgreSQLConverterManager), "Bypass upload OrtoDatas from database", "Upload OrtoDatas from database. Direct update of OrtoDatas by bypassing the GIS WebAPI HTTP post."));
 
                     PostgreSQLBuildingDataUpdateTask postgreSQLBuildingDataUpdateTask = new(gISPostgreSQLConverterManager);
                     postgreSQLBuildingDataUpdateTask.Starting += (sender, args) =>
@@ -94,18 +94,18 @@ namespace DiGi.GIS.PostgreSQL.UI
 
             if (mode == Mode.Client || mode == Mode.ServerAndCient)
             {
-                if (gISPostgreSQLWebAPIManager is not null)
+                if (GISWebAPIManager is not null)
                 {
-                    result.Add(DiGi.UI.WPF.Create.VisualBackgroundTask(new UIUpdateFromFilePostTask(gISPostgreSQLWebAPIManager), "Upload Areal2Ds from BDOT10k file", "Upload AdministrativeAreal2Ds and/or Building2Ds from BDOT10k *.zip file"));
+                    result.Add(DiGi.UI.WPF.Create.VisualBackgroundTask(new UIUpdateFromFilePostTask(GISWebAPIManager), "Upload Areal2Ds from BDOT10k file", "Upload AdministrativeAreal2Ds and/or Building2Ds from BDOT10k *.zip file"));
 
-                    result.Add(DiGi.UI.WPF.Create.VisualBackgroundTask(new UIAdministrativeAreal2DFromFilePostTask(gISPostgreSQLWebAPIManager), "Upload AdministrativeAreal2Ds from file", "Uploads AdministrativeAreal2Ds from file to the server"));
-                    result.Add(DiGi.UI.WPF.Create.VisualBackgroundTask(new UIEPWFileFromFilePostTask(gISPostgreSQLWebAPIManager), "Upload EPWFile from file", "Uploads EPWFile from selected file or directory to the server"));
-                    result.Add(DiGi.UI.WPF.Create.VisualBackgroundTask(new UIBuilding2DsFromFilePostTask(gISPostgreSQLWebAPIManager), "Upload Building2Ds from file", "Uploads Building2Ds from file to the server"));
-                    result.Add(DiGi.UI.WPF.Create.VisualBackgroundTask(new OrtoDatasFromDatabasePostTask(gISPostgreSQLWebAPIManager), "Upload OrtoDatas from database", "Uploads OrtoDatas from Building2D information stored in the database to the server"));
-                    result.Add(DiGi.UI.WPF.Create.VisualBackgroundTask(new UIYearBuiltDatasFromFilePostTask(gISPostgreSQLWebAPIManager), "Upload YearBuiltDatas from file", "Uploads YearBuiltDatas from file to the server"));
-                    result.Add(DiGi.UI.WPF.Create.VisualBackgroundTask(new UIOccupancyDatasFromFilePostTask(gISPostgreSQLWebAPIManager), "Upload OccupancyDatas from file", "Uploads OccupancyDatas (Building2D and AdministrativeAreal2D) from file to the server"));
+                    result.Add(DiGi.UI.WPF.Create.VisualBackgroundTask(new UIAdministrativeAreal2DFromFilePostTask(GISWebAPIManager), "Upload AdministrativeAreal2Ds from file", "Uploads AdministrativeAreal2Ds from file to the server"));
+                    result.Add(DiGi.UI.WPF.Create.VisualBackgroundTask(new UIEPWFileFromFilePostTask(GISWebAPIManager), "Upload EPWFile from file", "Uploads EPWFile from selected file or directory to the server"));
+                    result.Add(DiGi.UI.WPF.Create.VisualBackgroundTask(new UIBuilding2DsFromFilePostTask(GISWebAPIManager), "Upload Building2Ds from file", "Uploads Building2Ds from file to the server"));
+                    result.Add(DiGi.UI.WPF.Create.VisualBackgroundTask(new OrtoDatasFromDatabasePostTask(GISWebAPIManager), "Upload OrtoDatas from database", "Uploads OrtoDatas from Building2D information stored in the database to the server"));
+                    result.Add(DiGi.UI.WPF.Create.VisualBackgroundTask(new UIYearBuiltDatasFromFilePostTask(GISWebAPIManager), "Upload YearBuiltDatas from file", "Uploads YearBuiltDatas from file to the server"));
+                    result.Add(DiGi.UI.WPF.Create.VisualBackgroundTask(new UIOccupancyDatasFromFilePostTask(GISWebAPIManager), "Upload OccupancyDatas from file", "Uploads OccupancyDatas (Building2D and AdministrativeAreal2D) from file to the server"));
 
-                    result.Add(DiGi.UI.WPF.Create.VisualBackgroundTask(new UIOrtoDatasFromFilePostTask(gISPostgreSQLWebAPIManager)
+                    result.Add(DiGi.UI.WPF.Create.VisualBackgroundTask(new UIOrtoDatasFromFilePostTask(GISWebAPIManager)
                     {
                         SerializableObjectsPostOptions = new SerializableObjectsPostOptions()
                         {

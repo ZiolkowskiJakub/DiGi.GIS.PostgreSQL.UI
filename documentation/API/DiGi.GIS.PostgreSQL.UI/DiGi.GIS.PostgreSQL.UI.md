@@ -14,30 +14,30 @@ public static class Create
 Inheritance [System\.Object](https://learn.microsoft.com/en-us/dotnet/api/system.object 'System\.Object') → Create
 ### Methods
 
-<a name='DiGi.GIS.PostgreSQL.UI.Create.VisualBackgroundTasks(DiGi.GIS.PostgreSQL.Classes.GISPostgreSQLConverterManager,DiGi.GIS.PostgreSQL.WebAPI.Classes.GISPostgreSQLWebAPIManager,DiGi.GIS.PostgreSQL.UI.Enums.Mode)'></a>
+<a name='DiGi.GIS.PostgreSQL.UI.Create.VisualBackgroundTasks(DiGi.GIS.PostgreSQL.Classes.GISPostgreSQLConverterManager,DiGi.GIS.WebAPI.Classes.GISWebAPIManager,DiGi.GIS.PostgreSQL.UI.Enums.Mode)'></a>
 
-## Create\.VisualBackgroundTasks\(GISPostgreSQLConverterManager, GISPostgreSQLWebAPIManager, Mode\) Method
+## Create\.VisualBackgroundTasks\(GISPostgreSQLConverterManager, GISWebAPIManager, Mode\) Method
 
 Creates and returns a sorted list of visual background tasks based on the specified operation mode and available managers\.
 
 ```csharp
-public static System.Collections.Generic.List<DiGi.UI.WPF.Interfaces.IVisualBackgroundTask>? VisualBackgroundTasks(DiGi.GIS.PostgreSQL.Classes.GISPostgreSQLConverterManager? gISPostgreSQLConverterManager, DiGi.GIS.PostgreSQL.WebAPI.Classes.GISPostgreSQLWebAPIManager? gISPostgreSQLWebAPIManager, DiGi.GIS.PostgreSQL.UI.Enums.Mode mode);
+public static System.Collections.Generic.List<DiGi.UI.WPF.Interfaces.IVisualBackgroundTask>? VisualBackgroundTasks(DiGi.GIS.PostgreSQL.Classes.GISPostgreSQLConverterManager? gISPostgreSQLConverterManager, DiGi.GIS.WebAPI.Classes.GISWebAPIManager? GISWebAPIManager, DiGi.GIS.PostgreSQL.UI.Enums.Mode mode);
 ```
 #### Parameters
 
-<a name='DiGi.GIS.PostgreSQL.UI.Create.VisualBackgroundTasks(DiGi.GIS.PostgreSQL.Classes.GISPostgreSQLConverterManager,DiGi.GIS.PostgreSQL.WebAPI.Classes.GISPostgreSQLWebAPIManager,DiGi.GIS.PostgreSQL.UI.Enums.Mode).gISPostgreSQLConverterManager'></a>
+<a name='DiGi.GIS.PostgreSQL.UI.Create.VisualBackgroundTasks(DiGi.GIS.PostgreSQL.Classes.GISPostgreSQLConverterManager,DiGi.GIS.WebAPI.Classes.GISWebAPIManager,DiGi.GIS.PostgreSQL.UI.Enums.Mode).gISPostgreSQLConverterManager'></a>
 
 `gISPostgreSQLConverterManager` [DiGi\.GIS\.PostgreSQL\.Classes\.GISPostgreSQLConverterManager](https://learn.microsoft.com/en-us/dotnet/api/digi.gis.postgresql.classes.gispostgresqlconvertermanager 'DiGi\.GIS\.PostgreSQL\.Classes\.GISPostgreSQLConverterManager')
 
 The manager responsible for PostgreSQL conversion operations\.
 
-<a name='DiGi.GIS.PostgreSQL.UI.Create.VisualBackgroundTasks(DiGi.GIS.PostgreSQL.Classes.GISPostgreSQLConverterManager,DiGi.GIS.PostgreSQL.WebAPI.Classes.GISPostgreSQLWebAPIManager,DiGi.GIS.PostgreSQL.UI.Enums.Mode).gISPostgreSQLWebAPIManager'></a>
+<a name='DiGi.GIS.PostgreSQL.UI.Create.VisualBackgroundTasks(DiGi.GIS.PostgreSQL.Classes.GISPostgreSQLConverterManager,DiGi.GIS.WebAPI.Classes.GISWebAPIManager,DiGi.GIS.PostgreSQL.UI.Enums.Mode).GISWebAPIManager'></a>
 
-`gISPostgreSQLWebAPIManager` [DiGi\.GIS\.PostgreSQL\.WebAPI\.Classes\.GISPostgreSQLWebAPIManager](https://learn.microsoft.com/en-us/dotnet/api/digi.gis.postgresql.webapi.classes.gispostgresqlwebapimanager 'DiGi\.GIS\.PostgreSQL\.WebAPI\.Classes\.GISPostgreSQLWebAPIManager')
+`GISWebAPIManager` [DiGi\.GIS\.WebAPI\.Classes\.GISWebAPIManager](https://learn.microsoft.com/en-us/dotnet/api/digi.gis.webapi.classes.giswebapimanager 'DiGi\.GIS\.WebAPI\.Classes\.GISWebAPIManager')
 
 The manager responsible for interacting with the PostgreSQL Web API\.
 
-<a name='DiGi.GIS.PostgreSQL.UI.Create.VisualBackgroundTasks(DiGi.GIS.PostgreSQL.Classes.GISPostgreSQLConverterManager,DiGi.GIS.PostgreSQL.WebAPI.Classes.GISPostgreSQLWebAPIManager,DiGi.GIS.PostgreSQL.UI.Enums.Mode).mode'></a>
+<a name='DiGi.GIS.PostgreSQL.UI.Create.VisualBackgroundTasks(DiGi.GIS.PostgreSQL.Classes.GISPostgreSQLConverterManager,DiGi.GIS.WebAPI.Classes.GISWebAPIManager,DiGi.GIS.PostgreSQL.UI.Enums.Mode).mode'></a>
 
 `mode` [Mode](DiGi.GIS.PostgreSQL.UI.Enums.md#DiGi.GIS.PostgreSQL.UI.Enums.Mode 'DiGi\.GIS\.PostgreSQL\.UI\.Enums\.Mode')
 

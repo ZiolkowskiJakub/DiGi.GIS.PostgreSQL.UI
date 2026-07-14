@@ -49,8 +49,8 @@
     <Reference Include="DiGi.GIS.PostgreSQL">
       <HintPath>..\..\DiGi.GIS.PostgreSQL\bin\DiGi.GIS.PostgreSQL.dll</HintPath>
     </Reference>
-    <Reference Include="DiGi.GIS.PostgreSQL.WebAPI">
-      <HintPath>..\..\DiGi.GIS.PostgreSQL.WebAPI\bin\DiGi.GIS.PostgreSQL.WebAPI.dll</HintPath>
+    <Reference Include="DiGi.GIS.WebAPI">
+      <HintPath>..\..\DiGi.GIS.WebAPI\bin\DiGi.GIS.WebAPI.dll</HintPath>
     </Reference>
     <Reference Include="DiGi.PostgreSQL">
       <HintPath>..\..\DiGi.PostgreSQL\bin\DiGi.PostgreSQL.dll</HintPath>

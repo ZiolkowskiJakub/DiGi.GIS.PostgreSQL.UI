@@ -1,7 +1,7 @@
-﻿using DiGi.GIS.Classes;
+using DiGi.GIS.Classes;
 using DiGi.GIS.Constants;
 using DiGi.GIS.PostgreSQL.UI.Interfaces;
-using DiGi.GIS.PostgreSQL.WebAPI.Classes;
+using DiGi.GIS.WebAPI.Classes;
 using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
@@ -20,9 +20,9 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
         /// <summary>
         /// Initializes a new instance of the <see cref="UIOrtoDatasFromFilePostTask"/> class.
         /// </summary>
-        /// <param name="gISPostgreSQLWebAPIManager">The manager used to communicate with the GIS PostgreSQL Web API.</param>
-        public UIOrtoDatasFromFilePostTask(GISPostgreSQLWebAPIManager gISPostgreSQLWebAPIManager)
-            : base(gISPostgreSQLWebAPIManager)
+        /// <param name="GISWebAPIManager">The manager used to communicate with the GIS PostgreSQL Web API.</param>
+        public UIOrtoDatasFromFilePostTask(GISWebAPIManager GISWebAPIManager)
+            : base(GISWebAPIManager)
         {
         }
 

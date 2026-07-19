@@ -49,7 +49,7 @@ namespace DiGi.GIS.PostgreSQL.UI
 
                         if (listBoxWindow.ShowDialog() is not bool dialogResult || !dialogResult || listBoxWindow.GetItems<string>() is not List<string> texts)
                         {
-                            postgreSQLBuildingDataUpdateTask_Temp.uIBuildingDataUpdateOptions.BuildingDataUpdateTypes = [];
+                            postgreSQLBuildingDataUpdateTask_Temp.UIBuildingDataUpdateOptions.BuildingDataUpdateTypes = [];
                             return;
                         }
 
@@ -59,7 +59,7 @@ namespace DiGi.GIS.PostgreSQL.UI
                             buildingDataUpdateTypes.Add(dictionary[text]);
                         }
 
-                        postgreSQLBuildingDataUpdateTask_Temp.uIBuildingDataUpdateOptions.BuildingDataUpdateTypes = buildingDataUpdateTypes;
+                        postgreSQLBuildingDataUpdateTask_Temp.UIBuildingDataUpdateOptions.BuildingDataUpdateTypes = buildingDataUpdateTypes;
                     };
 
                     result.Add(DiGi.UI.WPF.Create.VisualBackgroundTask(postgreSQLBuildingDataUpdateTask, "Update building data", "Update building data base on Buidling2D and other data sources (database, OrtoDatas etc.)"));
@@ -104,6 +104,9 @@ namespace DiGi.GIS.PostgreSQL.UI
                     result.Add(DiGi.UI.WPF.Create.VisualBackgroundTask(new OrtoDatasFromDatabasePostTask(GISWebAPIManager), "Upload OrtoDatas from database", "Uploads OrtoDatas from Building2D information stored in the database to the server"));
                     result.Add(DiGi.UI.WPF.Create.VisualBackgroundTask(new UIYearBuiltDatasFromFilePostTask(GISWebAPIManager), "Upload YearBuiltDatas from file", "Uploads YearBuiltDatas from file to the server"));
                     result.Add(DiGi.UI.WPF.Create.VisualBackgroundTask(new UIOccupancyDatasFromFilePostTask(GISWebAPIManager), "Upload OccupancyDatas from file", "Uploads OccupancyDatas (Building2D and AdministrativeAreal2D) from file to the server"));
+
+                    result.Add(DiGi.UI.WPF.Create.VisualBackgroundTask(new UIBuildingsFromDirectoryPostTask(GISWebAPIManager), "Create CityGML Buildings from directory", "Creates Buildings for Building2Ds from database based on CityGML files saved in directory"));
+
 
                     result.Add(DiGi.UI.WPF.Create.VisualBackgroundTask(new UIOrtoDatasFromFilePostTask(GISWebAPIManager)
                     {

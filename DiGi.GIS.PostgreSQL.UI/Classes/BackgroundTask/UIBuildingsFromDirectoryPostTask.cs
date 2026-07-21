@@ -1,4 +1,5 @@
 using DiGi.CityGML.Classes;
+using DiGi.Core.Parameter.Classes;
 using DiGi.GIS.PostgreSQL.UI.Interfaces;
 using DiGi.GIS.WebAPI.Classes;
 using Microsoft.Win32;
@@ -65,12 +66,32 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
                     return;
                 }
 
+                GetValueSettings getValueSettings = new(true, false);
+
+                if (cityModel is null || !cityModel.TryGetValue(CityGML.Enums.CityModelParameter.Year, out short? year, getValueSettings))
+                {
+                    year = null;
+                }
+
+                if (cityModel is null || !cityModel.TryGetValue(CityGML.Enums.CityModelParameter.LOD, out CityGML.Enums.LOD? lOD, getValueSettings))
+                {
+                    lOD = null;
+                }
+
+                SetValueSettings setValueSettings = new (true, false);
+
+                foreach (Building building in buildings)
+                {
+                    building.SetValue(PostgreSQL.Enums.BuildingParameter.Year, year, setValueSettings);
+                    building.SetValue(PostgreSQL.Enums.BuildingParameter.LOD, lOD, setValueSettings);
+                }
+
                 string? code = null;
                 if (!string.IsNullOrWhiteSpace(path))
                 {
                     if (Path.GetFileNameWithoutExtension(path) is string name)
                     {
-                        if (name.Contains("_"))
+                        if (name.Contains('_'))
                         {
                             string value = name.Split("_")[0];
                             if (string.IsNullOrWhiteSpace(code) && int.TryParse(value, out _))

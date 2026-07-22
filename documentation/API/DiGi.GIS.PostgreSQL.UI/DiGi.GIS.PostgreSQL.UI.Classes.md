@@ -305,30 +305,57 @@ public UIBuildingsFromDirectoryPostTask(DiGi.GIS.WebAPI.Classes.GISWebAPIManager
 The [DiGi\.GIS\.WebAPI\.Classes\.GISWebAPIManager](https://learn.microsoft.com/en-us/dotnet/api/digi.gis.webapi.classes.giswebapimanager 'DiGi\.GIS\.WebAPI\.Classes\.GISWebAPIManager') instance used to communicate with the server\.
 ### Methods
 
-<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIBuildingsFromDirectoryPostTask.ProduceAsync(string,System.Threading.Channels.ChannelWriter_DiGi.GIS.PostgreSQL.UI.Classes.UIBuildingsFromDirectoryPostTask.BuildingsBatch_,System.Threading.CancellationToken)'></a>
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIBuildingsFromDirectoryPostTask.LatestSourceAsync(DiGi.GIS.WebAPI.Classes.GISWebAPIManager)'></a>
 
-## UIBuildingsFromDirectoryPostTask\.ProduceAsync\(string, ChannelWriter\<BuildingsBatch\>, CancellationToken\) Method
+## UIBuildingsFromDirectoryPostTask\.LatestSourceAsync\(GISWebAPIManager\) Method
+
+Asynchronously reads the source path recorded on the most recently written building\.
+
+```csharp
+private static System.Threading.Tasks.Task<string?> LatestSourceAsync(DiGi.GIS.WebAPI.Classes.GISWebAPIManager? GISWebAPIManager);
+```
+#### Parameters
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIBuildingsFromDirectoryPostTask.LatestSourceAsync(DiGi.GIS.WebAPI.Classes.GISWebAPIManager).GISWebAPIManager'></a>
+
+`GISWebAPIManager` [DiGi\.GIS\.WebAPI\.Classes\.GISWebAPIManager](https://learn.microsoft.com/en-us/dotnet/api/digi.gis.webapi.classes.giswebapimanager 'DiGi\.GIS\.WebAPI\.Classes\.GISWebAPIManager')
+
+The manager used to reach the server\.
+
+#### Returns
+[System\.Threading\.Tasks\.Task&lt;](https://learn.microsoft.com/en-us/dotnet/api/system.threading.tasks.task-1 'System\.Threading\.Tasks\.Task\`1')[System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')[&gt;](https://learn.microsoft.com/en-us/dotnet/api/system.threading.tasks.task-1 'System\.Threading\.Tasks\.Task\`1')  
+A task whose result is the recorded source path, or null when the server holds no buildings or the path was not recorded\.
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIBuildingsFromDirectoryPostTask.ProduceAsync(string,System.Threading.Channels.ChannelWriter_DiGi.GIS.PostgreSQL.UI.Classes.UIBuildingsFromDirectoryPostTask.BuildingsBatch_,DiGi.GIS.PostgreSQL.UI.Classes.UIBuildingsFromDirectoryPostTask.ResumeFilter,System.Threading.CancellationToken)'></a>
+
+## UIBuildingsFromDirectoryPostTask\.ProduceAsync\(string, ChannelWriter\<BuildingsBatch\>, ResumeFilter, CancellationToken\) Method
 
 Walks the directory, parses each city model and publishes its tagged buildings to the channel\.
 
 ```csharp
-private static System.Threading.Tasks.Task<bool> ProduceAsync(string directory, System.Threading.Channels.ChannelWriter<DiGi.GIS.PostgreSQL.UI.Classes.UIBuildingsFromDirectoryPostTask.BuildingsBatch> channelWriter, System.Threading.CancellationToken cancellationToken);
+private static System.Threading.Tasks.Task<bool> ProduceAsync(string directory, System.Threading.Channels.ChannelWriter<DiGi.GIS.PostgreSQL.UI.Classes.UIBuildingsFromDirectoryPostTask.BuildingsBatch> channelWriter, DiGi.GIS.PostgreSQL.UI.Classes.UIBuildingsFromDirectoryPostTask.ResumeFilter? resumeFilter, System.Threading.CancellationToken cancellationToken);
 ```
 #### Parameters
 
-<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIBuildingsFromDirectoryPostTask.ProduceAsync(string,System.Threading.Channels.ChannelWriter_DiGi.GIS.PostgreSQL.UI.Classes.UIBuildingsFromDirectoryPostTask.BuildingsBatch_,System.Threading.CancellationToken).directory'></a>
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIBuildingsFromDirectoryPostTask.ProduceAsync(string,System.Threading.Channels.ChannelWriter_DiGi.GIS.PostgreSQL.UI.Classes.UIBuildingsFromDirectoryPostTask.BuildingsBatch_,DiGi.GIS.PostgreSQL.UI.Classes.UIBuildingsFromDirectoryPostTask.ResumeFilter,System.Threading.CancellationToken).directory'></a>
 
 `directory` [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
 
 The directory to walk\.
 
-<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIBuildingsFromDirectoryPostTask.ProduceAsync(string,System.Threading.Channels.ChannelWriter_DiGi.GIS.PostgreSQL.UI.Classes.UIBuildingsFromDirectoryPostTask.BuildingsBatch_,System.Threading.CancellationToken).channelWriter'></a>
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIBuildingsFromDirectoryPostTask.ProduceAsync(string,System.Threading.Channels.ChannelWriter_DiGi.GIS.PostgreSQL.UI.Classes.UIBuildingsFromDirectoryPostTask.BuildingsBatch_,DiGi.GIS.PostgreSQL.UI.Classes.UIBuildingsFromDirectoryPostTask.ResumeFilter,System.Threading.CancellationToken).channelWriter'></a>
 
 `channelWriter` [System\.Threading\.Channels\.ChannelWriter&lt;](https://learn.microsoft.com/en-us/dotnet/api/system.threading.channels.channelwriter-1 'System\.Threading\.Channels\.ChannelWriter\`1')[BuildingsBatch](DiGi.GIS.PostgreSQL.UI.Classes.md#DiGi.GIS.PostgreSQL.UI.Classes.UIBuildingsFromDirectoryPostTask.BuildingsBatch 'DiGi\.GIS\.PostgreSQL\.UI\.Classes\.UIBuildingsFromDirectoryPostTask\.BuildingsBatch')[&gt;](https://learn.microsoft.com/en-us/dotnet/api/system.threading.channels.channelwriter-1 'System\.Threading\.Channels\.ChannelWriter\`1')
 
 The writer the parsed batches are published to\.
 
-<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIBuildingsFromDirectoryPostTask.ProduceAsync(string,System.Threading.Channels.ChannelWriter_DiGi.GIS.PostgreSQL.UI.Classes.UIBuildingsFromDirectoryPostTask.BuildingsBatch_,System.Threading.CancellationToken).cancellationToken'></a>
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIBuildingsFromDirectoryPostTask.ProduceAsync(string,System.Threading.Channels.ChannelWriter_DiGi.GIS.PostgreSQL.UI.Classes.UIBuildingsFromDirectoryPostTask.BuildingsBatch_,DiGi.GIS.PostgreSQL.UI.Classes.UIBuildingsFromDirectoryPostTask.ResumeFilter,System.Threading.CancellationToken).resumeFilter'></a>
+
+`resumeFilter` [ResumeFilter](DiGi.GIS.PostgreSQL.UI.Classes.md#DiGi.GIS.PostgreSQL.UI.Classes.UIBuildingsFromDirectoryPostTask.ResumeFilter 'DiGi\.GIS\.PostgreSQL\.UI\.Classes\.UIBuildingsFromDirectoryPostTask\.ResumeFilter')
+
+An optional filter that skips files preceding a recorded resume point, or null to walk everything\.
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIBuildingsFromDirectoryPostTask.ProduceAsync(string,System.Threading.Channels.ChannelWriter_DiGi.GIS.PostgreSQL.UI.Classes.UIBuildingsFromDirectoryPostTask.BuildingsBatch_,DiGi.GIS.PostgreSQL.UI.Classes.UIBuildingsFromDirectoryPostTask.ResumeFilter,System.Threading.CancellationToken).cancellationToken'></a>
 
 `cancellationToken` [System\.Threading\.CancellationToken](https://learn.microsoft.com/en-us/dotnet/api/system.threading.cancellationtoken 'System\.Threading\.CancellationToken')
 
@@ -400,6 +427,74 @@ public string? Code { get; }
 
 #### Property Value
 [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIBuildingsFromDirectoryPostTask.ResumeFilter'></a>
+
+## UIBuildingsFromDirectoryPostTask\.ResumeFilter Class
+
+Skips walked files until a recorded source path is reached, then admits everything from that file onward\.
+
+The recorded file is admitted rather than skipped: the run that wrote it was interrupted, so it was probably only partly uploaded. Re-importing it is safe because the server upserts on (county, reference, lod, year).
+
+```csharp
+private sealed class UIBuildingsFromDirectoryPostTask.ResumeFilter
+```
+
+Inheritance [System\.Object](https://learn.microsoft.com/en-us/dotnet/api/system.object 'System\.Object') → ResumeFilter
+### Constructors
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIBuildingsFromDirectoryPostTask.ResumeFilter.ResumeFilter(string)'></a>
+
+## ResumeFilter\(string\) Constructor
+
+Initializes a new instance of the [ResumeFilter](DiGi.GIS.PostgreSQL.UI.Classes.md#DiGi.GIS.PostgreSQL.UI.Classes.UIBuildingsFromDirectoryPostTask.ResumeFilter 'DiGi\.GIS\.PostgreSQL\.UI\.Classes\.UIBuildingsFromDirectoryPostTask\.ResumeFilter') class\.
+
+```csharp
+public ResumeFilter(string source);
+```
+#### Parameters
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIBuildingsFromDirectoryPostTask.ResumeFilter.ResumeFilter(string).source'></a>
+
+`source` [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
+
+The recorded source path, relative to the walked directory, to resume from\.
+### Properties
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIBuildingsFromDirectoryPostTask.ResumeFilter.Matched'></a>
+
+## UIBuildingsFromDirectoryPostTask\.ResumeFilter\.Matched Property
+
+Gets a value indicating whether the recorded source path was ever reached during the walk\.
+
+```csharp
+public bool Matched { get; }
+```
+
+#### Property Value
+[System\.Boolean](https://learn.microsoft.com/en-us/dotnet/api/system.boolean 'System\.Boolean')
+### Methods
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIBuildingsFromDirectoryPostTask.ResumeFilter.Admit(string)'></a>
+
+## UIBuildingsFromDirectoryPostTask\.ResumeFilter\.Admit\(string\) Method
+
+Decides whether a walked file should be parsed\.
+
+```csharp
+public bool Admit(string path);
+```
+#### Parameters
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIBuildingsFromDirectoryPostTask.ResumeFilter.Admit(string).path'></a>
+
+`path` [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
+
+The walked file's path, relative to the walked directory\.
+
+#### Returns
+[System\.Boolean](https://learn.microsoft.com/en-us/dotnet/api/system.boolean 'System\.Boolean')  
+True once the recorded source path has been reached; otherwise, false\.
 
 <a name='DiGi.GIS.PostgreSQL.UI.Classes.UIEPWFileFromFilePostTask'></a>
 

@@ -1,15 +1,18 @@
-using DiGi.CityGML.Classes;
+﻿using DiGi.CityGML.Classes;
 using DiGi.Core.Parameter.Classes;
 using DiGi.GIS.PostgreSQL.UI.Interfaces;
 using DiGi.GIS.WebAPI.Classes;
+using DiGi.WebAPI.Classes;
 using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
+using System.Windows;
 
 namespace DiGi.GIS.PostgreSQL.UI.Classes
 {
@@ -48,6 +51,25 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
                 return false;
             }
 
+            string? source_Resume = null;
+
+            // The last written building records the file it came from, so an interrupted import can pick
+            // up there instead of walking the whole directory again.
+            string? source_Latest = await LatestSourceAsync(GISWebAPIManager);
+            if (!string.IsNullOrWhiteSpace(source_Latest))
+            {
+                MessageBoxResult messageBoxResult = MessageBox.Show(string.Format("The last building on the server came from:\n\n{0}\n\nContinue from that file?\n\nYes - resume from it.\nNo - import the whole directory from the start.", source_Latest), "Continue", MessageBoxButton.YesNoCancel);
+                if (messageBoxResult == MessageBoxResult.Cancel)
+                {
+                    return false;
+                }
+
+                if (messageBoxResult == MessageBoxResult.Yes)
+                {
+                    source_Resume = source_Latest;
+                }
+            }
+
             Core.Classes.LongProgressWrapper? longProgressWrapper = Core.Create.LongProgressWrapper(progress);
 
             // Parsing a city model and uploading a batch are independent: one is CPU bound, the other
@@ -62,7 +84,9 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
 
             using CancellationTokenSource cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 
-            Task<bool> task_Producer = ProduceAsync(directory, channel.Writer, cancellationTokenSource.Token);
+            ResumeFilter? resumeFilter = source_Resume is null ? null : new(source_Resume);
+
+            Task<bool> task_Producer = ProduceAsync(directory, channel.Writer, resumeFilter, cancellationTokenSource.Token);
 
             bool result = true;
 
@@ -94,7 +118,65 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
                 }
             }
 
+            // A resume that never matched means the recorded file is no longer in this directory - report
+            // it rather than letting an import that silently did nothing look like a success.
+            if (result && resumeFilter is not null && !resumeFilter.Matched)
+            {
+                Serilog.Modify.Log(Serilog.Enums.LogEventLevel.Error, "Resume source {Source} was not found under {Directory}; nothing was imported", source_Resume ?? string.Empty, directory);
+
+                MessageBox.Show(string.Format("Could not resume: no file matching\n\n{0}\n\nwas found under the selected directory. Nothing has been imported.", source_Resume), "Continue", MessageBoxButton.OK);
+
+                return false;
+            }
+
             return result;
+        }
+
+        /// <summary>
+        /// Asynchronously reads the source path recorded on the most recently written building.
+        /// </summary>
+        /// <param name="GISWebAPIManager">The manager used to reach the server.</param>
+        /// <returns>A task whose result is the recorded source path, or null when the server holds no buildings or the path was not recorded.</returns>
+        private static async Task<string?> LatestSourceAsync(GISWebAPIManager? GISWebAPIManager)
+        {
+            if (GISWebAPIManager is null)
+            {
+                return null;
+            }
+
+            HttpClient? httpClient = GISWebAPIManager.CreateHttpClient<BuildingController>(nameof(BuildingController.GetItemByLatestCreatedAtAsync), out string? path);
+            if (httpClient is null || string.IsNullOrWhiteSpace(path))
+            {
+                return null;
+            }
+
+            // No countyid: the walk spans counties, so the globally latest building is the one wanted.
+            string requestUri = new UrlBuilder(path).ToString();
+
+            PostResponse<Building?> postResponse;
+
+            try
+            {
+                postResponse = await DiGi.WebAPI.Query.GetAsync<Building>(httpClient, requestUri, new PostOptions() { RequestResult = true });
+            }
+            catch (Exception exception)
+            {
+                // An unreachable or older server must not block a plain import.
+                Serilog.Modify.Log(exception, "Latest building could not be retrieved; resume will not be offered");
+                return null;
+            }
+
+            if (postResponse is null || !postResponse.Succeeded || postResponse.Result is not Building building)
+            {
+                return null;
+            }
+
+            if (!building.TryGetValue(PostgreSQL.Enums.BuildingParameter.Source, out string? source, new GetValueSettings(true, false)))
+            {
+                return null;
+            }
+
+            return string.IsNullOrWhiteSpace(source) ? null : source;
         }
 
         /// <summary>
@@ -102,9 +184,10 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
         /// </summary>
         /// <param name="directory">The directory to walk.</param>
         /// <param name="channelWriter">The writer the parsed batches are published to.</param>
+        /// <param name="resumeFilter">An optional filter that skips files preceding a recorded resume point, or null to walk everything.</param>
         /// <param name="cancellationToken">A token observed before each file is parsed.</param>
         /// <returns>A task that represents the asynchronous operation. The task result is true if the walk completed successfully; otherwise, false.</returns>
-        private static async Task<bool> ProduceAsync(string directory, ChannelWriter<BuildingsBatch> channelWriter, CancellationToken cancellationToken)
+        private static async Task<bool> ProduceAsync(string directory, ChannelWriter<BuildingsBatch> channelWriter, ResumeFilter? resumeFilter, CancellationToken cancellationToken)
         {
             Exception? exception = null;
 
@@ -155,11 +238,15 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
 
                     SetValueSettings setValueSettings = new(true, false);
 
+                    // Recorded relative to the selected directory, not absolute: a resume then survives the
+                    // data being moved, a different drive letter, or a different machine.
+                    string source = Core.IO.Query.RelativePath(directory, path) ?? path;
+
                     foreach (Building building in buildings)
                     {
                         building.SetValue(PostgreSQL.Enums.BuildingParameter.Year, year, setValueSettings);
                         building.SetValue(PostgreSQL.Enums.BuildingParameter.LOD, lOD, setValueSettings);
-                        building.SetValue(PostgreSQL.Enums.BuildingParameter.Source, path, setValueSettings);
+                        building.SetValue(PostgreSQL.Enums.BuildingParameter.Source, source, setValueSettings);
 
                         if (!string.IsNullOrWhiteSpace(code))
                         {
@@ -172,7 +259,7 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
                     await channelWriter.WriteAsync(new BuildingsBatch(buildings, code), cancellationToken);
 
                     return true;
-                }, cancellationToken);
+                }, resumeFilter is null ? null : path => resumeFilter.Admit(Core.IO.Query.RelativePath(directory, path) ?? path), cancellationToken);
             }
             catch (Exception exception_Temp)
             {
@@ -183,6 +270,46 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
             channelWriter.Complete(exception);
 
             return result;
+        }
+
+        /// <summary>
+        /// Skips walked files until a recorded source path is reached, then admits everything from that file onward.
+        /// <para>The recorded file is admitted rather than skipped: the run that wrote it was interrupted, so it was probably only partly uploaded. Re-importing it is safe because the server upserts on (county, reference, lod, year).</para>
+        /// </summary>
+        private sealed class ResumeFilter
+        {
+            private readonly string source;
+
+            private bool matched = false;
+
+            /// <summary>
+            /// Initializes a new instance of the <see cref="ResumeFilter"/> class.
+            /// </summary>
+            /// <param name="source">The recorded source path, relative to the walked directory, to resume from.</param>
+            public ResumeFilter(string source)
+            {
+                this.source = source;
+            }
+
+            /// <summary>
+            /// Gets a value indicating whether the recorded source path was ever reached during the walk.
+            /// </summary>
+            public bool Matched => matched;
+
+            /// <summary>
+            /// Decides whether a walked file should be parsed.
+            /// </summary>
+            /// <param name="path">The walked file's path, relative to the walked directory.</param>
+            /// <returns>True once the recorded source path has been reached; otherwise, false.</returns>
+            public bool Admit(string path)
+            {
+                if (!matched && string.Equals(path, source, StringComparison.OrdinalIgnoreCase))
+                {
+                    matched = true;
+                }
+
+                return matched;
+            }
         }
 
         /// <summary>

@@ -69,7 +69,7 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
             PostResponse<List<AdministrativeAreal2DReference>?> postResponse_AdministrativeAreal2DReferences = await DiGi.WebAPI.Query.GetAsync<List<AdministrativeAreal2DReference>>(httpClient_AdministrativeAreal2D, requestUri_AdministrativeAreal2D, postOptions);
             if (postResponse_AdministrativeAreal2DReferences is null || !postResponse_AdministrativeAreal2DReferences.Succeeded || postResponse_AdministrativeAreal2DReferences.Result is not List<AdministrativeAreal2DReference> administrativeAreal2DReferences)
             {
-                DiGi.Serilog.Modify.Log(DiGi.Serilog.Enums.LogEventLevel.Error, "County references could not be retrieved");
+                Serilog.Modify.Log(Serilog.Enums.LogEventLevel.Error, "County references could not be retrieved");
                 return false;
             }
 
@@ -129,7 +129,7 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
                     continue;
                 }
 
-                DiGi.Serilog.Modify.Log("County {Code} (id {CountyId}): {Count} CityModels loaded", code, countyId, cityModels.Count);
+                Serilog.Modify.Log("County {Code} (id {CountyId}): {Count} CityModels loaded", code, countyId, cityModels.Count);
 
                 string? cursor = null;
 
@@ -145,18 +145,18 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
                     {
                         using CancellationTokenSource cancellationTokenSource = new(postOptions.Delay);
 
-                        using (HttpContent? httpContent = await DiGi.GIS.WebAPI.Create.HttpContent(Core.Convert.ToSystem_String(building2DReferencesByPagingParameter) ?? string.Empty, cancellationTokenSource.Token).ConfigureAwait(false))
+                        using (HttpContent? httpContent = await WebAPI.Create.HttpContent(Core.Convert.ToSystem_String(building2DReferencesByPagingParameter) ?? string.Empty, cancellationTokenSource.Token).ConfigureAwait(false))
                         {
                             if (httpContent is null)
                             {
-                                DiGi.Serilog.Modify.Log(DiGi.Serilog.Enums.LogEventLevel.Error, "Paging parameter content could not be created");
+                                Serilog.Modify.Log(Serilog.Enums.LogEventLevel.Error, "Paging parameter content could not be created");
                                 return false;
                             }
 
                             PostResponse<List<Building2DReference>?> postResponse_Building2DReferences = await DiGi.WebAPI.Modify.PostAsync<List<Building2DReference>>(httpClient_Building2DReferences, requestUri_Building2DReferences, httpContent, postOptions);
                             if (postResponse_Building2DReferences is null || !postResponse_Building2DReferences.Succeeded)
                             {
-                                DiGi.Serilog.Modify.Log(DiGi.Serilog.Enums.LogEventLevel.Error, "Building2DReferences page could not be retrieved for county {CountyId}", countyId);
+                                Serilog.Modify.Log(Serilog.Enums.LogEventLevel.Error, "Building2DReferences page could not be retrieved for county {CountyId}", countyId);
                                 return false;
                             }
 
@@ -166,7 +166,7 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
                     // A cancellation raised by the caller's token is left to propagate; anything else is a genuine request failure.
                     catch (Exception exception) when (!cancellationToken.IsCancellationRequested)
                     {
-                        DiGi.Serilog.Modify.Log(exception, "Building2DReferences page request failed for county {CountyId}", countyId);
+                        Serilog.Modify.Log(exception, "Building2DReferences page request failed for county {CountyId}", countyId);
                         return false;
                     }
 
@@ -181,18 +181,18 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
                     {
                         using CancellationTokenSource cancellationTokenSource = new(postOptions.Delay);
 
-                        using (HttpContent? httpContent = await DiGi.GIS.WebAPI.Create.HttpContent(building2DReferences, cancellationTokenSource.Token).ConfigureAwait(false))
+                        using (HttpContent? httpContent = await WebAPI.Create.HttpContent(building2DReferences, cancellationTokenSource.Token).ConfigureAwait(false))
                         {
                             if (httpContent is null)
                             {
-                                DiGi.Serilog.Modify.Log(DiGi.Serilog.Enums.LogEventLevel.Error, "Building2DReferences content could not be created");
+                                Serilog.Modify.Log(Serilog.Enums.LogEventLevel.Error, "Building2DReferences content could not be created");
                                 return false;
                             }
 
                             PostResponse<List<GIS.Classes.Building2D>?> postResponse_Building2D = await DiGi.WebAPI.Modify.PostAsync<List<GIS.Classes.Building2D>>(httpClient_Building2D, requestUri_Building2D, httpContent, postOptions);
                             if (postResponse_Building2D is null || !postResponse_Building2D.Succeeded)
                             {
-                                DiGi.Serilog.Modify.Log(DiGi.Serilog.Enums.LogEventLevel.Error, "Building2Ds could not be retrieved for county {CountyId}", countyId);
+                                Serilog.Modify.Log(Serilog.Enums.LogEventLevel.Error, "Building2Ds could not be retrieved for county {CountyId}", countyId);
                                 return false;
                             }
 
@@ -201,18 +201,18 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
                     }
                     catch (Exception exception) when (!cancellationToken.IsCancellationRequested)
                     {
-                        DiGi.Serilog.Modify.Log(exception, "Building2Ds request failed for county {CountyId}", countyId);
+                        Serilog.Modify.Log(exception, "Building2Ds request failed for county {CountyId}", countyId);
                         return false;
                     }
 
                     if (building2Ds is not null && building2Ds.Count != 0)
                     {
-                        List<DiGi.Analytical.Building.Classes.BuildingModel>? buildingModels = DiGi.GIS.Analytical.Create.BuildingModels(building2Ds, cityModels);
+                        List<DiGi.Analytical.Building.Classes.BuildingModel>? buildingModels = Analytical.Create.BuildingModels(building2Ds, cityModels);
                         if (buildingModels is not null && buildingModels.Count != 0)
                         {
                             if (!await ExecuteAsync(buildingModels, longProgressWrapper, cancellationToken))
                             {
-                                DiGi.Serilog.Modify.Log(DiGi.Serilog.Enums.LogEventLevel.Error, "BuildingModels could not be uploaded for county {CountyId}", countyId);
+                                Serilog.Modify.Log(Serilog.Enums.LogEventLevel.Error, "BuildingModels could not be uploaded for county {CountyId}", countyId);
                                 return false;
                             }
                         }
@@ -223,7 +223,7 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
                         break;
                     }
 
-                    cursor = building2DReferences[building2DReferences.Count - 1].Reference;
+                    cursor = building2DReferences[^1].Reference;
                     if (string.IsNullOrWhiteSpace(cursor))
                     {
                         break;

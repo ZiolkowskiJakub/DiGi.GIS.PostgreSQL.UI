@@ -51,7 +51,7 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
                 OpenFileDialog openFileDialog = new()
                 {
                     Title = "Select EPW file",
-                    Filter = string.Format("EPW File (*.{0})|*.{0}|All files (*.*)|*.*", DiGi.EPW.Constants.FileExtension.EPWFile)
+                    Filter = string.Format("EPW File (*.{0})|*.{0}|All files (*.*)|*.*", EPW.Constants.FileExtension.EPWFile)
                 };
 
                 bool? dialogResult = openFileDialog.ShowDialog();
@@ -77,7 +77,7 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
                     return false;
                 }
 
-                string[] paths_Input = Directory.GetFiles(directory, "*." + DiGi.EPW.Constants.FileExtension.EPWFile, SearchOption.AllDirectories);
+                string[] paths_Input = Directory.GetFiles(directory, "*." + EPW.Constants.FileExtension.EPWFile, SearchOption.AllDirectories);
                 if (paths_Input == null || paths_Input.Length == 0)
                 {
                     return false;
@@ -103,7 +103,7 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
                     return false;
                 }
 
-                EPWFile? ePWFile = DiGi.EPW.Modify.Read(path_EPW);
+                EPWFile? ePWFile = EPW.Modify.Read(path_EPW);
                 if (ePWFile is not null)
                 {
                     ePWFiles.Add(ePWFile);
@@ -115,7 +115,7 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
                 return true;
             }
 
-            bool succeeded = false;
+            bool succeeded;
             try
             {
                 succeeded = await ExecuteAsync(ePWFiles, longProgressWrapper, cancellationToken);

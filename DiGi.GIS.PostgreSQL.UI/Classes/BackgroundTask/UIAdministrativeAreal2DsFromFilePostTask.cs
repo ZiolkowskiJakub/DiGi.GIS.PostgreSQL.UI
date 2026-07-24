@@ -116,7 +116,7 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
                 bool succeeded = false;
                 try
                 {
-                    succeeded = await base.ExecuteAsync(administrativeAreal2Ds, longProgressWrapper, cancellationToken);
+                    succeeded = await ExecuteAsync(administrativeAreal2Ds, longProgressWrapper, cancellationToken);
                 }
                 catch
                 {

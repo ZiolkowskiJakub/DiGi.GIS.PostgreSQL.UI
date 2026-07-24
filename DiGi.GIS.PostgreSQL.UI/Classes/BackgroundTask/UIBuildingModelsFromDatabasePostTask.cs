@@ -13,8 +13,8 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
 {
     /// <summary>
     /// A post task that generates <see cref="DiGi.Analytical.Building.Classes.BuildingModel"/> instances entirely from data already held on the server - the CityGML <see cref="CityGML.Classes.Building"/> records stored in the database are used instead of CityGML archives read from a local directory.
-    /// <para>For every county in scope the task pages through the county's <see cref="Building2DReference"/> records and, per page, downloads both the <see cref="GIS.Classes.Building2D"/> data and the matching CityGML buildings, so neither a whole county's buildings nor its CityGML geometry is ever held in memory at once.</para>
-    /// <para>The 2D and CityGML data are joined on their shared reference; 2D buildings without a stored CityGML building fall back to an extruded footprint.</para>
+    /// <para>For every county in scope the task pages through the county's <see cref="Building2DReference"/> records and, per page, downloads the <see cref="GIS.Classes.Building2D"/> data, so a whole county's buildings are never held in memory at once.</para>
+    /// <para>Each <see cref="GIS.Classes.Building2D"/> is then processed individually: its single best ranked CityGML <see cref="CityGML.Classes.Building"/> is pulled by reference through <see cref="BuildingController.GetItemByReferenceAsync"/> and refined into storeys by the matching <c>Analytical.Create.BuildingModel</c> overload. A 2D building whose reference has no stored CityGML building, no reference at all, or whose pull fails is modelled from an extruded footprint instead.</para>
     /// </summary>
     public class UIBuildingModelsFromDatabasePostTask : BuildingModelsPostTask, IGISPostgreSQLUIObject
     {
@@ -86,7 +86,7 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
                 return false;
             }
 
-            HttpClient? httpClient_Building = GISWebAPIManager.CreateHttpClient<BuildingController>(nameof(BuildingController.GetItemsByReferencesAsync), out string? path_Building);
+            HttpClient? httpClient_Building = GISWebAPIManager.CreateHttpClient<BuildingController>(nameof(BuildingController.GetItemByReferenceAsync), out string? path_Building);
             if (httpClient_Building is null || string.IsNullOrWhiteSpace(path_Building))
             {
                 return false;
@@ -114,8 +114,6 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
                 {
                     continue;
                 }
-
-                string requestUri_Building = new UrlBuilder(path_Building).AddParameter("countyid", countyId).ToString();
 
                 Serilog.Modify.Log("County {Code} (id {CountyId}) started", administrativeAreal2DReference.Code ?? string.Empty, countyId);
 
@@ -194,49 +192,53 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
 
                     if (building2Ds is not null && building2Ds.Count != 0)
                     {
-                        List<string> references = [];
-                        foreach (Building2DReference building2DReference in building2DReferences)
+                        List<DiGi.Analytical.Building.Classes.BuildingModel> buildingModels = [];
+
+                        foreach (GIS.Classes.Building2D building2D in building2Ds)
                         {
-                            if (building2DReference?.Reference is not string reference || string.IsNullOrWhiteSpace(reference))
+                            cancellationToken.ThrowIfCancellationRequested();
+
+                            if (building2D is null)
                             {
                                 continue;
                             }
 
-                            references.Add(reference);
-                        }
+                            DiGi.Analytical.Building.Classes.BuildingModel? buildingModel;
 
-                        List<CityGML.Classes.Building>? buildings = null;
-
-                        try
-                        {
-                            using CancellationTokenSource cancellationTokenSource = new(postOptions.Delay);
-
-                            using (HttpContent? httpContent = await WebAPI.Create.HttpContent(references, cancellationTokenSource.Token).ConfigureAwait(false))
+                            string? reference = building2D.Reference;
+                            if (string.IsNullOrWhiteSpace(reference))
                             {
-                                if (httpContent is null)
-                                {
-                                    Serilog.Modify.Log(Serilog.Enums.LogEventLevel.Error, "References content could not be created");
-                                    return false;
-                                }
+                                // No reference to look up - extrude the model from the footprint.
+                                buildingModel = Analytical.Create.BuildingModel(building2D);
+                            }
+                            else
+                            {
+                                string requestUri_Building = new UrlBuilder(path_Building).AddParameter("reference", reference).AddParameter("countyid", countyId).ToString();
 
-                                PostResponse<List<CityGML.Classes.Building>?> postResponse_Building = await DiGi.WebAPI.Modify.PostAsync<List<CityGML.Classes.Building>>(httpClient_Building, requestUri_Building, httpContent, postOptions);
-                                if (postResponse_Building is null || !postResponse_Building.Succeeded)
+                                try
                                 {
-                                    Serilog.Modify.Log(Serilog.Enums.LogEventLevel.Error, "Buildings could not be retrieved for county {CountyId}", countyId);
-                                    return false;
-                                }
+                                    PostResponse<CityGML.Classes.Building?> postResponse_Building = await DiGi.WebAPI.Query.GetAsync<CityGML.Classes.Building>(httpClient_Building, requestUri_Building, postOptions);
 
-                                buildings = postResponse_Building.Result;
+                                    // A 204 (no matching CityGML building) is a success with a null result; the combined method then extrudes the footprint itself.
+                                    CityGML.Classes.Building? building = postResponse_Building is not null && postResponse_Building.Succeeded ? postResponse_Building.Result : null;
+
+                                    buildingModel = Analytical.Create.BuildingModel(building, building2D);
+                                }
+                                catch (Exception exception) when (!cancellationToken.IsCancellationRequested)
+                                {
+                                    Serilog.Modify.Log(exception, "Building request failed for reference {Reference} in county {CountyId} - generating model from footprint", reference, countyId);
+
+                                    buildingModel = Analytical.Create.BuildingModel(building2D);
+                                }
+                            }
+
+                            if (buildingModel is not null)
+                            {
+                                buildingModels.Add(buildingModel);
                             }
                         }
-                        catch (Exception exception) when (!cancellationToken.IsCancellationRequested)
-                        {
-                            Serilog.Modify.Log(exception, "Buildings request failed for county {CountyId}", countyId);
-                            return false;
-                        }
 
-                        List<DiGi.Analytical.Building.Classes.BuildingModel>? buildingModels = Analytical.Create.BuildingModels(building2Ds, buildings ?? []);
-                        if (buildingModels is not null && buildingModels.Count != 0)
+                        if (buildingModels.Count != 0)
                         {
                             if (!await ExecuteAsync(buildingModels, longProgressWrapper, cancellationToken))
                             {

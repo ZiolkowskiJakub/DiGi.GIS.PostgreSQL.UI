@@ -209,38 +209,39 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
                             if (string.IsNullOrWhiteSpace(reference))
                             {
                                 // No reference to look up - extrude the model from the footprint.
-                                buildingModel = Analytical.Create.BuildingModel(building2D);
+                                // buildingModel = Analytical.Create.BuildingModel(building2D);
+                                continue;
                             }
-                            else
+
+                            string requestUri_Building = new UrlBuilder(path_Building).AddParameter("reference", reference).AddParameter("countyid", countyId).ToString();
+
+                            try
                             {
-                                string requestUri_Building = new UrlBuilder(path_Building).AddParameter("reference", reference).AddParameter("countyid", countyId).ToString();
+                                PostResponse<CityGML.Classes.Building?> postResponse_Building = await DiGi.WebAPI.Query.GetAsync<CityGML.Classes.Building>(httpClient_Building, requestUri_Building, postOptions);
 
-                                try
-                                {
-                                    PostResponse<CityGML.Classes.Building?> postResponse_Building = await DiGi.WebAPI.Query.GetAsync<CityGML.Classes.Building>(httpClient_Building, requestUri_Building, postOptions);
+                                // A 204 (no matching CityGML building) is a success with a null result; the combined method then extrudes the footprint itself.
+                                CityGML.Classes.Building? building = postResponse_Building is not null && postResponse_Building.Succeeded ? postResponse_Building.Result : null;
 
-                                    // A 204 (no matching CityGML building) is a success with a null result; the combined method then extrudes the footprint itself.
-                                    CityGML.Classes.Building? building = postResponse_Building is not null && postResponse_Building.Succeeded ? postResponse_Building.Result : null;
+                                buildingModel = Analytical.Create.BuildingModel(building, building2D);
+                            }
+                            catch (Exception exception) when (!cancellationToken.IsCancellationRequested)
+                            {
+                                Serilog.Modify.Log(exception, "Building request failed for reference {Reference} in county {CountyId} - generating model from footprint", reference, countyId);
 
-                                    buildingModel = Analytical.Create.BuildingModel(building, building2D);
-                                }
-                                catch (Exception exception) when (!cancellationToken.IsCancellationRequested)
-                                {
-                                    Serilog.Modify.Log(exception, "Building request failed for reference {Reference} in county {CountyId} - generating model from footprint", reference, countyId);
-
-                                    buildingModel = Analytical.Create.BuildingModel(building2D);
-                                }
+                                buildingModel = Analytical.Create.BuildingModel(building2D);
                             }
 
                             if (buildingModel is not null)
                             {
+                                // Carry the county code as metadata (parity with Building); the server resolves the code passed on the upload to a county id.
+                                buildingModel.SetValue(Analytical.Enums.BuildingModelParameter.Code, administrativeAreal2DReference.Code, new Core.Parameter.Classes.SetValueSettings(true, false));
                                 buildingModels.Add(buildingModel);
                             }
                         }
 
                         if (buildingModels.Count != 0)
                         {
-                            if (!await ExecuteAsync(buildingModels, longProgressWrapper, cancellationToken))
+                            if (!await ExecuteAsync(buildingModels, administrativeAreal2DReference.Code, longProgressWrapper, cancellationToken))
                             {
                                 Serilog.Modify.Log(Serilog.Enums.LogEventLevel.Error, "BuildingModels could not be uploaded for county {CountyId}", countyId);
                                 return false;

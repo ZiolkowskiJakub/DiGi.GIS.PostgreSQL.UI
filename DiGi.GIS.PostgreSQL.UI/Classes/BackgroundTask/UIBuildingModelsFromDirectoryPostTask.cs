@@ -210,7 +210,7 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
                         List<DiGi.Analytical.Building.Classes.BuildingModel>? buildingModels = Analytical.Create.BuildingModels(building2Ds, cityModels);
                         if (buildingModels is not null && buildingModels.Count != 0)
                         {
-                            if (!await ExecuteAsync(buildingModels, longProgressWrapper, cancellationToken))
+                            if (!await ExecuteAsync(buildingModels, code, longProgressWrapper, cancellationToken))
                             {
                                 Serilog.Modify.Log(Serilog.Enums.LogEventLevel.Error, "BuildingModels could not be uploaded for county {CountyId}", countyId);
                                 return false;

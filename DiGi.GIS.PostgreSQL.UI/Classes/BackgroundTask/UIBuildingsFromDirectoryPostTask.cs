@@ -28,6 +28,10 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
         public UIBuildingsFromDirectoryPostTask(GISWebAPIManager GISWebAPIManager)
             : base(GISWebAPIManager)
         {
+            // A bulk import posts batches that take the server far longer than an interactive request:
+            // it deserializes thousands of buildings with full 3D geometry and upserts them in one go.
+            // The 20s default bounds a single attempt and would cancel a large county file client-side.
+            SerializableObjectsPostOptions.Delay = TimeSpan.FromMinutes(3);
         }
 
         /// <inheritdoc />

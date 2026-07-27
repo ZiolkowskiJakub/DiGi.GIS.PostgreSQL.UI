@@ -1,3 +1,5 @@
+using DiGi.Core.Parameter.Classes;
+using DiGi.GIS.Classes;
 using DiGi.GIS.PostgreSQL.Classes;
 using DiGi.GIS.PostgreSQL.Enums;
 using DiGi.GIS.PostgreSQL.UI.Interfaces;
@@ -203,7 +205,7 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
                                 continue;
                             }
 
-                            DiGi.Analytical.Building.Classes.BuildingModel? buildingModel;
+                            DiGi.Analytical.Building.Classes.BuildingModel? buildingModel = null;
 
                             string? reference = building2D.Reference;
                             if (string.IsNullOrWhiteSpace(reference))
@@ -221,7 +223,6 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
 
                                 // A 204 (no matching CityGML building) is a success with a null result; the combined method then extrudes the footprint itself.
                                 CityGML.Classes.Building? building = postResponse_Building is not null && postResponse_Building.Succeeded ? postResponse_Building.Result : null;
-
                                 buildingModel = Analytical.Create.BuildingModel(building, building2D);
                             }
                             catch (Exception exception) when (!cancellationToken.IsCancellationRequested)
@@ -234,7 +235,8 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
                             if (buildingModel is not null)
                             {
                                 // Carry the county code as metadata (parity with Building); the server resolves the code passed on the upload to a county id.
-                                buildingModel.SetValue(Analytical.Enums.BuildingModelParameter.Code, administrativeAreal2DReference.Code, new Core.Parameter.Classes.SetValueSettings(true, false));
+                                buildingModel.SetValue(Analytical.Enums.BuildingModelParameter.Code, administrativeAreal2DReference.Code, new SetValueSettings(true, false));
+                                buildingModel.SetValue(Analytical.Enums.BuildingModelParameter.Reference, reference, new SetValueSettings(true, false));
                                 buildingModels.Add(buildingModel);
                             }
                         }

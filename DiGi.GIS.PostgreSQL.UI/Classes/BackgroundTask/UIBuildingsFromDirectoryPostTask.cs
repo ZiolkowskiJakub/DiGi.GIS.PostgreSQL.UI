@@ -1,4 +1,4 @@
-﻿using DiGi.CityGML.Classes;
+using DiGi.CityGML.Classes;
 using DiGi.Core.Parameter.Classes;
 using DiGi.GIS.PostgreSQL.UI.Interfaces;
 using DiGi.GIS.WebAPI.Classes;
@@ -175,7 +175,7 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
                 return null;
             }
 
-            if (!building.TryGetValue(PostgreSQL.Enums.BuildingParameter.Source, out string? source, new GetValueSettings(true, false)))
+            if (!building.TryGetValue(Analytical.Enums.BuildingParameter.Source, out string? source, new GetValueSettings(true, false)))
             {
                 return null;
             }
@@ -248,13 +248,13 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
 
                     foreach (Building building in buildings)
                     {
-                        building.SetValue(PostgreSQL.Enums.BuildingParameter.Year, year, setValueSettings);
-                        building.SetValue(PostgreSQL.Enums.BuildingParameter.LOD, lOD, setValueSettings);
-                        building.SetValue(PostgreSQL.Enums.BuildingParameter.Source, source, setValueSettings);
+                        building.SetValue(Analytical.Enums.BuildingParameter.Year, year, setValueSettings);
+                        building.SetValue(Analytical.Enums.BuildingParameter.LOD, lOD, setValueSettings);
+                        building.SetValue(Analytical.Enums.BuildingParameter.Source, source, setValueSettings);
 
                         if (!string.IsNullOrWhiteSpace(code))
                         {
-                            building.SetValue(PostgreSQL.Enums.BuildingParameter.Code, code, setValueSettings);
+                            building.SetValue(Analytical.Enums.BuildingParameter.Code, code, setValueSettings);
                         }
                     }
 

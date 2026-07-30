@@ -49,7 +49,7 @@ namespace DiGi.GIS.PostgreSQL.UI
 
                         if (listBoxWindow.ShowDialog() is not bool dialogResult || !dialogResult || listBoxWindow.GetItems<string>() is not List<string> texts)
                         {
-                            postgreSQLBuildingDataUpdateTask_Temp.UIBuildingDataUpdateOptions.BuildingDataUpdateTypes = [];
+                            postgreSQLBuildingDataUpdateTask_Temp.PostgreSQLBuildingDataUpdateOptions.BuildingDataUpdateTypes = [];
                             return;
                         }
 
@@ -59,7 +59,7 @@ namespace DiGi.GIS.PostgreSQL.UI
                             buildingDataUpdateTypes.Add(dictionary[text]);
                         }
 
-                        postgreSQLBuildingDataUpdateTask_Temp.UIBuildingDataUpdateOptions.BuildingDataUpdateTypes = buildingDataUpdateTypes;
+                        postgreSQLBuildingDataUpdateTask_Temp.PostgreSQLBuildingDataUpdateOptions.BuildingDataUpdateTypes = buildingDataUpdateTypes;
                     };
 
                     result.Add(DiGi.UI.WPF.Create.VisualBackgroundTask(postgreSQLBuildingDataUpdateTask, "Update building data", "Update building data base on Buidling2D and other data sources (database, OrtoDatas etc.)"));

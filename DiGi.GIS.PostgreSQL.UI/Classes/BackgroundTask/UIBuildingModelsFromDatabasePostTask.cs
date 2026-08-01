@@ -224,6 +224,24 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
                                 // A 204 (no matching CityGML building) is a success with a null result; the combined method then extrudes the footprint itself.
                                 CityGML.Classes.Building? building = postResponse_Building is not null && postResponse_Building.Succeeded ? postResponse_Building.Result : null;
                                 buildingModel = Analytical.Create.BuildingModel(building, building2D);
+
+                                // A building whose CityGML geometry cannot be converted is silently extruded from
+                                // its footprint instead, which loses every wall and roof shape it had and is
+                                // otherwise indistinguishable from a building that never had CityGML at all.
+                                // The two cases are worth telling apart in the log.
+                                if (building is not null && buildingModel is not null && buildingModel.GetComponents<DiGi.Analytical.Building.Interfaces.IComponent>() is List<DiGi.Analytical.Building.Interfaces.IComponent> components_Created)
+                                {
+                                    int count_Surfaces = 0;
+                                    foreach (CityGML.Interfaces.ISurface surface in building.Surfaces ?? [])
+                                    {
+                                        count_Surfaces++;
+                                    }
+
+                                    if (count_Surfaces != 0 && components_Created.Count != count_Surfaces)
+                                    {
+                                        Serilog.Modify.Log(Serilog.Enums.LogEventLevel.Warning, "BuildingModel for reference {Reference} in county {CountyId} holds {Components} components for {Surfaces} CityGML surfaces - the 3D geometry was not carried over in full", reference, countyId, components_Created.Count, count_Surfaces);
+                                    }
+                                }
                             }
                             catch (Exception exception) when (!cancellationToken.IsCancellationRequested)
                             {

@@ -94,6 +94,12 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
                 return false;
             }
 
+            HttpClient? httpClient_GUGiK = WebAPI.Create.HttpClient_GUGiK(GISWebAPIManager);
+            if (httpClient_GUGiK is null)
+            {
+                return false;
+            }
+
             string requestUri_Building2DReferences = new UrlBuilder(path_Building2DReferences).ToString();
             string requestUri_Building2D = new UrlBuilder(path_Building2D).ToString();
 
@@ -223,7 +229,7 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
 
                                 // A 204 (no matching CityGML building) is a success with a null result; the combined method then extrudes the footprint itself.
                                 CityGML.Classes.Building? building = postResponse_Building is not null && postResponse_Building.Succeeded ? postResponse_Building.Result : null;
-                                buildingModel = Analytical.Create.BuildingModel(building, building2D);
+                                buildingModel = await Analytical.Create.BuildingModelAsync(httpClient_GUGiK, building, building2D);
 
                                 // A building whose CityGML geometry cannot be converted is silently extruded from
                                 // its footprint instead, which loses every wall and roof shape it had and is
@@ -247,16 +253,23 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
                             {
                                 Serilog.Modify.Log(exception, "Building request failed for reference {Reference} in county {CountyId} - generating model from footprint", reference, countyId);
 
+                                // No terrain query on this path - the model is extruded at an elevation of zero rather than dropped.
                                 buildingModel = Analytical.Create.BuildingModel(building2D);
                             }
 
-                            if (buildingModel is not null)
+                            if (buildingModel is null)
                             {
-                                // Carry the county code as metadata (parity with Building); the server resolves the code passed on the upload to a county id.
-                                buildingModel.SetValue(Analytical.Enums.BuildingModelParameter.Code, administrativeAreal2DReference.Code, new SetValueSettings(true, false));
-                                buildingModel.SetValue(Analytical.Enums.BuildingModelParameter.Reference, reference, new SetValueSettings(true, false));
-                                buildingModels.Add(buildingModel);
+                                // A null result no longer means the terrain service was unreachable - the creator extrudes at an elevation of
+                                // zero in that case - so the geometry itself could not be converted. Dropping it silently would let a whole
+                                // county import short, so every loss is logged.
+                                Serilog.Modify.Log(Serilog.Enums.LogEventLevel.Warning, "BuildingModel could not be created for reference {Reference} in county {CountyId} - the building is not part of the upload", reference, countyId);
+                                continue;
                             }
+
+                            // Carry the county code as metadata (parity with Building); the server resolves the code passed on the upload to a county id.
+                            buildingModel.SetValue(Analytical.Enums.BuildingModelParameter.Code, administrativeAreal2DReference.Code, new SetValueSettings(true, false));
+                            buildingModel.SetValue(Analytical.Enums.BuildingModelParameter.Reference, reference, new SetValueSettings(true, false));
+                            buildingModels.Add(buildingModel);
                         }
 
                         if (buildingModels.Count != 0)

@@ -108,6 +108,7 @@ namespace DiGi.GIS.PostgreSQL.UI
                     result.Add(DiGi.UI.WPF.Create.VisualBackgroundTask(new UIBuildingsFromDirectoryPostTask(GISWebAPIManager), "Create CityGML Buildings from directory", "Creates Buildings for Building2Ds from database based on CityGML files saved in directory"));
                     result.Add(DiGi.UI.WPF.Create.VisualBackgroundTask(new UIBuildingModelsFromDirectoryPostTask(GISWebAPIManager), "Create BuildingModels from directory", "Creates BuildingModels for Building2Ds from database based on CityGML files saved in directory"));
                     result.Add(DiGi.UI.WPF.Create.VisualBackgroundTask(new UIBuildingModelsFromDatabasePostTask(GISWebAPIManager), "Create BuildingModels from database", "Creates BuildingModels for Building2Ds from database based on CityGML Buildings stored in database"));
+                    result.Add(DiGi.UI.WPF.Create.VisualBackgroundTask(new UIBuildingModelsVerificationTask(GISWebAPIManager), "Verify BuildingModels from database", "Reads BuildingModels stored in database and reports completeness and space enclosure. Read only - nothing is uploaded"));
 
 
                     result.Add(DiGi.UI.WPF.Create.VisualBackgroundTask(new UIOrtoDatasFromFilePostTask(GISWebAPIManager)

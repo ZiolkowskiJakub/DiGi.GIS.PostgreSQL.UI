@@ -171,6 +171,10 @@ For every county in scope the task pages through the county's [DiGi\.GIS\.Postgr
 
 Each [DiGi\.GIS\.Classes\.Building2D](https://learn.microsoft.com/en-us/dotnet/api/digi.gis.classes.building2d 'DiGi\.GIS\.Classes\.Building2D') is then processed individually: its single best ranked CityGML [DiGi\.CityGML\.Classes\.Building](https://learn.microsoft.com/en-us/dotnet/api/digi.citygml.classes.building 'DiGi\.CityGML\.Classes\.Building') is pulled by reference through [DiGi\.GIS\.WebAPI\.Classes\.BuildingController\.GetItemByReferenceAsync\(System\.String,System\.Nullable\{System\.Int32\},System\.Nullable\{System\.Double\},System\.Nullable\{System\.Double\},System\.Nullable\{System\.Double\},System\.Nullable\{System\.Double\},System\.Threading\.CancellationToken\)](https://learn.microsoft.com/en-us/dotnet/api/digi.gis.webapi.classes.buildingcontroller.getitembyreferenceasync#digi-gis-webapi-classes-buildingcontroller-getitembyreferenceasync(system-string-system-nullable{system-int32}-system-nullable{system-double}-system-nullable{system-double}-system-nullable{system-double}-system-nullable{system-double}-system-threading-cancellationtoken) 'DiGi\.GIS\.WebAPI\.Classes\.BuildingController\.GetItemByReferenceAsync\(System\.String,System\.Nullable\{System\.Int32\},System\.Nullable\{System\.Double\},System\.Nullable\{System\.Double\},System\.Nullable\{System\.Double\},System\.Nullable\{System\.Double\},System\.Threading\.CancellationToken\)') and refined into storeys by the matching `Analytical.Create.BuildingModel` overload. A 2D building whose reference has no stored CityGML building, no reference at all, or whose pull fails is modelled from an extruded footprint instead.
 
+<b>"County" here means one polygon part.</b> The county listing returns 406 references for 380 codes, because a county whose territory is disconnected is stored as one row per part. The task reads and uploads by `Id`, so each part is filled from its own `building_2d` rows; uploading by `Code` instead would let the server file every part's models under a single one, which is what left three counties reading back empty. The county code is still written onto each model as descriptive metadata.
+
+Because `building_2d` holds the same building under every part it was imported under, a building shared by two parts is modelled once per part. That is inherent to keying by part and is not a duplicate to suppress here - it mirrors the underlying table.
+
 ```csharp
 public class UIBuildingModelsFromDatabasePostTask : DiGi.GIS.WebAPI.Classes.BuildingModelsPostTask, DiGi.GIS.PostgreSQL.UI.Interfaces.IGISPostgreSQLUIObject
 ```
@@ -271,6 +275,178 @@ public int PageSize { get; set; }
 
 #### Property Value
 [System\.Int32](https://learn.microsoft.com/en-us/dotnet/api/system.int32 'System\.Int32')
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIBuildingModelsVerificationTask'></a>
+
+## UIBuildingModelsVerificationTask Class
+
+A UI\-driven task that reads the [DiGi\.Analytical\.Building\.Classes\.BuildingModel](https://learn.microsoft.com/en-us/dotnet/api/digi.analytical.building.classes.buildingmodel 'DiGi\.Analytical\.Building\.Classes\.BuildingModel') records already stored on the server and reports how complete and how sound they are\.
+
+Read-only. Nothing is uploaded, nothing is repaired - the task exists to say what the stored data looks like, which is the state the upload path itself never reported: a model whose spaces are not enclosed is accepted by the server today and stored without a word.
+
+For every county in scope a sample of [SampleSize](DiGi.GIS.PostgreSQL.UI.Classes.md#DiGi.GIS.PostgreSQL.UI.Classes.UIBuildingModelsVerificationTask.SampleSize 'DiGi\.GIS\.PostgreSQL\.UI\.Classes\.UIBuildingModelsVerificationTask\.SampleSize') 2D building references is drawn with [RandomSeed](DiGi.GIS.PostgreSQL.UI.Classes.md#DiGi.GIS.PostgreSQL.UI.Classes.UIBuildingModelsVerificationTask.RandomSeed 'DiGi\.GIS\.PostgreSQL\.UI\.Classes\.UIBuildingModelsVerificationTask\.RandomSeed'), so a run is reproducible and two runs can be compared. The models behind those references are pulled in batches and each one is passed through `Analytical.Create.BuildingModelValidationResult`. A reference the server holds no model for is recorded as missing, which is the completeness half of the answer.
+
+Two files are written into [ReportDirectory](DiGi.GIS.PostgreSQL.UI.Classes.md#DiGi.GIS.PostgreSQL.UI.Classes.UIBuildingModelsVerificationTask.ReportDirectory 'DiGi\.GIS\.PostgreSQL\.UI\.Classes\.UIBuildingModelsVerificationTask\.ReportDirectory'): one row per reference in `BuildingModels_Verification.csv`, and per county plus national totals in `BuildingModels_Verification_Summary.txt`. The row file is flushed county by county, so a run interrupted late still leaves everything it had already measured.
+
+```csharp
+public class UIBuildingModelsVerificationTask : DiGi.Core.Classes.ReportableBackgroundTask<long>, DiGi.GIS.PostgreSQL.UI.Interfaces.IGISPostgreSQLUIObject
+```
+
+Inheritance [System\.Object](https://learn.microsoft.com/en-us/dotnet/api/system.object 'System\.Object') → [DiGi\.Core\.Classes\.BackgroundTask](https://learn.microsoft.com/en-us/dotnet/api/digi.core.classes.backgroundtask 'DiGi\.Core\.Classes\.BackgroundTask') → [DiGi\.Core\.Classes\.CancelableBackgroundTask](https://learn.microsoft.com/en-us/dotnet/api/digi.core.classes.cancelablebackgroundtask 'DiGi\.Core\.Classes\.CancelableBackgroundTask') → [DiGi\.Core\.Classes\.ReportableBackgroundTask&lt;](https://learn.microsoft.com/en-us/dotnet/api/digi.core.classes.reportablebackgroundtask-1 'DiGi\.Core\.Classes\.ReportableBackgroundTask\`1')[System\.Int64](https://learn.microsoft.com/en-us/dotnet/api/system.int64 'System\.Int64')[&gt;](https://learn.microsoft.com/en-us/dotnet/api/digi.core.classes.reportablebackgroundtask-1 'DiGi\.Core\.Classes\.ReportableBackgroundTask\`1') → UIBuildingModelsVerificationTask
+
+Implements [IGISPostgreSQLUIObject](DiGi.GIS.PostgreSQL.UI.Interfaces.md#DiGi.GIS.PostgreSQL.UI.Interfaces.IGISPostgreSQLUIObject 'DiGi\.GIS\.PostgreSQL\.UI\.Interfaces\.IGISPostgreSQLUIObject')
+### Constructors
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIBuildingModelsVerificationTask.UIBuildingModelsVerificationTask(DiGi.GIS.WebAPI.Classes.GISWebAPIManager)'></a>
+
+## UIBuildingModelsVerificationTask\(GISWebAPIManager\) Constructor
+
+Initializes a new instance of the [UIBuildingModelsVerificationTask](DiGi.GIS.PostgreSQL.UI.Classes.md#DiGi.GIS.PostgreSQL.UI.Classes.UIBuildingModelsVerificationTask 'DiGi\.GIS\.PostgreSQL\.UI\.Classes\.UIBuildingModelsVerificationTask') class\.
+
+```csharp
+public UIBuildingModelsVerificationTask(DiGi.GIS.WebAPI.Classes.GISWebAPIManager GISWebAPIManager);
+```
+#### Parameters
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIBuildingModelsVerificationTask.UIBuildingModelsVerificationTask(DiGi.GIS.WebAPI.Classes.GISWebAPIManager).GISWebAPIManager'></a>
+
+`GISWebAPIManager` [DiGi\.GIS\.WebAPI\.Classes\.GISWebAPIManager](https://learn.microsoft.com/en-us/dotnet/api/digi.gis.webapi.classes.giswebapimanager 'DiGi\.GIS\.WebAPI\.Classes\.GISWebAPIManager')
+
+The [DiGi\.GIS\.PostgreSQL\.UI\.Classes\.UIBuildingModelsVerificationTask\.GISWebAPIManager](https://learn.microsoft.com/en-us/dotnet/api/digi.gis.postgresql.ui.classes.uibuildingmodelsverificationtask.giswebapimanager 'DiGi\.GIS\.PostgreSQL\.UI\.Classes\.UIBuildingModelsVerificationTask\.GISWebAPIManager') instance used to communicate with the server\.
+### Properties
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIBuildingModelsVerificationTask.BatchSize'></a>
+
+## UIBuildingModelsVerificationTask\.BatchSize Property
+
+Gets or sets the number of references asked for in a single request\. The references travel in the query string, so a batch far above this risks the URL length limit of the server\.
+
+```csharp
+public int BatchSize { get; set; }
+```
+
+#### Property Value
+[System\.Int32](https://learn.microsoft.com/en-us/dotnet/api/system.int32 'System\.Int32')
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIBuildingModelsVerificationTask.CountyIds'></a>
+
+## UIBuildingModelsVerificationTask\.CountyIds Property
+
+Gets or sets the identifiers of the counties to be processed\. When null every county held on the server is processed\.
+
+```csharp
+public System.Collections.Generic.IEnumerable<int>? CountyIds { get; set; }
+```
+
+#### Property Value
+[System\.Collections\.Generic\.IEnumerable&lt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.ienumerable-1 'System\.Collections\.Generic\.IEnumerable\`1')[System\.Int32](https://learn.microsoft.com/en-us/dotnet/api/system.int32 'System\.Int32')[&gt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.ienumerable-1 'System\.Collections\.Generic\.IEnumerable\`1')
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIBuildingModelsVerificationTask.RandomSeed'></a>
+
+## UIBuildingModelsVerificationTask\.RandomSeed Property
+
+Gets or sets the seed of the sampling\. Two runs sharing a seed draw the same references, which is what lets a run before a change be compared with one after it\.
+
+```csharp
+public int RandomSeed { get; set; }
+```
+
+#### Property Value
+[System\.Int32](https://learn.microsoft.com/en-us/dotnet/api/system.int32 'System\.Int32')
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIBuildingModelsVerificationTask.ReportDirectory'></a>
+
+## UIBuildingModelsVerificationTask\.ReportDirectory Property
+
+Gets or sets the directory the two report files are written into\. When null the user is asked for one\.
+
+```csharp
+public string? ReportDirectory { get; set; }
+```
+
+#### Property Value
+[System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIBuildingModelsVerificationTask.SampleSize'></a>
+
+## UIBuildingModelsVerificationTask\.SampleSize Property
+
+Gets or sets the number of references drawn per county\. A value of zero or less takes every reference of the county\.
+
+```csharp
+public int SampleSize { get; set; }
+```
+
+#### Property Value
+[System\.Int32](https://learn.microsoft.com/en-us/dotnet/api/system.int32 'System\.Int32')
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIBuildingModelsVerificationTask.Tolerance'></a>
+
+## UIBuildingModelsVerificationTask\.Tolerance Property
+
+Gets or sets the distance tolerance the enclosure of a space is required to hold at\.
+
+```csharp
+public double Tolerance { get; set; }
+```
+
+#### Property Value
+[System\.Double](https://learn.microsoft.com/en-us/dotnet/api/system.double 'System\.Double')
+### Methods
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIBuildingModelsVerificationTask.Sample(System.Collections.Generic.List_string_,int,System.Random)'></a>
+
+## UIBuildingModelsVerificationTask\.Sample\(List\<string\>, int, Random\) Method
+
+Draws a reproducible sample of the given size from a list of references\.
+
+```csharp
+private static System.Collections.Generic.List<string> Sample(System.Collections.Generic.List<string> references, int sampleSize, System.Random random);
+```
+#### Parameters
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIBuildingModelsVerificationTask.Sample(System.Collections.Generic.List_string_,int,System.Random).references'></a>
+
+`references` [System\.Collections\.Generic\.List&lt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.list-1 'System\.Collections\.Generic\.List\`1')[System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')[&gt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.list-1 'System\.Collections\.Generic\.List\`1')
+
+The references to draw from\.
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIBuildingModelsVerificationTask.Sample(System.Collections.Generic.List_string_,int,System.Random).sampleSize'></a>
+
+`sampleSize` [System\.Int32](https://learn.microsoft.com/en-us/dotnet/api/system.int32 'System\.Int32')
+
+The number of references to draw\. A value of zero or less takes them all\.
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIBuildingModelsVerificationTask.Sample(System.Collections.Generic.List_string_,int,System.Random).random'></a>
+
+`random` [System\.Random](https://learn.microsoft.com/en-us/dotnet/api/system.random 'System\.Random')
+
+The random source, seeded by the caller so the draw can be repeated\.
+
+#### Returns
+[System\.Collections\.Generic\.List&lt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.list-1 'System\.Collections\.Generic\.List\`1')[System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')[&gt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.list-1 'System\.Collections\.Generic\.List\`1')  
+The drawn references\.
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIBuildingModelsVerificationTask.Text(double)'></a>
+
+## UIBuildingModelsVerificationTask\.Text\(double\) Method
+
+Formats a value for the report, writing an empty cell rather than the word for not a number\.
+
+```csharp
+private static string Text(double value);
+```
+#### Parameters
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIBuildingModelsVerificationTask.Text(double).value'></a>
+
+`value` [System\.Double](https://learn.microsoft.com/en-us/dotnet/api/system.double 'System\.Double')
+
+The value to format\.
+
+#### Returns
+[System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')  
+The formatted value, or an empty string when it is not a number\.
 
 <a name='DiGi.GIS.PostgreSQL.UI.Classes.UIBuildingsFromDirectoryPostTask'></a>
 

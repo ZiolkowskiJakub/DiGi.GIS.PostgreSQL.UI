@@ -17,6 +17,8 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
     /// A post task that generates <see cref="DiGi.Analytical.Building.Classes.BuildingModel"/> instances entirely from data already held on the server - the CityGML <see cref="CityGML.Classes.Building"/> records stored in the database are used instead of CityGML archives read from a local directory.
     /// <para>For every county in scope the task pages through the county's <see cref="Building2DReference"/> records and, per page, downloads the <see cref="GIS.Classes.Building2D"/> data, so a whole county's buildings are never held in memory at once.</para>
     /// <para>Each <see cref="GIS.Classes.Building2D"/> is then processed individually: its single best ranked CityGML <see cref="CityGML.Classes.Building"/> is pulled by reference through <see cref="BuildingController.GetItemByReferenceAsync"/> and refined into storeys by the matching <c>Analytical.Create.BuildingModel</c> overload. A 2D building whose reference has no stored CityGML building, no reference at all, or whose pull fails is modelled from an extruded footprint instead.</para>
+    /// <para><b>"County" here means one polygon part.</b> The county listing returns 406 references for 380 codes, because a county whose territory is disconnected is stored as one row per part. The task reads and uploads by <c>Id</c>, so each part is filled from its own <c>building_2d</c> rows; uploading by <c>Code</c> instead would let the server file every part's models under a single one, which is what left three counties reading back empty. The county code is still written onto each model as descriptive metadata.</para>
+    /// <para>Because <c>building_2d</c> holds the same building under every part it was imported under, a building shared by two parts is modelled once per part. That is inherent to keying by part and is not a duplicate to suppress here - it mirrors the underlying table.</para>
     /// </summary>
     public class UIBuildingModelsFromDatabasePostTask : BuildingModelsPostTask, IGISPostgreSQLUIObject
     {
@@ -266,7 +268,9 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
                                 continue;
                             }
 
-                            // Carry the county code as metadata (parity with Building); the server resolves the code passed on the upload to a county id.
+                            // Carry the county code as metadata (parity with Building). It is descriptive only -
+                            // the upload is keyed by countyId, because a code covers every polygon part of a
+                            // multi-part county and would let the server file this part's models under another.
                             buildingModel.SetValue(Analytical.Enums.BuildingModelParameter.Code, administrativeAreal2DReference.Code, new SetValueSettings(true, false));
                             buildingModel.SetValue(Analytical.Enums.BuildingModelParameter.Reference, reference, new SetValueSettings(true, false));
                             buildingModels.Add(buildingModel);
@@ -274,7 +278,7 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
 
                         if (buildingModels.Count != 0)
                         {
-                            if (!await ExecuteAsync(buildingModels, administrativeAreal2DReference.Code, longProgressWrapper, cancellationToken))
+                            if (!await ExecuteAsync(buildingModels, countyId, longProgressWrapper, cancellationToken))
                             {
                                 Serilog.Modify.Log(Serilog.Enums.LogEventLevel.Error, "BuildingModels could not be uploaded for county {CountyId}", countyId);
                                 return false;

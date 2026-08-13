@@ -139,6 +139,11 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
 
                 Dictionary<int, List<string>> references_Delete_ByCountyId = [];
 
+                // Derived once per code: a part's polygon is the same for every building tested against it,
+                // and deriving it deserializes a county-sized geometry. Handing the rows themselves to
+                // Query.CountyId would repeat that for each of the tens of thousands of duplicated references.
+                Dictionary<int, IPolygonal2D> polygonal2Ds_ByCountyId = administrativeAreal2Ds_Code.Polygonal2DsByCountyId();
+
                 int count_Kept_Code = 0;
                 int count_Moved_Code = 0;
 
@@ -160,7 +165,7 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
 
                     IPolygonal2D? polygonal2D = building2D?.ToDiGi()?.PolygonalFace2D?.ExternalEdge;
 
-                    int? countyId_Resolved = Query.CountyId(administrativeAreal2Ds_Code, polygonal2D);
+                    int? countyId_Resolved = Query.CountyId(polygonal2Ds_ByCountyId, polygonal2D);
                     if (countyId_Resolved is null || !countyIds_Reference.Contains(countyId_Resolved.Value))
                     {
                         // The part the footprint belongs to holds no copy to keep, so moving it would mean

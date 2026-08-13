@@ -91,7 +91,24 @@ namespace DiGi.GIS.PostgreSQL.UI
                     result.Add(DiGi.UI.WPF.Create.VisualBackgroundTask(new PostgreSQLUpdateOccupancyTask(gISPostgreSQLConverterManager), "Update occupancy from database", "Update occupancy for Building2Ds and AdministrativeAreal2Ds based on data in database"));
 
                     // Reports only until DryRun is turned off - the deletes it describes have no undo.
-                    result.Add(DiGi.UI.WPF.Create.VisualBackgroundTask(new PostgreSQLBuilding2DCountyPartRepairTask(gISPostgreSQLConverterManager), "Report Building2D county part duplicates", "Reports Building2Ds held under more than one polygon part of the same county and which part each belongs to. Dry run - deletes nothing until DryRun is turned off"));
+                    // Scoped to the three codes whose parts both hold buildings; clear Codes to sweep all 18 multi-part codes.
+                    result.Add(DiGi.UI.WPF.Create.VisualBackgroundTask(new PostgreSQLBuilding2DCountyPartRepairTask(gISPostgreSQLConverterManager)
+                    {
+                        Codes = ["2212", "2405", "2612"],
+                        DryRun = true
+                    },
+                    "Report Building2D county part duplicates", "Reports Building2Ds held under more than one polygon part of the same county and which part each belongs to. Dry run - deletes nothing until DryRun is turned off"));
+
+                    // Reports only until DryRun is turned off - the deletes it describes have no undo.
+                    // Scoped to the regeneration pilot; clear CountyIds to clean every part. RemoveOrphans stays off
+                    // until the repair report shows buildings moved away from the part holding their models.
+                    result.Add(DiGi.UI.WPF.Create.VisualBackgroundTask(new PostgreSQLBuildingModelCleanupTask(gISPostgreSQLConverterManager)
+                    {
+                        CountyIds = [5],
+                        DryRun = true,
+                        RemoveOrphans = false
+                    },
+                    "Clean up superseded BuildingModels", "Reports BuildingModel rows a regeneration has already replaced but not removed, and optionally models whose building no longer exists under the part. Dry run - deletes nothing until DryRun is turned off"));
                 }
             }
 
@@ -110,8 +127,23 @@ namespace DiGi.GIS.PostgreSQL.UI
 
                     result.Add(DiGi.UI.WPF.Create.VisualBackgroundTask(new UIBuildingsFromDirectoryPostTask(GISWebAPIManager), "Create CityGML Buildings from directory", "Creates Buildings for Building2Ds from database based on CityGML files saved in directory"));
                     result.Add(DiGi.UI.WPF.Create.VisualBackgroundTask(new UIBuildingModelsFromDirectoryPostTask(GISWebAPIManager), "Create BuildingModels from directory", "Creates BuildingModels for Building2Ds from database based on CityGML files saved in directory"));
-                    result.Add(DiGi.UI.WPF.Create.VisualBackgroundTask(new UIBuildingModelsFromDatabasePostTask(GISWebAPIManager), "Create BuildingModels from database", "Creates BuildingModels for Building2Ds from database based on CityGML Buildings stored in database"));
-                    result.Add(DiGi.UI.WPF.Create.VisualBackgroundTask(new UIBuildingModelsVerificationTask(GISWebAPIManager), "Verify BuildingModels from database", "Reads BuildingModels stored in database and reports completeness and space enclosure. Read only - nothing is uploaded"));
+                    // Pilot scope: one county part, so a run can be repeated and the row count compared. Clear CountyIds
+                    // for a national pass, and turn MaxConcurrentRequests down if the server or GUGiK starts refusing.
+                    result.Add(DiGi.UI.WPF.Create.VisualBackgroundTask(new UIBuildingModelsFromDatabasePostTask(GISWebAPIManager)
+                    {
+                        CountyIds = [5],
+                        MaxConcurrentRequests = 8
+                    },
+                    "Create BuildingModels from database", "Creates BuildingModels for Building2Ds from database based on CityGML Buildings stored in database"));
+
+                    // The seed and the sample size are what make two runs comparable - they match the 2026-08-11 baseline
+                    // and should not be changed without restating the baseline they are being compared against.
+                    result.Add(DiGi.UI.WPF.Create.VisualBackgroundTask(new UIBuildingModelsVerificationTask(GISWebAPIManager)
+                    {
+                        RandomSeed = 20260811,
+                        SampleSize = 200
+                    },
+                    "Verify BuildingModels from database", "Reads BuildingModels stored in database and reports completeness and space enclosure. Read only - nothing is uploaded"));
 
 
                     result.Add(DiGi.UI.WPF.Create.VisualBackgroundTask(new UIOrtoDatasFromFilePostTask(GISWebAPIManager)

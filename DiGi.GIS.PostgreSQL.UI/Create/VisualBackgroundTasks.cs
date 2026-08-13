@@ -89,6 +89,9 @@ namespace DiGi.GIS.PostgreSQL.UI
                     "Refresh OrtoDatas", "Refreshes OrtoDatas table in database"));
 
                     result.Add(DiGi.UI.WPF.Create.VisualBackgroundTask(new PostgreSQLUpdateOccupancyTask(gISPostgreSQLConverterManager), "Update occupancy from database", "Update occupancy for Building2Ds and AdministrativeAreal2Ds based on data in database"));
+
+                    // Reports only until DryRun is turned off - the deletes it describes have no undo.
+                    result.Add(DiGi.UI.WPF.Create.VisualBackgroundTask(new PostgreSQLBuilding2DCountyPartRepairTask(gISPostgreSQLConverterManager), "Report Building2D county part duplicates", "Reports Building2Ds held under more than one polygon part of the same county and which part each belongs to. Dry run - deletes nothing until DryRun is turned off"));
                 }
             }
 

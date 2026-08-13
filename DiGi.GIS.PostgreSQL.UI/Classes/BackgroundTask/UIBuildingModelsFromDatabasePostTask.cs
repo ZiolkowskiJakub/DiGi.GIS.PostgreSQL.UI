@@ -1,4 +1,6 @@
 using DiGi.Core.Parameter.Classes;
+using DiGi.Geometry.Planar.Classes;
+using DiGi.Geometry.Spatial.Classes;
 using DiGi.GIS.Classes;
 using DiGi.GIS.PostgreSQL.Classes;
 using DiGi.GIS.PostgreSQL.Enums;
@@ -35,6 +37,12 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
         /// Gets or sets the identifiers of the counties to be processed. When null every county held on the server is processed.
         /// </summary>
         public IEnumerable<int>? CountyIds { get; set; } = null;
+
+        /// <summary>
+        /// Gets or sets how many CityGML and terrain requests are allowed to be in flight at once.
+        /// <para>One CityGML request per building at roughly 60 ms each makes a national pass a matter of weeks when they are issued one after another. The requests are independent, so they are issued in groups of this size. Lower it if the server or the terrain service starts refusing.</para>
+        /// </summary>
+        public int MaxConcurrentRequests { get; set; } = 8;
 
         /// <summary>
         /// Gets or sets the number of <see cref="Building2DReference"/> items requested per page while downloading a county's buildings.
@@ -204,61 +212,111 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
                     {
                         List<DiGi.Analytical.Building.Classes.BuildingModel> buildingModels = [];
 
-                        foreach (GIS.Classes.Building2D building2D in building2Ds)
+                        List<GIS.Classes.Building2D> building2Ds_Referenced = building2Ds.FindAll(x => x is not null && !string.IsNullOrWhiteSpace(x.Reference));
+
+                        // The CityGML pull is what the run is made of - one request per building, and at ~60 ms
+                        // each a national pass takes weeks sequentially. The requests are independent, so they
+                        // go out in bounded groups instead; the geometry that follows stays serial because it
+                        // is a fraction of the cost.
+                        CityGML.Classes.Building?[] buildings = new CityGML.Classes.Building?[building2Ds_Referenced.Count];
+                        bool[] failures = new bool[building2Ds_Referenced.Count];
+
+                        int maxConcurrentRequests = MaxConcurrentRequests < 1 ? 1 : MaxConcurrentRequests;
+
+                        for (int i = 0; i < building2Ds_Referenced.Count; i += maxConcurrentRequests)
                         {
                             cancellationToken.ThrowIfCancellationRequested();
 
-                            if (building2D is null)
+                            List<Task> tasks = [];
+                            for (int j = i; j < System.Math.Min(i + maxConcurrentRequests, building2Ds_Referenced.Count); j++)
                             {
-                                continue;
-                            }
+                                int index = j;
 
-                            DiGi.Analytical.Building.Classes.BuildingModel? buildingModel = null;
+                                string requestUri_Building = new UrlBuilder(path_Building).AddParameter("reference", building2Ds_Referenced[index].Reference).AddParameter("countyid", countyId).ToString();
 
-                            string? reference = building2D.Reference;
-                            if (string.IsNullOrWhiteSpace(reference))
-                            {
-                                // No reference to look up - extrude the model from the footprint.
-                                // buildingModel = Analytical.Create.BuildingModel(building2D);
-                                continue;
-                            }
-
-                            string requestUri_Building = new UrlBuilder(path_Building).AddParameter("reference", reference).AddParameter("countyid", countyId).ToString();
-
-                            try
-                            {
-                                PostResponse<CityGML.Classes.Building?> postResponse_Building = await DiGi.WebAPI.Query.GetAsync<CityGML.Classes.Building>(httpClient_Building, requestUri_Building, postOptions);
-
-                                // A 204 (no matching CityGML building) is a success with a null result; the combined method then extrudes the footprint itself.
-                                CityGML.Classes.Building? building = postResponse_Building is not null && postResponse_Building.Succeeded ? postResponse_Building.Result : null;
-                                buildingModel = await Analytical.Create.BuildingModelAsync(httpClient_GUGiK, building, building2D);
-
-                                // A building whose CityGML geometry cannot be converted is silently extruded from
-                                // its footprint instead, which loses every wall and roof shape it had and is
-                                // otherwise indistinguishable from a building that never had CityGML at all.
-                                // The two cases are worth telling apart in the log.
-                                if (building is not null && buildingModel is not null && buildingModel.GetComponents<DiGi.Analytical.Building.Interfaces.IComponent>() is List<DiGi.Analytical.Building.Interfaces.IComponent> components_Created)
+                                tasks.Add(Task.Run(async () =>
                                 {
-                                    int count_Surfaces = 0;
-                                    foreach (CityGML.Interfaces.ISurface surface in building.Surfaces ?? [])
+                                    try
                                     {
-                                        count_Surfaces++;
-                                    }
+                                        PostResponse<CityGML.Classes.Building?> postResponse_Building = await DiGi.WebAPI.Query.GetAsync<CityGML.Classes.Building>(httpClient_Building, requestUri_Building, postOptions);
 
-                                    if (count_Surfaces != 0 && components_Created.Count != count_Surfaces)
-                                    {
-                                        Serilog.Modify.Log(Serilog.Enums.LogEventLevel.Warning, "BuildingModel for reference {Reference} in county {CountyId} holds {Components} components for {Surfaces} CityGML surfaces - the 3D geometry was not carried over in full", reference, countyId, components_Created.Count, count_Surfaces);
+                                        // A 204 (no matching CityGML building) is a success with a null result; the footprint is extruded instead.
+                                        buildings[index] = postResponse_Building is not null && postResponse_Building.Succeeded ? postResponse_Building.Result : null;
                                     }
-                                }
+                                    catch (Exception exception) when (!cancellationToken.IsCancellationRequested)
+                                    {
+                                        Serilog.Modify.Log(exception, "Building request failed for reference {Reference} in county {CountyId} - generating model from footprint", building2Ds_Referenced[index].Reference ?? string.Empty, countyId);
+                                        failures[index] = true;
+                                    }
+                                }, cancellationToken));
                             }
-                            catch (Exception exception) when (!cancellationToken.IsCancellationRequested)
+
+                            await Task.WhenAll(tasks);
+                        }
+
+                        // Built with the elevation withheld, exactly as Analytical.Create.BuildingModelAsync does:
+                        // a model that comes back carried its own elevations in the 3D geometry, and only the ones
+                        // that fall through to an extrusion need the terrain.
+                        DiGi.Analytical.Building.Classes.BuildingModel?[] buildingModels_Page = new DiGi.Analytical.Building.Classes.BuildingModel?[building2Ds_Referenced.Count];
+                        List<int> indexes_Elevation = [];
+
+                        for (int i = 0; i < building2Ds_Referenced.Count; i++)
+                        {
+                            cancellationToken.ThrowIfCancellationRequested();
+
+                            if (failures[i])
                             {
-                                Serilog.Modify.Log(exception, "Building request failed for reference {Reference} in county {CountyId} - generating model from footprint", reference, countyId);
-
                                 // No terrain query on this path - the model is extruded at an elevation of zero rather than dropped.
-                                buildingModel = Analytical.Create.BuildingModel(building2D);
+                                buildingModels_Page[i] = Analytical.Create.BuildingModel(building2Ds_Referenced[i]);
+                                continue;
                             }
 
+                            buildingModels_Page[i] = Analytical.Create.BuildingModel(buildings[i], building2Ds_Referenced[i], double.NaN);
+                            if (buildingModels_Page[i] is null)
+                            {
+                                indexes_Elevation.Add(i);
+                            }
+                        }
+
+                        if (indexes_Elevation.Count != 0)
+                        {
+                            List<Point2D> point2Ds = [];
+                            foreach (int index in indexes_Elevation)
+                            {
+                                Point2D? point2D = building2Ds_Referenced[index].PolygonalFace2D?.GetInternalPoint();
+                                point2Ds.Add(point2D ?? new Point2D(double.NaN, double.NaN));
+                            }
+
+                            List<Point3D>? point3Ds = await GIS.Query.ElevationsAsync(httpClient_GUGiK, point2Ds, maxConcurrentRequests);
+
+                            // The helper drops the points it could not resolve, so the answers are matched back by
+                            // coordinate rather than by position. They are the same doubles that were sent.
+                            Dictionary<(double X, double Y), double> elevations = [];
+                            foreach (Point3D point3D in point3Ds ?? [])
+                            {
+                                elevations[(point3D.X, point3D.Y)] = point3D.Z;
+                            }
+
+                            for (int i = 0; i < indexes_Elevation.Count; i++)
+                            {
+                                cancellationToken.ThrowIfCancellationRequested();
+
+                                int index = indexes_Elevation[i];
+
+                                // An unresolved point falls back to zero, the same as an unreachable service.
+                                double elevation = elevations.TryGetValue((point2Ds[i].X, point2Ds[i].Y), out double elevation_Temp) ? elevation_Temp : 0;
+
+                                buildingModels_Page[index] = Analytical.Create.BuildingModel(buildings[index], building2Ds_Referenced[index], elevation);
+                            }
+                        }
+
+                        for (int i = 0; i < building2Ds_Referenced.Count; i++)
+                        {
+                            GIS.Classes.Building2D building2D = building2Ds_Referenced[i];
+
+                            string reference = building2D.Reference!;
+
+                            DiGi.Analytical.Building.Classes.BuildingModel? buildingModel = buildingModels_Page[i];
                             if (buildingModel is null)
                             {
                                 // A null result no longer means the terrain service was unreachable - the creator extrudes at an elevation of
@@ -266,6 +324,24 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
                                 // county import short, so every loss is logged.
                                 Serilog.Modify.Log(Serilog.Enums.LogEventLevel.Warning, "BuildingModel could not be created for reference {Reference} in county {CountyId} - the building is not part of the upload", reference, countyId);
                                 continue;
+                            }
+
+                            // A building whose CityGML geometry cannot be converted is silently extruded from
+                            // its footprint instead, which loses every wall and roof shape it had and is
+                            // otherwise indistinguishable from a building that never had CityGML at all.
+                            // The two cases are worth telling apart in the log.
+                            if (buildings[i] is CityGML.Classes.Building building && buildingModel.GetComponents<DiGi.Analytical.Building.Interfaces.IComponent>() is List<DiGi.Analytical.Building.Interfaces.IComponent> components_Created)
+                            {
+                                int count_Surfaces = 0;
+                                foreach (CityGML.Interfaces.ISurface surface in building.Surfaces ?? [])
+                                {
+                                    count_Surfaces++;
+                                }
+
+                                if (count_Surfaces != 0 && components_Created.Count != count_Surfaces)
+                                {
+                                    Serilog.Modify.Log(Serilog.Enums.LogEventLevel.Warning, "BuildingModel for reference {Reference} in county {CountyId} holds {Components} components for {Surfaces} CityGML surfaces - the 3D geometry was not carried over in full", reference, countyId, components_Created.Count, count_Surfaces);
+                                }
                             }
 
                             // Carry the county code as metadata (parity with Building). It is descriptive only -

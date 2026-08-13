@@ -118,7 +118,7 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
                     continue;
                 }
 
-                Serilog.Modify.Log("Part {CountyId}: superseded models {Superseded}, models without a building {Orphaned}", countyId, count_Superseded_County, references_Orphaned.Count);
+                Serilog.Modify.Log("Part {CountyId}: superseded models {Superseded}, references without a building {Orphaned}", countyId, count_Superseded_County, references_Orphaned.Count);
 
                 count_Superseded += count_Superseded_County;
                 count_Orphaned += references_Orphaned.Count;
@@ -151,16 +151,18 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
                     int count = ids?.Count ?? 0;
                     count_Deleted += count;
 
-                    if (count != references_Orphaned.Count)
+                    // More rows than references is the normal case rather than a fault - a reference the upsert could
+                    // not match holds one row per run that wrote it. Fewer means the table no longer holds what was read.
+                    if (count < references_Orphaned.Count)
                     {
-                        Serilog.Modify.Log(Serilog.Enums.LogEventLevel.Warning, "Part {CountyId}: {Deleted}/{Counted} models without a building deleted - the table did not hold what was counted", countyId, count, references_Orphaned.Count);
+                        Serilog.Modify.Log(Serilog.Enums.LogEventLevel.Warning, "Part {CountyId}: {Deleted} rows deleted for {Counted} references without a building - the table did not hold what was read", countyId, count, references_Orphaned.Count);
                     }
 
                     longProgressWrapper?.Increment(count);
                 }
             }
 
-            Serilog.Modify.Log("{Type} ended. DryRun: {DryRun}. Superseded models {Superseded}, models without a building {Orphaned}, rows deleted {Deleted}", nameof(PostgreSQLBuildingModelCleanupTask), DryRun, count_Superseded, count_Orphaned, count_Deleted);
+            Serilog.Modify.Log("{Type} ended. DryRun: {DryRun}. Superseded models {Superseded}, references without a building {Orphaned}, rows deleted {Deleted}", nameof(PostgreSQLBuildingModelCleanupTask), DryRun, count_Superseded, count_Orphaned, count_Deleted);
 
             return true;
         }

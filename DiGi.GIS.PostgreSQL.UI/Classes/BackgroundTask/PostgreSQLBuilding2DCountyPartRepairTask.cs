@@ -242,7 +242,9 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
 
                 foreach (KeyValuePair<int, List<string>> keyValuePair_Delete in references_Delete_ByCountyId)
                 {
-                    Serilog.Modify.Log("Code {Code}: {Count} copies would be deleted from part {CountyId}", code, keyValuePair_Delete.Value.Count, keyValuePair_Delete.Key);
+                    // The tense follows DryRun: a live run used to report what "would be" deleted, which left the
+                    // log of an irreversible change reading like a rehearsal of one.
+                    Serilog.Modify.Log("Code {Code}: {Count} copies {Verb} from part {CountyId}", code, keyValuePair_Delete.Value.Count, DryRun ? "would be deleted" : "to delete", keyValuePair_Delete.Key);
                 }
 
                 summaryLines.Add($"{code};{string.Join(" ", administrativeAreal2Ds_Code.ConvertAll(x => x.Id))};{count_Kept_Code + count_Moved_Code};{count_Kept_Code};{count_Moved_Code};{count_Delete_Code}");

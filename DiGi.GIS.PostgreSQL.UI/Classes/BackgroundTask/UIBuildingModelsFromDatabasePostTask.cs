@@ -264,17 +264,29 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
                         {
                             cancellationToken.ThrowIfCancellationRequested();
 
-                            if (failures[i])
+                            // One building whose geometry the creator cannot handle used to end the whole run: the
+                            // exception left the task, and BackgroundTask stores it without logging, so a county
+                            // stopped mid-page with no upload and no recorded reason. A building that throws is now
+                            // named and skipped, exactly as one that converts to null already was.
+                            try
                             {
-                                // No terrain query on this path - the model is extruded at an elevation of zero rather than dropped.
-                                buildingModels_Page[i] = Analytical.Create.BuildingModel(building2Ds_Referenced[i]);
-                                continue;
-                            }
+                                if (failures[i])
+                                {
+                                    // No terrain query on this path - the model is extruded at an elevation of zero rather than dropped.
+                                    buildingModels_Page[i] = Analytical.Create.BuildingModel(building2Ds_Referenced[i]);
+                                    continue;
+                                }
 
-                            buildingModels_Page[i] = Analytical.Create.BuildingModel(buildings[i], building2Ds_Referenced[i], double.NaN);
-                            if (buildingModels_Page[i] is null)
+                                buildingModels_Page[i] = Analytical.Create.BuildingModel(buildings[i], building2Ds_Referenced[i], double.NaN);
+                                if (buildingModels_Page[i] is null)
+                                {
+                                    indexes_Elevation.Add(i);
+                                }
+                            }
+                            catch (Exception exception) when (!cancellationToken.IsCancellationRequested)
                             {
-                                indexes_Elevation.Add(i);
+                                Serilog.Modify.Log(exception, "BuildingModel could not be created for reference {Reference} in county {CountyId} - the building is not part of the upload", building2Ds_Referenced[i].Reference ?? string.Empty, countyId);
+                                buildingModels_Page[i] = null;
                             }
                         }
 
@@ -306,7 +318,17 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
                                 // An unresolved point falls back to zero, the same as an unreachable service.
                                 double elevation = elevations.TryGetValue((point2Ds[i].X, point2Ds[i].Y), out double elevation_Temp) ? elevation_Temp : 0;
 
-                                buildingModels_Page[index] = Analytical.Create.BuildingModel(buildings[index], building2Ds_Referenced[index], elevation);
+                                // Same reasoning as the first pass: a building the creator cannot handle is named
+                                // and skipped rather than taking the county down with it.
+                                try
+                                {
+                                    buildingModels_Page[index] = Analytical.Create.BuildingModel(buildings[index], building2Ds_Referenced[index], elevation);
+                                }
+                                catch (Exception exception) when (!cancellationToken.IsCancellationRequested)
+                                {
+                                    Serilog.Modify.Log(exception, "BuildingModel could not be created at elevation {Elevation} for reference {Reference} in county {CountyId} - the building is not part of the upload", elevation, building2Ds_Referenced[index].Reference ?? string.Empty, countyId);
+                                    buildingModels_Page[index] = null;
+                                }
                             }
                         }
 
@@ -373,6 +395,8 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
                         break;
                     }
                 }
+
+                Serilog.Modify.Log("County {Code} (id {CountyId}) ended", administrativeAreal2DReference.Code ?? string.Empty, countyId);
             }
 
             return true;

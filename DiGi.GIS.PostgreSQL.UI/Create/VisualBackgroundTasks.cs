@@ -90,14 +90,20 @@ namespace DiGi.GIS.PostgreSQL.UI
 
                     result.Add(DiGi.UI.WPF.Create.VisualBackgroundTask(new PostgreSQLUpdateOccupancyTask(gISPostgreSQLConverterManager), "Update occupancy from database", "Update occupancy for Building2Ds and AdministrativeAreal2Ds based on data in database"));
 
-                    // Reports only until DryRun is turned off - the deletes it describes have no undo.
+                    // ARMED: DryRun is off, so this deletes. The dry run of 2026-08-14 was reviewed first and
+                    // matched an independent count derived from the parts' own subdivisions on every code -
+                    // 10 197 from 73482, 24 257 from 76989 and 3 from 76984, 51 739 from 86713.
+                    // It only ever deletes a copy of a reference held by more than one part, keeping the part the
+                    // footprint lies in, so no building loses its last row. Turn DryRun back on once the three
+                    // codes are repaired; re-running against repaired data is a no-op either way, because a
+                    // reference held by a single part is skipped.
                     // Scoped to the three codes whose parts both hold buildings; clear Codes to sweep all 18 multi-part codes.
                     result.Add(DiGi.UI.WPF.Create.VisualBackgroundTask(new PostgreSQLBuilding2DCountyPartRepairTask(gISPostgreSQLConverterManager)
                     {
                         Codes = ["2212", "2405", "2612"],
-                        DryRun = true
+                        DryRun = false
                     },
-                    "Report Building2D county part duplicates", "Reports Building2Ds held under more than one polygon part of the same county and which part each belongs to. Dry run - deletes nothing until DryRun is turned off"));
+                    "Repair Building2D county parts (DELETES duplicate copies)", "Re-files each Building2D held under more than one polygon part of the same county under the part its footprint lies in, and DELETES the copies left under the other parts. DryRun is off - this writes and has no undo. Review Building2D_CountyPartRepair.csv from the dry run first"));
 
                     // Reports only until DryRun is turned off - the deletes it describes have no undo.
                     // Scoped to the regeneration pilot; clear CountyIds to clean every part. RemoveOrphans stays off

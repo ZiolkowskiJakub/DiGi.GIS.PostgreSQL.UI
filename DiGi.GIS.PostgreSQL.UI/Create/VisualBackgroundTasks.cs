@@ -121,16 +121,21 @@ namespace DiGi.GIS.PostgreSQL.UI
                     },
                     "Report Building2D county part duplicates", "Reports Building2Ds held under more than one polygon part of the same county and which part each belongs to. Dry run - deletes nothing until DryRun is turned off"));
 
-                    // Reports only until DryRun is turned off - the deletes it describes have no undo.
+                    // ARMED, and meant to stay that way: a row is removed only when a correctly keyed row for the
+                    // same building already sits beside it, so no building can lose its only model and a county
+                    // that has not been regenerated is untouched. That makes it safe to run after each county of
+                    // the national pass, unlike the repair above, which deletes buildings.
+                    // The 2026-08-14 dry run over county 5 reported 33 687 superseded rows - one per building -
+                    // and 0 references without a building, matching an audit of 300 references at 2 models each.
                     // Scoped to the regeneration pilot; clear CountyIds to clean every part. RemoveOrphans stays off
                     // until the repair report shows buildings moved away from the part holding their models.
                     result.Add(Visual(new PostgreSQLBuildingModelCleanupTask(gISPostgreSQLConverterManager)
                     {
                         CountyIds = [5],
-                        DryRun = true,
+                        DryRun = false,
                         RemoveOrphans = false
                     },
-                    "Clean up superseded BuildingModels", "Reports BuildingModel rows a regeneration has already replaced but not removed, and optionally models whose building no longer exists under the part. Dry run - deletes nothing until DryRun is turned off"));
+                    "Clean up superseded BuildingModels (DELETES replaced rows)", "Removes BuildingModel rows a regeneration has already replaced, keeping the correctly keyed row beside them, and optionally models whose building no longer exists under the part. DryRun is off - this writes and has no undo"));
                 }
             }
 

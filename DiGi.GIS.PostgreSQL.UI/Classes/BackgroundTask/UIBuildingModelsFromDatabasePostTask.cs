@@ -258,6 +258,7 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
                         // a model that comes back carried its own elevations in the 3D geometry, and only the ones
                         // that fall through to an extrusion need the terrain.
                         DiGi.Analytical.Building.Classes.BuildingModel?[] buildingModels_Page = new DiGi.Analytical.Building.Classes.BuildingModel?[building2Ds_Referenced.Count];
+                        bool[] failures_Reported = new bool[building2Ds_Referenced.Count];
                         List<int> indexes_Elevation = [];
 
                         for (int i = 0; i < building2Ds_Referenced.Count; i++)
@@ -287,6 +288,9 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
                             {
                                 Serilog.Modify.Log(exception, "BuildingModel could not be created for reference {Reference} in county {CountyId} - the building is not part of the upload", building2Ds_Referenced[i].Reference ?? string.Empty, countyId);
                                 buildingModels_Page[i] = null;
+
+                                // Already reported with its exception; the loss check below would otherwise say so again.
+                                failures_Reported[i] = true;
                             }
                         }
 
@@ -328,6 +332,7 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
                                 {
                                     Serilog.Modify.Log(exception, "BuildingModel could not be created at elevation {Elevation} for reference {Reference} in county {CountyId} - the building is not part of the upload", elevation, building2Ds_Referenced[index].Reference ?? string.Empty, countyId);
                                     buildingModels_Page[index] = null;
+                                    failures_Reported[index] = true;
                                 }
                             }
                         }
@@ -343,8 +348,13 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
                             {
                                 // A null result no longer means the terrain service was unreachable - the creator extrudes at an elevation of
                                 // zero in that case - so the geometry itself could not be converted. Dropping it silently would let a whole
-                                // county import short, so every loss is logged.
-                                Serilog.Modify.Log(Serilog.Enums.LogEventLevel.Warning, "BuildingModel could not be created for reference {Reference} in county {CountyId} - the building is not part of the upload", reference, countyId);
+                                // county import short, so every loss is logged - unless it threw, in which case it was already reported
+                                // above with its exception and saying so twice only doubles the size of a national run's log.
+                                if (!failures_Reported[i])
+                                {
+                                    Serilog.Modify.Log(Serilog.Enums.LogEventLevel.Warning, "BuildingModel could not be created for reference {Reference} in county {CountyId} - the building is not part of the upload", reference, countyId);
+                                }
+
                                 continue;
                             }
 

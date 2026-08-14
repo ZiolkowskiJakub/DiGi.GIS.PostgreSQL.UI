@@ -24,6 +24,10 @@
   <ItemGroup>
     <PackageReference Include="NetTopologySuite" Version="2.6.0" />
     <PackageReference Include="Npgsql" Version="10.0.2" />
+    <!-- DiGi.Geometry is referenced by HintPath, so its NuGet dependencies do not reach this host.
+         Without this the storey split throws FileNotFoundException per building at runtime and the
+         county silently loses every model that needed one - it builds and tests clean regardless. -->
+    <PackageReference Include="QuikGraph" Version="2.5.0" />
   </ItemGroup>
 
   <ItemGroup>

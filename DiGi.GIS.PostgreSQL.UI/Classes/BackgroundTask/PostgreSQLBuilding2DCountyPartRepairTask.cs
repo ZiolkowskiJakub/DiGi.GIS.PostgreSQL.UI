@@ -5,7 +5,9 @@ using DiGi.GIS.PostgreSQL.Enums;
 using DiGi.GIS.PostgreSQL.UI.Interfaces;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -16,6 +18,7 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
     /// <para>A county code names one <c>administrative_areal_2d</c> row per polygon part. Imports that resolved a code to a single part filed a whole county's buildings there, and imports that resolved it differently filed them again somewhere else - so the same reference is held under several parts at once. Three codes carry roughly 86 000 such rows today.</para>
     /// <para>Each affected building is re-filed under the part its footprint actually lies in, using the same decision the import now makes (<c>Query.CountyId</c>), and the copies left under the other parts are deleted. A reference held by exactly one part is left untouched, so running this over a healthy county does nothing.</para>
     /// <para><b>Reports by default and writes nothing.</b> <see cref="DryRun"/> has to be turned off deliberately, and the report it produces first is what the delete should be reviewed against - the buildings removed here have no undo.</para>
+    /// <para>The report is written as files into <see cref="ReportDirectory"/> as well as to the log: one row per affected reference in <c>Building2D_CountyPartRepair.csv</c> and per-code totals in <c>Building2D_CountyPartRepair_Summary.txt</c>. The files are what the decision to delete should rest on - a log is shared with whatever else the application is doing and rolls by day, which is no place for the only record of an irreversible change. The row file is flushed per code, so a run interrupted late still leaves everything it had already decided.</para>
     /// </summary>
     public class PostgreSQLBuilding2DCountyPartRepairTask : ReportableBackgroundTask<long>, IGISPostgreSQLUIObject
     {
@@ -40,9 +43,23 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
         /// </summary>
         public bool DryRun { get; set; } = true;
 
+        /// <summary>
+        /// Gets or sets the directory the two report files are written into. When null the directory the application was launched from is used.
+        /// <para>Deliberately not a folder dialog: this runs on a thread pool thread, where a WPF common dialog needs an STA apartment and throws instead of opening. A report that cannot be written is the one thing this task must not fail on.</para>
+        /// </summary>
+        public string? ReportDirectory { get; set; } = null;
+
         /// <inheritdoc />
         protected override async Task<bool> ExecuteAsync(IProgress<long> progress, CancellationToken cancellationToken)
         {
+            string directory = string.IsNullOrWhiteSpace(ReportDirectory) ? AppContext.BaseDirectory : ReportDirectory!;
+
+            if (!Directory.Exists(directory))
+            {
+                Serilog.Modify.Log(Serilog.Enums.LogEventLevel.Error, "Report directory {Directory} does not exist", directory);
+                return false;
+            }
+
             AdministrativeAreal2DPostgreSQLConverter? administrativeAreal2DPostgreSQLConverter = gISPostgreSQLConverterManager?.GetPostgreSQLConverter<AdministrativeAreal2DPostgreSQLConverter>();
             Building2DPostgreSQLConverter? building2DPostgreSQLConverter = gISPostgreSQLConverterManager?.GetPostgreSQLConverter<Building2DPostgreSQLConverter>();
 
@@ -86,6 +103,19 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
             long count_Kept = 0;
             long count_Moved = 0;
             long count_Deleted = 0;
+
+            List<string> summaryLines =
+            [
+                $"Building2D county part repair",
+                $"Started: {DateTime.Now:yyyy-MM-dd HH:mm:ss}",
+                $"DryRun: {DryRun}",
+                $"Codes examined: {administrativeAreal2Ds_ByCode.Count}",
+                string.Empty,
+                "Code;Parts;Duplicated;Kept;Moved;ToDelete"
+            ];
+
+            using StreamWriter streamWriter = new(System.IO.Path.Combine(directory, "Building2D_CountyPartRepair.csv"), false, Encoding.UTF8);
+            await streamWriter.WriteLineAsync("Code;Reference;HeldByCountyIds;ResolvedCountyId;Action;DeleteFromCountyIds");
 
             foreach (KeyValuePair<string, List<AdministrativeAreal2D>> keyValuePair in administrativeAreal2Ds_ByCode)
             {
@@ -171,6 +201,8 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
                         // The part the footprint belongs to holds no copy to keep, so moving it would mean
                         // writing a building rather than removing a duplicate. Left alone and reported.
                         Serilog.Modify.Log(Serilog.Enums.LogEventLevel.Warning, "Code {Code}: reference {Reference} is held by {Count} parts but belongs to {CountyId}, which holds no copy - left untouched", code, reference, countyIds_Reference.Count, countyId_Resolved?.ToString() ?? "none");
+
+                        await streamWriter.WriteLineAsync($"{code};{reference};{string.Join(" ", countyIds_Reference)};{countyId_Resolved?.ToString() ?? string.Empty};LeftUntouched;");
                         continue;
                     }
 
@@ -182,6 +214,10 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
                     {
                         count_Moved_Code++;
                     }
+
+                    List<int> countyIds_Delete = countyIds_Reference.FindAll(x => x != countyId_Resolved.Value);
+
+                    await streamWriter.WriteLineAsync($"{code};{reference};{string.Join(" ", countyIds_Reference)};{countyId_Resolved.Value};{(countyId_Resolved.Value == countyIds_Reference[0] ? "Kept" : "Moved")};{string.Join(" ", countyIds_Delete)}");
 
                     foreach (int countyId in countyIds_Reference)
                     {
@@ -209,8 +245,18 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
                     Serilog.Modify.Log("Code {Code}: {Count} copies would be deleted from part {CountyId}", code, keyValuePair_Delete.Value.Count, keyValuePair_Delete.Key);
                 }
 
+                summaryLines.Add($"{code};{string.Join(" ", administrativeAreal2Ds_Code.ConvertAll(x => x.Id))};{count_Kept_Code + count_Moved_Code};{count_Kept_Code};{count_Moved_Code};{count_Delete_Code}");
+
+                foreach (KeyValuePair<int, List<string>> keyValuePair_Delete in references_Delete_ByCountyId)
+                {
+                    summaryLines.Add($"  part {keyValuePair_Delete.Key}: {keyValuePair_Delete.Value.Count} copies to delete");
+                }
+
                 count_Kept += count_Kept_Code;
                 count_Moved += count_Moved_Code;
+
+                // Flushed per code so a run interrupted late still leaves everything already decided on disk.
+                await streamWriter.FlushAsync(cancellationToken);
 
                 if (DryRun)
                 {
@@ -236,7 +282,17 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
                 }
             }
 
-            Serilog.Modify.Log("{Type} ended. DryRun: {DryRun}. References staying {Kept}, belonging elsewhere {Moved}, copies deleted {Deleted}", nameof(PostgreSQLBuilding2DCountyPartRepairTask), DryRun, count_Kept, count_Moved, count_Deleted);
+            summaryLines.Add(string.Empty);
+            summaryLines.Add($"References staying where they are: {count_Kept}");
+            summaryLines.Add($"References belonging to another part: {count_Moved}");
+            summaryLines.Add($"Copies deleted: {count_Deleted}");
+            summaryLines.Add($"Ended: {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+
+            await streamWriter.FlushAsync(cancellationToken);
+
+            await File.WriteAllLinesAsync(System.IO.Path.Combine(directory, "Building2D_CountyPartRepair_Summary.txt"), summaryLines, cancellationToken);
+
+            Serilog.Modify.Log("{Type} ended. DryRun: {DryRun}. References staying {Kept}, belonging elsewhere {Moved}, copies deleted {Deleted}. Report written to {Directory}", nameof(PostgreSQLBuilding2DCountyPartRepairTask), DryRun, count_Kept, count_Moved, count_Deleted, directory);
 
             return true;
         }

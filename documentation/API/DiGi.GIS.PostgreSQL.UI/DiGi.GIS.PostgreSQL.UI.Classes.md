@@ -53,6 +53,8 @@ Each affected building is re-filed under the part its footprint actually lies in
 
 <b>Reports by default and writes nothing.</b>[DryRun](DiGi.GIS.PostgreSQL.UI.Classes.md#DiGi.GIS.PostgreSQL.UI.Classes.PostgreSQLBuilding2DCountyPartRepairTask.DryRun 'DiGi\.GIS\.PostgreSQL\.UI\.Classes\.PostgreSQLBuilding2DCountyPartRepairTask\.DryRun') has to be turned off deliberately, and the report it produces first is what the delete should be reviewed against - the buildings removed here have no undo.
 
+The report is written as files into [ReportDirectory](DiGi.GIS.PostgreSQL.UI.Classes.md#DiGi.GIS.PostgreSQL.UI.Classes.PostgreSQLBuilding2DCountyPartRepairTask.ReportDirectory 'DiGi\.GIS\.PostgreSQL\.UI\.Classes\.PostgreSQLBuilding2DCountyPartRepairTask\.ReportDirectory') as well as to the log: one row per affected reference in `Building2D_CountyPartRepair.csv` and per-code totals in `Building2D_CountyPartRepair_Summary.txt`. The files are what the decision to delete should rest on - a log is shared with whatever else the application is doing and rolls by day, which is no place for the only record of an irreversible change. The row file is flushed per code, so a run interrupted late still leaves everything it had already decided.
+
 ```csharp
 public class PostgreSQLBuilding2DCountyPartRepairTask : DiGi.Core.Classes.ReportableBackgroundTask<long>, DiGi.GIS.PostgreSQL.UI.Interfaces.IGISPostgreSQLUIObject
 ```
@@ -105,6 +107,21 @@ public bool DryRun { get; set; }
 
 #### Property Value
 [System\.Boolean](https://learn.microsoft.com/en-us/dotnet/api/system.boolean 'System\.Boolean')
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.PostgreSQLBuilding2DCountyPartRepairTask.ReportDirectory'></a>
+
+## PostgreSQLBuilding2DCountyPartRepairTask\.ReportDirectory Property
+
+Gets or sets the directory the two report files are written into\. When null the directory the application was launched from is used\.
+
+Deliberately not a folder dialog: this runs on a thread pool thread, where a WPF common dialog needs an STA apartment and throws instead of opening. A report that cannot be written is the one thing this task must not fail on.
+
+```csharp
+public string? ReportDirectory { get; set; }
+```
+
+#### Property Value
+[System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
 
 <a name='DiGi.GIS.PostgreSQL.UI.Classes.PostgreSQLBuildingModelCleanupTask'></a>
 

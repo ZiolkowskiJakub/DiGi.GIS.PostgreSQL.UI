@@ -121,20 +121,21 @@ namespace DiGi.GIS.PostgreSQL.UI
                     },
                     "Report Building2D county part duplicates", "Reports Building2Ds held under more than one polygon part of the same county and which part each belongs to. Dry run - deletes nothing until DryRun is turned off"));
 
-                    // Back behind DryRun for one run: RemoveOrphans is on for the first time and has never executed.
-                    // The superseded half is proven - county 5 deleted 33 687 rows on 2026-08-14 and a following
-                    // regeneration left the count unchanged - but orphan removal reaches across to a different part
-                    // and deletes a model whose building is gone, so it gets a report before it gets to write.
-                    // All six parts of the three repaired codes: the small ones hold the moved buildings and should
-                    // report nothing once regenerated, the large ones hold the 1 + 6 + 1 model rows left behind.
-                    // Expected: 0 superseded everywhere, 8 references without a building.
+                    // ARMED with RemoveOrphans on. The dry run of 2026-08-14 reported 0 superseded rows on all six
+                    // parts - the three large ones were never regenerated, so nothing there has a correctly keyed
+                    // row beside it - and 5 references without a building: 1 under 73485, 3 under 76984, 1 under
+                    // 86698. Those are exactly the five buildings the repair moved, confirmed by querying the large
+                    // parts with the small parts' own reference lists.
+                    // The delete removes 8 rows for those 5 references: 76984 holds two rows for each of its three,
+                    // from before the keying was fixed. Rows outnumbering references is normal here, which is why
+                    // the count check only complains when fewer come back than were asked for.
                     result.Add(Visual(new PostgreSQLBuildingModelCleanupTask(gISPostgreSQLConverterManager)
                     {
                         CountyIds = [73482, 73485, 76984, 76989, 86698, 86713],
-                        DryRun = true,
+                        DryRun = false,
                         RemoveOrphans = true
                     },
-                    "Clean up superseded BuildingModels", "Reports BuildingModel rows a regeneration has already replaced, and models whose building no longer exists under the part. Dry run - deletes nothing until DryRun is turned off"));
+                    "Clean up superseded BuildingModels (DELETES replaced and orphaned rows)", "Removes BuildingModel rows a regeneration has already replaced, keeping the correctly keyed row beside them, and models whose building no longer exists under the part. DryRun is off - this writes and has no undo"));
                 }
             }
 

@@ -121,21 +121,20 @@ namespace DiGi.GIS.PostgreSQL.UI
                     },
                     "Report Building2D county part duplicates", "Reports Building2Ds held under more than one polygon part of the same county and which part each belongs to. Dry run - deletes nothing until DryRun is turned off"));
 
-                    // ARMED, and meant to stay that way: a row is removed only when a correctly keyed row for the
-                    // same building already sits beside it, so no building can lose its only model and a county
-                    // that has not been regenerated is untouched. That makes it safe to run after each county of
-                    // the national pass, unlike the repair above, which deletes buildings.
-                    // The 2026-08-14 dry run over county 5 reported 33 687 superseded rows - one per building -
-                    // and 0 references without a building, matching an audit of 300 references at 2 models each.
-                    // Scoped to the regeneration pilot; clear CountyIds to clean every part. RemoveOrphans stays off
-                    // until the repair report shows buildings moved away from the part holding their models.
+                    // Back behind DryRun for one run: RemoveOrphans is on for the first time and has never executed.
+                    // The superseded half is proven - county 5 deleted 33 687 rows on 2026-08-14 and a following
+                    // regeneration left the count unchanged - but orphan removal reaches across to a different part
+                    // and deletes a model whose building is gone, so it gets a report before it gets to write.
+                    // All six parts of the three repaired codes: the small ones hold the moved buildings and should
+                    // report nothing once regenerated, the large ones hold the 1 + 6 + 1 model rows left behind.
+                    // Expected: 0 superseded everywhere, 8 references without a building.
                     result.Add(Visual(new PostgreSQLBuildingModelCleanupTask(gISPostgreSQLConverterManager)
                     {
-                        CountyIds = [5],
-                        DryRun = false,
-                        RemoveOrphans = false
+                        CountyIds = [73482, 73485, 76984, 76989, 86698, 86713],
+                        DryRun = true,
+                        RemoveOrphans = true
                     },
-                    "Clean up superseded BuildingModels (DELETES replaced rows)", "Removes BuildingModel rows a regeneration has already replaced, keeping the correctly keyed row beside them, and optionally models whose building no longer exists under the part. DryRun is off - this writes and has no undo"));
+                    "Clean up superseded BuildingModels", "Reports BuildingModel rows a regeneration has already replaced, and models whose building no longer exists under the part. Dry run - deletes nothing until DryRun is turned off"));
                 }
             }
 
@@ -154,11 +153,15 @@ namespace DiGi.GIS.PostgreSQL.UI
 
                     result.Add(Visual(new UIBuildingsFromDirectoryPostTask(GISWebAPIManager), "Create CityGML Buildings from directory", "Creates Buildings for Building2Ds from database based on CityGML files saved in directory"));
                     result.Add(Visual(new UIBuildingModelsFromDirectoryPostTask(GISWebAPIManager), "Create BuildingModels from directory", "Creates BuildingModels for Building2Ds from database based on CityGML files saved in directory"));
-                    // Pilot scope: one county part, so a run can be repeated and the row count compared. Clear CountyIds
-                    // for a national pass, and turn MaxConcurrentRequests down if the server or GUGiK starts refusing.
+                    // The five buildings the county part repair moved to a part holding no models: 1 under 73482,
+                    // 3 under 76989, 1 under 86713. Their models still sit under the sibling part they came from
+                    // and are removed as orphans by the cleanup task, which is scoped to all six parts.
+                    // County 5 was the pilot and is done - 33 687 buildings, regenerated twice with the row count
+                    // unchanged. Clear CountyIds for a national pass, and turn MaxConcurrentRequests down if the
+                    // server or GUGiK starts refusing.
                     result.Add(Visual(new UIBuildingModelsFromDatabasePostTask(GISWebAPIManager)
                     {
-                        CountyIds = [5],
+                        CountyIds = [73482, 76989, 86713],
                         MaxConcurrentRequests = 8
                     },
                     "Create BuildingModels from database", "Creates BuildingModels for Building2Ds from database based on CityGML Buildings stored in database"));

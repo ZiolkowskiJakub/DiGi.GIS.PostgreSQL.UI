@@ -121,14 +121,19 @@ namespace DiGi.GIS.PostgreSQL.UI
                     },
                     "Report Building2D county part duplicates", "Reports Building2Ds held under more than one polygon part of the same county and which part each belongs to. Dry run - deletes nothing until DryRun is turned off"));
 
-                    // Disarmed, and re-scoped to the national regeneration (issue #2). The 2026-08-14 orphan run is
-                    // done: 8 rows for the 5 references the county part repair left behind were removed.
-                    // What runs from here is the second half of each voivodeship round - regenerate a voivodeship,
-                    // then clean it - which is what turns the legacy rows a regeneration supersedes into deletions
-                    // and keeps the storage tablespace from carrying a second copy of more than one voivodeship.
-                    // Set VoivodeshipCodes to the round being run, review BuildingModels_Cleanup.csv from the dry
-                    // run, then turn DryRun off for the same scope. RemoveOrphans stays off: it answers a different
-                    // question - whether the building moved - and only belongs on after a repair report says so.
+                    // ARMED for voivodeship 16, on the evidence of its own dry run of 2026-08-15 22:45. Superseded
+                    // rows matched that part's building_2d reference count exactly on all twelve parts - 32 379,
+                    // 25 120, 36 231, 29 990, 29 416, 22 693, 59 187, 42 367, 74 982, 31 248, 37 737, 27 257,
+                    // totalling 448 607 - so every building regenerated and none was missed. Equal rather than
+                    // greater also says this voivodeship held exactly one legacy row per reference.
+                    // 0 references without a building, so RemoveOrphans stays off; it answers a different question
+                    // - whether the building moved - and only belongs on after a repair report says so.
+                    // The delete is safe by construction: a row goes only where a reference-keyed row for the same
+                    // (county_id, reference) sits beside it, so no building can lose its last model.
+                    // Each further round repeats this: set VoivodeshipCodes, run with DryRun on, compare the
+                    // superseded count per part against that part's reference count, then arm the same scope.
+                    // Cleaning a voivodeship before the next is regenerated is what keeps the storage tablespace
+                    // from carrying a second copy of more than one voivodeship at a time.
                     // The name and the description are derived from DryRun rather than written beside it. They were
                     // last written by hand while the task was armed and were left saying "DryRun is off - this
                     // writes and has no undo" after it had been put back behind the flag, which is the wrong
@@ -136,7 +141,7 @@ namespace DiGi.GIS.PostgreSQL.UI
                     PostgreSQLBuildingModelCleanupTask postgreSQLBuildingModelCleanupTask = new(gISPostgreSQLConverterManager)
                     {
                         VoivodeshipCodes = ["16"],
-                        DryRun = true,
+                        DryRun = false,
                         RemoveOrphans = false
                     };
 
@@ -166,10 +171,12 @@ namespace DiGi.GIS.PostgreSQL.UI
                     // three repaired parts 73482 / 76989 / 86713 hold a handful of buildings each. Every other
                     // part still holds models keyed on the Guid the model reissued on every creation, and only a
                     // regeneration turns those into rows the cleanup task can see.
-                    // Scoped to 16 (opolskie) for the scale test: 12 parts, the smallest voivodeship, and the
-                    // read-back is a verification run over every reference with Missing required to be 0. A run
-                    // that finishes proves nothing on its own - county 5 modelled 65 % of its buildings and
-                    // reported success when QuikGraph was missing from the host.
+                    // 16 (opolskie) was the scale test and is regenerated: 448 607 buildings across 12 parts in
+                    // 1 h 32 m on 2026-08-15, no county failed, no building was lost, and the cleanup dry run
+                    // afterwards accounted for every one of them. A run that finishes proves nothing on its own -
+                    // county 5 modelled 65 % of its buildings and reported success when QuikGraph was missing from
+                    // the host - which is why the count is read back rather than the task's own verdict trusted.
+                    // The checkpoint means re-running this scope is a no-op; set VoivodeshipCodes to the next round.
                     // Then round by round in ascending code order: 02 04 06 08 10 12 14 16 18 20 22 24 26 28 30 32,
                     // each followed by the cleanup task at the same scope. Turn MaxConcurrentRequests down if the
                     // server or GUGiK starts refusing.

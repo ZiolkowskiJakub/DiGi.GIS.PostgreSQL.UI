@@ -22,8 +22,17 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- MathNet.Numerics is a NuGet dependency of DiGi.Math, reached through the DiGi.Geometry HintPath below.
+         Matrix.GetInversed (transform inversion, polynomial fitting) throws FileNotFoundException without it. -->
+    <PackageReference Include="MathNet.Numerics" Version="5.0.0" />
+    <!-- Microsoft.OpenApi is a NuGet dependency of DiGi.WebAPI (referenced via HintPath), whose Swashbuckle
+         assemblies are copied next to it, so it must be re-added here to reach the application output. -->
+    <PackageReference Include="Microsoft.OpenApi" Version="2.7.5" />
     <PackageReference Include="NetTopologySuite" Version="2.6.0" />
     <PackageReference Include="Npgsql" Version="10.0.2" />
+    <!-- ProjNET4GeoAPI is a NuGet dependency of DiGi.GIS (referenced via HintPath) and carries
+         GeoAPI.CoordinateSystems. Convert.ToEPSG2180 / ToEPSG4326 need both at runtime. -->
+    <PackageReference Include="ProjNET4GeoAPI" Version="1.4.1" />
     <!-- DiGi.Geometry is referenced by HintPath, so its NuGet dependencies do not reach this host.
          Without this the storey split throws FileNotFoundException per building at runtime and the
          county silently loses every model that needed one - it builds and tests clean regardless. -->
@@ -66,9 +75,6 @@
     </Reference>
     <Reference Include="DiGi.GIS.Analytical">
       <HintPath>..\..\DiGi.GIS.Analytical\bin\DiGi.GIS.Analytical.dll</HintPath>
-    </Reference>
-    <Reference Include="DiGi.GIS.Emgu.CV">
-      <HintPath>..\..\DiGi.GIS.Emgu.CV\bin\DiGi.GIS.Emgu.CV.dll</HintPath>
     </Reference>
     <Reference Include="DiGi.GIS.IO">
       <HintPath>..\..\DiGi.GIS.IO\bin\DiGi.GIS.IO.dll</HintPath>

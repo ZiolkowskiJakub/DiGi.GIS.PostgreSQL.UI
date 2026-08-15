@@ -221,6 +221,21 @@ public string? ReportDirectory { get; set; }
 
 #### Property Value
 [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.PostgreSQLBuildingModelCleanupTask.VoivodeshipCodes'></a>
+
+## PostgreSQLBuildingModelCleanupTask\.VoivodeshipCodes Property
+
+Gets or sets the two\-digit voivodeship codes to be cleaned\. A county row is in scope when its code starts with one of them\. When null every voivodeship is cleaned\. Combined with [CountyIds](DiGi.GIS.PostgreSQL.UI.Classes.md#DiGi.GIS.PostgreSQL.UI.Classes.PostgreSQLBuildingModelCleanupTask.CountyIds 'DiGi\.GIS\.PostgreSQL\.UI\.Classes\.PostgreSQLBuildingModelCleanupTask\.CountyIds') both filters have to admit the row\.
+
+This is what makes the national regeneration affordable: a voivodeship is regenerated and then cleaned before the next one starts, so the storage tablespace only ever carries a second copy of one voivodeship rather than of the whole country.
+
+```csharp
+public System.Collections.Generic.IEnumerable<string>? VoivodeshipCodes { get; set; }
+```
+
+#### Property Value
+[System\.Collections\.Generic\.IEnumerable&lt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.ienumerable-1 'System\.Collections\.Generic\.IEnumerable\`1')[System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')[&gt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.ienumerable-1 'System\.Collections\.Generic\.IEnumerable\`1')
 ### Methods
 
 <a name='DiGi.GIS.PostgreSQL.UI.Classes.PostgreSQLBuildingModelCleanupTask.ReferencesOrphanedAsync(DiGi.GIS.PostgreSQL.Classes.BuildingModelPostgreSQLConverter,DiGi.GIS.PostgreSQL.Classes.Building2DPostgreSQLConverter,int,System.Threading.CancellationToken)'></a>
@@ -396,6 +411,8 @@ Each [DiGi\.GIS\.Classes\.Building2D](https://learn.microsoft.com/en-us/dotnet/a
 
 Because `building_2d` holds the same building under every part it was imported under, a building shared by two parts is modelled once per part. That is inherent to keying by part and is not a duplicate to suppress here - it mirrors the underlying table.
 
+<b>A national pass takes days, so a county is the unit of both failure and progress.</b> A county whose pages cannot be read or uploaded is named, recorded in `BuildingModels_Regeneration_Failed.txt` and skipped, rather than ending the run and discarding every county after it. A county that completes in full is appended to `BuildingModels_Regeneration_Checkpoint.txt`, which [Resume](DiGi.GIS.PostgreSQL.UI.Classes.md#DiGi.GIS.PostgreSQL.UI.Classes.UIBuildingModelsFromDatabasePostTask.Resume 'DiGi\.GIS\.PostgreSQL\.UI\.Classes\.UIBuildingModelsFromDatabasePostTask\.Resume') reads on the next run - so an interrupted pass continues where it stopped, and a county interrupted part way is simply redone.
+
 ```csharp
 public class UIBuildingModelsFromDatabasePostTask : DiGi.GIS.WebAPI.Classes.BuildingModelsPostTask, DiGi.GIS.PostgreSQL.UI.Interfaces.IGISPostgreSQLUIObject
 ```
@@ -464,6 +481,51 @@ public int PageSize { get; set; }
 #### Property Value
 [System\.Int32](https://learn.microsoft.com/en-us/dotnet/api/system.int32 'System\.Int32')
 
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIBuildingModelsFromDatabasePostTask.ReportDirectory'></a>
+
+## UIBuildingModelsFromDatabasePostTask\.ReportDirectory Property
+
+Gets or sets the directory the checkpoint and the list of failed counties are written into\. When null the directory the application was launched from is used\.
+
+Deliberately not a folder dialog: this runs on a thread pool thread, where a WPF common dialog needs an STA apartment and throws instead of opening.
+
+```csharp
+public string? ReportDirectory { get; set; }
+```
+
+#### Property Value
+[System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIBuildingModelsFromDatabasePostTask.Resume'></a>
+
+## UIBuildingModelsFromDatabasePostTask\.Resume Property
+
+Gets or sets a value indicating whether counties named in the checkpoint of an earlier run are skipped\. Defaults to [true](https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/bool 'https://docs\.microsoft\.com/en\-us/dotnet/csharp/language\-reference/builtin\-types/bool')\.
+
+A national pass is a matter of days, so it has to survive being interrupted. Turning this off starts from the first county in scope and truncates the checkpoint, which is what a deliberate re-run of an already-completed scope needs.
+
+```csharp
+public bool Resume { get; set; }
+```
+
+#### Property Value
+[System\.Boolean](https://learn.microsoft.com/en-us/dotnet/api/system.boolean 'System\.Boolean')
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIBuildingModelsFromDatabasePostTask.VoivodeshipCodes'></a>
+
+## UIBuildingModelsFromDatabasePostTask\.VoivodeshipCodes Property
+
+Gets or sets the two\-digit voivodeship codes to be processed\. A county is in scope when its code starts with one of them\. When null every voivodeship is processed\. Combined with [CountyIds](DiGi.GIS.PostgreSQL.UI.Classes.md#DiGi.GIS.PostgreSQL.UI.Classes.UIBuildingModelsFromDatabasePostTask.CountyIds 'DiGi\.GIS\.PostgreSQL\.UI\.Classes\.UIBuildingModelsFromDatabasePostTask\.CountyIds') both filters have to admit the county\.
+
+Regenerating one voivodeship at a time is what keeps the storage tablespace within reach: a county's models are written beside the ones they supersede until [PostgreSQLBuildingModelCleanupTask](DiGi.GIS.PostgreSQL.UI.Classes.md#DiGi.GIS.PostgreSQL.UI.Classes.PostgreSQLBuildingModelCleanupTask 'DiGi\.GIS\.PostgreSQL\.UI\.Classes\.PostgreSQLBuildingModelCleanupTask') removes them, so a national pass in one go would need room for a second copy of the whole table.
+
+```csharp
+public System.Collections.Generic.IEnumerable<string>? VoivodeshipCodes { get; set; }
+```
+
+#### Property Value
+[System\.Collections\.Generic\.IEnumerable&lt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.ienumerable-1 'System\.Collections\.Generic\.IEnumerable\`1')[System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')[&gt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.ienumerable-1 'System\.Collections\.Generic\.IEnumerable\`1')
+
 <a name='DiGi.GIS.PostgreSQL.UI.Classes.UIBuildingModelsFromDirectoryPostTask'></a>
 
 ## UIBuildingModelsFromDirectoryPostTask Class
@@ -521,6 +583,8 @@ A UI\-driven task that reads the [DiGi\.Analytical\.Building\.Classes\.BuildingM
 Read-only. Nothing is uploaded, nothing is repaired - the task exists to say what the stored data looks like, which is the state the upload path itself never reported: a model whose spaces are not enclosed is accepted by the server today and stored without a word.
 
 For every county in scope a sample of [SampleSize](DiGi.GIS.PostgreSQL.UI.Classes.md#DiGi.GIS.PostgreSQL.UI.Classes.UIBuildingModelsVerificationTask.SampleSize 'DiGi\.GIS\.PostgreSQL\.UI\.Classes\.UIBuildingModelsVerificationTask\.SampleSize') 2D building references is drawn with [RandomSeed](DiGi.GIS.PostgreSQL.UI.Classes.md#DiGi.GIS.PostgreSQL.UI.Classes.UIBuildingModelsVerificationTask.RandomSeed 'DiGi\.GIS\.PostgreSQL\.UI\.Classes\.UIBuildingModelsVerificationTask\.RandomSeed'), so a run is reproducible and two runs can be compared. The models behind those references are pulled in batches and each one is passed through `Analytical.Create.BuildingModelValidationResult`. A reference the server holds no model for is recorded as missing, which is the completeness half of the answer.
+
+The seed is combined with the county row identifier rather than shared across counties, so a county draws the same sample whether it is verified on its own, with its voivodeship, or nationally. A single generator advanced across counties made every county's draw depend on how many references each preceding county held, which the 2026-08-14 county part repair changed - and with it the sample of every county after the repaired three.
 
 Two files are written into [ReportDirectory](DiGi.GIS.PostgreSQL.UI.Classes.md#DiGi.GIS.PostgreSQL.UI.Classes.UIBuildingModelsVerificationTask.ReportDirectory 'DiGi\.GIS\.PostgreSQL\.UI\.Classes\.UIBuildingModelsVerificationTask\.ReportDirectory'): one row per reference in `BuildingModels_Verification.csv`, and per county plus national totals in `BuildingModels_Verification_Summary.txt`. The row file is flushed county by county, so a run interrupted late still leaves everything it had already measured.
 
@@ -581,7 +645,7 @@ public System.Collections.Generic.IEnumerable<int>? CountyIds { get; set; }
 
 ## UIBuildingModelsVerificationTask\.RandomSeed Property
 
-Gets or sets the seed of the sampling\. Two runs sharing a seed draw the same references, which is what lets a run before a change be compared with one after it\.
+Gets or sets the seed of the sampling\. Two runs sharing a seed draw the same references, which is what lets a run before a change be compared with one after it\. The seed is combined per county by [DiGi\.GIS\.PostgreSQL\.Query\.RandomSeed\(System\.Int32,System\.Int32\)](https://learn.microsoft.com/en-us/dotnet/api/digi.gis.postgresql.query.randomseed#digi-gis-postgresql-query-randomseed(system-int32-system-int32) 'DiGi\.GIS\.PostgreSQL\.Query\.RandomSeed\(System\.Int32,System\.Int32\)'), so a county's draw does not depend on the scope of the run or on what any other county holds\.
 
 ```csharp
 public int RandomSeed { get; set; }
@@ -628,40 +692,20 @@ public double Tolerance { get; set; }
 
 #### Property Value
 [System\.Double](https://learn.microsoft.com/en-us/dotnet/api/system.double 'System\.Double')
-### Methods
 
-<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIBuildingModelsVerificationTask.Sample(System.Collections.Generic.List_string_,int,System.Random)'></a>
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIBuildingModelsVerificationTask.VoivodeshipCodes'></a>
 
-## UIBuildingModelsVerificationTask\.Sample\(List\<string\>, int, Random\) Method
+## UIBuildingModelsVerificationTask\.VoivodeshipCodes Property
 
-Draws a reproducible sample of the given size from a list of references\.
+Gets or sets the two\-digit voivodeship codes to be processed\. A county is in scope when its code starts with one of them\. When null every voivodeship is processed\. Combined with [CountyIds](DiGi.GIS.PostgreSQL.UI.Classes.md#DiGi.GIS.PostgreSQL.UI.Classes.UIBuildingModelsVerificationTask.CountyIds 'DiGi\.GIS\.PostgreSQL\.UI\.Classes\.UIBuildingModelsVerificationTask\.CountyIds') both filters have to admit the county\.
 
 ```csharp
-private static System.Collections.Generic.List<string> Sample(System.Collections.Generic.List<string> references, int sampleSize, System.Random random);
+public System.Collections.Generic.IEnumerable<string>? VoivodeshipCodes { get; set; }
 ```
-#### Parameters
 
-<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIBuildingModelsVerificationTask.Sample(System.Collections.Generic.List_string_,int,System.Random).references'></a>
-
-`references` [System\.Collections\.Generic\.List&lt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.list-1 'System\.Collections\.Generic\.List\`1')[System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')[&gt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.list-1 'System\.Collections\.Generic\.List\`1')
-
-The references to draw from\.
-
-<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIBuildingModelsVerificationTask.Sample(System.Collections.Generic.List_string_,int,System.Random).sampleSize'></a>
-
-`sampleSize` [System\.Int32](https://learn.microsoft.com/en-us/dotnet/api/system.int32 'System\.Int32')
-
-The number of references to draw\. A value of zero or less takes them all\.
-
-<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIBuildingModelsVerificationTask.Sample(System.Collections.Generic.List_string_,int,System.Random).random'></a>
-
-`random` [System\.Random](https://learn.microsoft.com/en-us/dotnet/api/system.random 'System\.Random')
-
-The random source, seeded by the caller so the draw can be repeated\.
-
-#### Returns
-[System\.Collections\.Generic\.List&lt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.list-1 'System\.Collections\.Generic\.List\`1')[System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')[&gt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.list-1 'System\.Collections\.Generic\.List\`1')  
-The drawn references\.
+#### Property Value
+[System\.Collections\.Generic\.IEnumerable&lt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.ienumerable-1 'System\.Collections\.Generic\.IEnumerable\`1')[System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')[&gt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.ienumerable-1 'System\.Collections\.Generic\.IEnumerable\`1')
+### Methods
 
 <a name='DiGi.GIS.PostgreSQL.UI.Classes.UIBuildingModelsVerificationTask.Text(double)'></a>
 

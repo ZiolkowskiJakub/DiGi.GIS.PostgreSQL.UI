@@ -121,19 +121,19 @@ namespace DiGi.GIS.PostgreSQL.UI
                     },
                     "Report Building2D county part duplicates", "Reports Building2Ds held under more than one polygon part of the same county and which part each belongs to. Dry run - deletes nothing until DryRun is turned off"));
 
-                    // ARMED with RemoveOrphans on. The dry run of 2026-08-14 reported 0 superseded rows on all six
-                    // parts - the three large ones were never regenerated, so nothing there has a correctly keyed
-                    // row beside it - and 5 references without a building: 1 under 73485, 3 under 76984, 1 under
-                    // 86698. Those are exactly the five buildings the repair moved, confirmed by querying the large
-                    // parts with the small parts' own reference lists.
-                    // The delete removes 8 rows for those 5 references: 76984 holds two rows for each of its three,
-                    // from before the keying was fixed. Rows outnumbering references is normal here, which is why
-                    // the count check only complains when fewer come back than were asked for.
+                    // Disarmed, and re-scoped to the national regeneration (issue #2). The 2026-08-14 orphan run is
+                    // done: 8 rows for the 5 references the county part repair left behind were removed.
+                    // What runs from here is the second half of each voivodeship round - regenerate a voivodeship,
+                    // then clean it - which is what turns the legacy rows a regeneration supersedes into deletions
+                    // and keeps the storage tablespace from carrying a second copy of more than one voivodeship.
+                    // Set VoivodeshipCodes to the round being run, review BuildingModels_Cleanup.csv from the dry
+                    // run, then turn DryRun off for the same scope. RemoveOrphans stays off: it answers a different
+                    // question - whether the building moved - and only belongs on after a repair report says so.
                     result.Add(Visual(new PostgreSQLBuildingModelCleanupTask(gISPostgreSQLConverterManager)
                     {
-                        CountyIds = [73482, 73485, 76984, 76989, 86698, 86713],
-                        DryRun = false,
-                        RemoveOrphans = true
+                        VoivodeshipCodes = ["16"],
+                        DryRun = true,
+                        RemoveOrphans = false
                     },
                     "Clean up superseded BuildingModels (DELETES replaced and orphaned rows)", "Removes BuildingModel rows a regeneration has already replaced, keeping the correctly keyed row beside them, and models whose building no longer exists under the part. DryRun is off - this writes and has no undo"));
                 }
@@ -154,25 +154,39 @@ namespace DiGi.GIS.PostgreSQL.UI
 
                     result.Add(Visual(new UIBuildingsFromDirectoryPostTask(GISWebAPIManager), "Create CityGML Buildings from directory", "Creates Buildings for Building2Ds from database based on CityGML files saved in directory"));
                     result.Add(Visual(new UIBuildingModelsFromDirectoryPostTask(GISWebAPIManager), "Create BuildingModels from directory", "Creates BuildingModels for Building2Ds from database based on CityGML files saved in directory"));
-                    // The five buildings the county part repair moved to a part holding no models: 1 under 73482,
-                    // 3 under 76989, 1 under 86713. Their models still sit under the sibling part they came from
-                    // and are removed as orphans by the cleanup task, which is scoped to all six parts.
-                    // County 5 was the pilot and is done - 33 687 buildings, regenerated twice with the row count
-                    // unchanged. Clear CountyIds for a national pass, and turn MaxConcurrentRequests down if the
+                    // The national regeneration (issue #2), run one voivodeship at a time. County 5 was the pilot
+                    // and is done - 33 687 buildings, regenerated twice with the row count unchanged - and the
+                    // three repaired parts 73482 / 76989 / 86713 hold a handful of buildings each. Every other
+                    // part still holds models keyed on the Guid the model reissued on every creation, and only a
+                    // regeneration turns those into rows the cleanup task can see.
+                    // Scoped to 16 (opolskie) for the scale test: 12 parts, the smallest voivodeship, and the
+                    // read-back is a verification run over every reference with Missing required to be 0. A run
+                    // that finishes proves nothing on its own - county 5 modelled 65 % of its buildings and
+                    // reported success when QuikGraph was missing from the host.
+                    // Then round by round in ascending code order: 02 04 06 08 10 12 14 16 18 20 22 24 26 28 30 32,
+                    // each followed by the cleanup task at the same scope. Turn MaxConcurrentRequests down if the
                     // server or GUGiK starts refusing.
                     result.Add(Visual(new UIBuildingModelsFromDatabasePostTask(GISWebAPIManager)
                     {
-                        CountyIds = [73482, 76989, 86713],
+                        VoivodeshipCodes = ["16"],
                         MaxConcurrentRequests = 8
                     },
                     "Create BuildingModels from database", "Creates BuildingModels for Building2Ds from database based on CityGML Buildings stored in database"));
 
-                    // The seed and the sample size are what make two runs comparable - they match the 2026-08-11 baseline
-                    // and should not be changed without restating the baseline they are being compared against.
+                    // Scoped to the 16 (opolskie) scale test, with SampleSize 0 so every reference is read rather
+                    // than a sample of 200: the gate this has to pass before the national pass widens is Missing = 0
+                    // on every county, and a sample cannot say that.
+                    // For the acceptance run, clear VoivodeshipCodes and put SampleSize back to 200. The seed stays
+                    // 20260811 to match the 2026-08-11 baseline, but note the comparison is aggregate only: the
+                    // baseline was drawn from one generator shared across counties, and the 2026-08-14 county part
+                    // repair changed three counties from 10 198 / 24 260 / 51 740 references to 1 / 3 / 1, shifting
+                    // the draw of every county after them. The per-county seed removes that for future runs; it
+                    // cannot retrofit the baseline.
                     result.Add(Visual(new UIBuildingModelsVerificationTask(GISWebAPIManager)
                     {
                         RandomSeed = 20260811,
-                        SampleSize = 200
+                        SampleSize = 0,
+                        VoivodeshipCodes = ["16"]
                     },
                     "Verify BuildingModels from database", "Reads BuildingModels stored in database and reports completeness and space enclosure. Read only - nothing is uploaded"));
 

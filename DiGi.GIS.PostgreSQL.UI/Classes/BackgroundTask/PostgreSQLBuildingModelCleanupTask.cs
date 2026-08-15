@@ -55,6 +55,12 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
         /// </summary>
         public string? ReportDirectory { get; set; } = null;
 
+        /// <summary>
+        /// Gets or sets the two-digit voivodeship codes to be cleaned. A county row is in scope when its code starts with one of them. When null every voivodeship is cleaned. Combined with <see cref="CountyIds"/> both filters have to admit the row.
+        /// <para>This is what makes the national regeneration affordable: a voivodeship is regenerated and then cleaned before the next one starts, so the storage tablespace only ever carries a second copy of one voivodeship rather than of the whole country.</para>
+        /// </summary>
+        public IEnumerable<string>? VoivodeshipCodes { get; set; } = null;
+
         /// <inheritdoc />
         protected override async Task<bool> ExecuteAsync(IProgress<long> progress, CancellationToken cancellationToken)
         {
@@ -92,22 +98,29 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
             }
 
             HashSet<int>? countyIds = CountyIds is null ? null : [.. CountyIds];
+            HashSet<string>? voivodeshipCodes = VoivodeshipCodes is null ? null : [.. VoivodeshipCodes];
 
             List<int> countyIds_Cleaned = [];
             foreach (AdministrativeAreal2D administrativeAreal2D in administrativeAreal2Ds)
             {
                 int countyId = administrativeAreal2D.Id;
-                if (countyIds is null || countyIds.Contains(countyId))
+                if (PostgreSQL.Query.IsInScope(countyId, administrativeAreal2D.Code, countyIds, voivodeshipCodes))
                 {
                     countyIds_Cleaned.Add(countyId);
                 }
+            }
+
+            if (countyIds_Cleaned.Count == 0)
+            {
+                Serilog.Modify.Log(Serilog.Enums.LogEventLevel.Warning, "No county row is in scope - nothing to clean up");
+                return false;
             }
 
             countyIds_Cleaned.Sort();
 
             LongProgressWrapper? longProgressWrapper = Core.Create.LongProgressWrapper(progress);
 
-            Serilog.Modify.Log("{Type} started. DryRun: {DryRun}. RemoveOrphans: {RemoveOrphans}. County rows examined: {Count}", nameof(PostgreSQLBuildingModelCleanupTask), DryRun, RemoveOrphans, countyIds_Cleaned.Count);
+            Serilog.Modify.Log("{Type} started. DryRun: {DryRun}. RemoveOrphans: {RemoveOrphans}. VoivodeshipCodes: {VoivodeshipCodes}. County rows examined: {Count}", nameof(PostgreSQLBuildingModelCleanupTask), DryRun, RemoveOrphans, voivodeshipCodes is null ? "all" : string.Join(' ', voivodeshipCodes), countyIds_Cleaned.Count);
 
             long count_Superseded = 0;
             long count_Orphaned = 0;
@@ -119,6 +132,7 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
                 $"Started: {DateTime.Now:yyyy-MM-dd HH:mm:ss}",
                 $"DryRun: {DryRun}",
                 $"RemoveOrphans: {RemoveOrphans}",
+                $"VoivodeshipCodes: {(voivodeshipCodes is null ? "all" : string.Join(' ', voivodeshipCodes))}",
                 $"County rows examined: {countyIds_Cleaned.Count}",
                 string.Empty,
                 "CountyId;SupersededRows;OrphanReferences"

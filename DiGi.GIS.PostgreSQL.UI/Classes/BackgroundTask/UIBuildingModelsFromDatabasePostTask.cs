@@ -9,7 +9,9 @@ using DiGi.GIS.WebAPI.Classes;
 using DiGi.WebAPI.Classes;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Net.Http;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -21,6 +23,7 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
     /// <para>Each <see cref="GIS.Classes.Building2D"/> is then processed individually: its single best ranked CityGML <see cref="CityGML.Classes.Building"/> is pulled by reference through <see cref="BuildingController.GetItemByReferenceAsync"/> and refined into storeys by the matching <c>Analytical.Create.BuildingModel</c> overload. A 2D building whose reference has no stored CityGML building, no reference at all, or whose pull fails is modelled from an extruded footprint instead.</para>
     /// <para><b>"County" here means one polygon part.</b> The county listing returns 406 references for 380 codes, because a county whose territory is disconnected is stored as one row per part. The task reads and uploads by <c>Id</c>, so each part is filled from its own <c>building_2d</c> rows; uploading by <c>Code</c> instead would let the server file every part's models under a single one, which is what left three counties reading back empty. The county code is still written onto each model as descriptive metadata.</para>
     /// <para>Because <c>building_2d</c> holds the same building under every part it was imported under, a building shared by two parts is modelled once per part. That is inherent to keying by part and is not a duplicate to suppress here - it mirrors the underlying table.</para>
+    /// <para><b>A national pass takes days, so a county is the unit of both failure and progress.</b> A county whose pages cannot be read or uploaded is named, recorded in <c>BuildingModels_Regeneration_Failed.txt</c> and skipped, rather than ending the run and discarding every county after it. A county that completes in full is appended to <c>BuildingModels_Regeneration_Checkpoint.txt</c>, which <see cref="Resume"/> reads on the next run - so an interrupted pass continues where it stopped, and a county interrupted part way is simply redone.</para>
     /// </summary>
     public class UIBuildingModelsFromDatabasePostTask : BuildingModelsPostTask, IGISPostgreSQLUIObject
     {
@@ -48,6 +51,24 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
         /// Gets or sets the number of <see cref="Building2DReference"/> items requested per page while downloading a county's buildings.
         /// </summary>
         public int PageSize { get; set; } = 250;
+
+        /// <summary>
+        /// Gets or sets the directory the checkpoint and the list of failed counties are written into. When null the directory the application was launched from is used.
+        /// <para>Deliberately not a folder dialog: this runs on a thread pool thread, where a WPF common dialog needs an STA apartment and throws instead of opening.</para>
+        /// </summary>
+        public string? ReportDirectory { get; set; } = null;
+
+        /// <summary>
+        /// Gets or sets a value indicating whether counties named in the checkpoint of an earlier run are skipped. Defaults to <see langword="true"/>.
+        /// <para>A national pass is a matter of days, so it has to survive being interrupted. Turning this off starts from the first county in scope and truncates the checkpoint, which is what a deliberate re-run of an already-completed scope needs.</para>
+        /// </summary>
+        public bool Resume { get; set; } = true;
+
+        /// <summary>
+        /// Gets or sets the two-digit voivodeship codes to be processed. A county is in scope when its code starts with one of them. When null every voivodeship is processed. Combined with <see cref="CountyIds"/> both filters have to admit the county.
+        /// <para>Regenerating one voivodeship at a time is what keeps the storage tablespace within reach: a county's models are written beside the ones they supersede until <see cref="PostgreSQLBuildingModelCleanupTask"/> removes them, so a national pass in one go would need room for a second copy of the whole table.</para>
+        /// </summary>
+        public IEnumerable<string>? VoivodeshipCodes { get; set; } = null;
 
         /// <inheritdoc />
         protected override async Task<bool> ExecuteAsync(IProgress<long> progress, CancellationToken cancellationToken)
@@ -86,6 +107,17 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
                 }
             }
 
+            HashSet<string>? voivodeshipCodes = null;
+            if (VoivodeshipCodes is not null)
+            {
+                voivodeshipCodes = [.. VoivodeshipCodes];
+                if (voivodeshipCodes.Count == 0)
+                {
+                    Serilog.Modify.Log(Serilog.Enums.LogEventLevel.Warning, "VoivodeshipCodes is empty - nothing to process");
+                    return false;
+                }
+            }
+
             HttpClient? httpClient_Building2DReferences = GISWebAPIManager.CreateHttpClient<Building2DController>(nameof(Building2DController.GetBuilding2DReferencesByPagingParameterAsync), out string? path_Building2DReferences);
             if (httpClient_Building2DReferences is null || string.IsNullOrWhiteSpace(path_Building2DReferences))
             {
@@ -117,24 +149,48 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
 
             int pageSize = PageSize < 1 ? 1 : PageSize;
 
-            foreach (AdministrativeAreal2DReference administrativeAreal2DReference in administrativeAreal2DReferences)
+            // Deliberately not a folder dialog: this runs on a thread pool thread, where a WPF common dialog
+            // needs an STA apartment and throws instead of opening.
+            string? directory = ReportDirectory;
+            if (string.IsNullOrWhiteSpace(directory))
             {
-                cancellationToken.ThrowIfCancellationRequested();
+                directory = AppContext.BaseDirectory;
+            }
 
-                // Id identifies the county itself - CountryId/VoivodeshipId/CountyId are the parent chain and are not the value building_2d.county_id holds.
-                int countyId = administrativeAreal2DReference.Id;
-                if (countyId < 0)
+            if (string.IsNullOrWhiteSpace(directory) || !Directory.Exists(directory))
+            {
+                Serilog.Modify.Log(Serilog.Enums.LogEventLevel.Error, "Report directory does not exist");
+                return false;
+            }
+
+            string path_Checkpoint = Path.Combine(directory, "BuildingModels_Regeneration_Checkpoint.txt");
+
+            // Read before the writer is opened - a run with Resume off truncates the file rather than skipping
+            // the counties an earlier, differently scoped run recorded.
+            HashSet<int> countyIds_Completed = [];
+            if (Resume && File.Exists(path_Checkpoint))
+            {
+                foreach (string line in await File.ReadAllLinesAsync(path_Checkpoint, cancellationToken))
                 {
-                    continue;
+                    if (int.TryParse(line.Trim(), out int countyId_Completed))
+                    {
+                        countyIds_Completed.Add(countyId_Completed);
+                    }
                 }
 
-                if (countyIds is not null && !countyIds.Contains(countyId))
-                {
-                    continue;
-                }
+                Serilog.Modify.Log("Resuming from {Path}: {Count} county rows already completed are skipped", path_Checkpoint, countyIds_Completed.Count);
+            }
 
-                Serilog.Modify.Log("County {Code} (id {CountyId}) started", administrativeAreal2DReference.Code ?? string.Empty, countyId);
+            using StreamWriter streamWriter_Checkpoint = new(path_Checkpoint, Resume, Encoding.UTF8);
 
+            List<int> countyIds_Failed = [];
+
+            // A county's pages are generated and uploaded here rather than inline in the loop below, so a
+            // request the server refuses ends this county instead of the whole run. Across ~17.6 million
+            // buildings a single refusal used to discard every county after it, with nothing recording how
+            // far the run had got.
+            async Task<bool> ExecuteCountyAsync(AdministrativeAreal2DReference administrativeAreal2DReference, int countyId)
+            {
                 string? cursor = null;
 
                 while (true)
@@ -406,7 +462,57 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
                     }
                 }
 
-                Serilog.Modify.Log("County {Code} (id {CountyId}) ended", administrativeAreal2DReference.Code ?? string.Empty, countyId);
+                return true;
+            }
+
+            foreach (AdministrativeAreal2DReference administrativeAreal2DReference in administrativeAreal2DReferences)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                // Id identifies the county itself - CountryId/VoivodeshipId/CountyId are the parent chain and are not the value building_2d.county_id holds.
+                int countyId = administrativeAreal2DReference.Id;
+
+                string code = administrativeAreal2DReference.Code ?? string.Empty;
+
+                if (!PostgreSQL.Query.IsInScope(countyId, code, countyIds, voivodeshipCodes))
+                {
+                    continue;
+                }
+
+                if (countyIds_Completed.Contains(countyId))
+                {
+                    Serilog.Modify.Log("County {Code} (id {CountyId}) was completed by an earlier run - skipped", code, countyId);
+                    continue;
+                }
+
+                Serilog.Modify.Log("County {Code} (id {CountyId}) started", code, countyId);
+
+                if (!await ExecuteCountyAsync(administrativeAreal2DReference, countyId))
+                {
+                    Serilog.Modify.Log(Serilog.Enums.LogEventLevel.Error, "County {Code} (id {CountyId}) failed - it is not checkpointed and the run continues with the next county", code, countyId);
+                    countyIds_Failed.Add(countyId);
+                    continue;
+                }
+
+                // Recorded only once every page of the county has been generated and uploaded. A county
+                // interrupted part way is therefore redone in full on the next run, which is safe: the upsert
+                // is keyed on the building reference, so regenerating replaces rather than inserts.
+                await streamWriter_Checkpoint.WriteLineAsync(countyId.ToString());
+                await streamWriter_Checkpoint.FlushAsync(cancellationToken);
+
+                Serilog.Modify.Log("County {Code} (id {CountyId}) ended", code, countyId);
+            }
+
+            if (countyIds_Failed.Count != 0)
+            {
+                string path_Failed = Path.Combine(directory, "BuildingModels_Regeneration_Failed.txt");
+
+                await File.WriteAllLinesAsync(path_Failed, countyIds_Failed.ConvertAll(x => x.ToString()), cancellationToken);
+
+                // Named so the re-run is a copy of this list into CountyIds rather than a hunt through the log.
+                Serilog.Modify.Log(Serilog.Enums.LogEventLevel.Warning, "{Count} county rows failed and were skipped: {CountyIds}. Written to {Path} - re-run them with CountyIds set to that list", countyIds_Failed.Count, string.Join(", ", countyIds_Failed), path_Failed);
+
+                return false;
             }
 
             return true;

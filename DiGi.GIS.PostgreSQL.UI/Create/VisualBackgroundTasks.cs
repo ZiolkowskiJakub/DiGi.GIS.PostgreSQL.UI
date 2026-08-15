@@ -129,13 +129,20 @@ namespace DiGi.GIS.PostgreSQL.UI
                     // Set VoivodeshipCodes to the round being run, review BuildingModels_Cleanup.csv from the dry
                     // run, then turn DryRun off for the same scope. RemoveOrphans stays off: it answers a different
                     // question - whether the building moved - and only belongs on after a repair report says so.
-                    result.Add(Visual(new PostgreSQLBuildingModelCleanupTask(gISPostgreSQLConverterManager)
+                    // The name and the description are derived from DryRun rather than written beside it. They were
+                    // last written by hand while the task was armed and were left saying "DryRun is off - this
+                    // writes and has no undo" after it had been put back behind the flag, which is the wrong
+                    // direction for a label on a row whose button deletes rows with no undo.
+                    PostgreSQLBuildingModelCleanupTask postgreSQLBuildingModelCleanupTask = new(gISPostgreSQLConverterManager)
                     {
                         VoivodeshipCodes = ["16"],
                         DryRun = true,
                         RemoveOrphans = false
-                    },
-                    "Clean up superseded BuildingModels (DELETES replaced and orphaned rows)", "Removes BuildingModel rows a regeneration has already replaced, keeping the correctly keyed row beside them, and models whose building no longer exists under the part. DryRun is off - this writes and has no undo"));
+                    };
+
+                    result.Add(Visual(postgreSQLBuildingModelCleanupTask,
+                    postgreSQLBuildingModelCleanupTask.DryRun ? "Report superseded BuildingModels (dry run, deletes nothing)" : "Clean up superseded BuildingModels (DELETES rows)",
+                    $"Reports BuildingModel rows a regeneration has already replaced, keeping the correctly keyed row beside them{(postgreSQLBuildingModelCleanupTask.RemoveOrphans ? ", and models whose building no longer exists under the part" : string.Empty)}. Scope: {(postgreSQLBuildingModelCleanupTask.VoivodeshipCodes is null ? "every voivodeship" : $"voivodeship {string.Join(' ', postgreSQLBuildingModelCleanupTask.VoivodeshipCodes)}")}. {(postgreSQLBuildingModelCleanupTask.DryRun ? "Dry run - nothing is written until DryRun is turned off" : "DryRun is OFF - this writes and has no undo")}"));
                 }
             }
 

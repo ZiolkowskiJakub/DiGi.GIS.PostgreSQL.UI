@@ -418,6 +418,12 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
                             // its footprint instead, which loses every wall and roof shape it had and is
                             // otherwise indistinguishable from a building that never had CityGML at all.
                             // The two cases are worth telling apart in the log.
+                            // Only a shortfall is worth saying. More components than surfaces is the storey split
+                            // doing its job - a wall spanning three storeys becomes three components - and testing
+                            // for inequality reported it as a loss: voivodeship 16 raised 138 546 of these over
+                            // 448 607 buildings, every one of them with more components than surfaces and not one
+                            // with fewer. A national pass would raise millions, and a real shortfall would be one
+                            // line among them, in the very channel someone would search to find it.
                             if (buildings[i] is CityGML.Classes.Building building && buildingModel.GetComponents<DiGi.Analytical.Building.Interfaces.IComponent>() is List<DiGi.Analytical.Building.Interfaces.IComponent> components_Created)
                             {
                                 int count_Surfaces = 0;
@@ -426,7 +432,7 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
                                     count_Surfaces++;
                                 }
 
-                                if (count_Surfaces != 0 && components_Created.Count != count_Surfaces)
+                                if (count_Surfaces != 0 && components_Created.Count < count_Surfaces)
                                 {
                                     Serilog.Modify.Log(Serilog.Enums.LogEventLevel.Warning, "BuildingModel for reference {Reference} in county {CountyId} holds {Components} components for {Surfaces} CityGML surfaces - the 3D geometry was not carried over in full", reference, countyId, components_Created.Count, count_Surfaces);
                                 }

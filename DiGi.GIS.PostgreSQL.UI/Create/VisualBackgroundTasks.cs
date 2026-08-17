@@ -47,6 +47,12 @@ namespace DiGi.GIS.PostgreSQL.UI
                     result.Add(Visual(new PostgreSQLOrtoDatasCreateDatabaseTask(gISPostgreSQLConverterManager), "Create storage database", "Creates storage database for OrtoDatas objects"));
                     result.Add(Visual(new OrtoDatasTask(GISWebAPIManager, gISPostgreSQLConverterManager), "Bypass upload OrtoDatas from database", "Upload OrtoDatas from database. Direct update of OrtoDatas by bypassing the GIS WebAPI HTTP post."));
 
+                    // Scoped from a dialog rather than from defaults written here: the cost of this run is the
+                    // square of the grid size over the area chosen, from an afternoon over one county to
+                    // hundreds of millions of requests over the country, so it is asked for at the moment the
+                    // task is started.
+                    result.Add(Visual(new UIPostgreSQLTerrainPointCreateTableTask(GISWebAPIManager, gISPostgreSQLConverterManager), "Create TerrainPoint table", "Creates the TerrainPoint table and fills it by sampling terrain elevations onto a shared grid. Grid size, override existing and the counties are asked for when the task is started"));
+
                     PostgreSQLBuildingDataUpdateTask postgreSQLBuildingDataUpdateTask = new(gISPostgreSQLConverterManager);
                     postgreSQLBuildingDataUpdateTask.Starting += (sender, args) =>
                     {

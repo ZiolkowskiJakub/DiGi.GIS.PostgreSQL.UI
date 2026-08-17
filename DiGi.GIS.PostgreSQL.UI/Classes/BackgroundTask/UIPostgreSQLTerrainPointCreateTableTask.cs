@@ -1,0 +1,94 @@
+using DiGi.GIS.PostgreSQL.Classes;
+using DiGi.GIS.PostgreSQL.UI.Interfaces;
+using DiGi.GIS.PostgreSQL.UI.Windows;
+using DiGi.GIS.WebAPI.Classes;
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace DiGi.GIS.PostgreSQL.UI.Classes
+{
+    /// <summary>
+    /// A terrain point run that is scoped from the user interface: the counties, the spacing of the sampling grid and whether points already stored are sampled again are asked for through <see cref="PostgreSQLTerrainPointCreateTableOptionsWindow"/> each time the task is started, and only then is the run handed to <see cref="PostgreSQLTerrainPointCreateTableTask"/>.
+    /// <para>That is what the settings are worth asking for: a national pass at 50 m is about 125 million points and one request to the elevation service each, while the same task over a named county at 10 m is an afternoon. Neither is a default the other would tolerate.</para>
+    /// </summary>
+    public class UIPostgreSQLTerrainPointCreateTableTask : PostgreSQLTerrainPointCreateTableTask, IGISPostgreSQLUIObject
+    {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="UIPostgreSQLTerrainPointCreateTableTask"/> class.
+        /// </summary>
+        /// <param name="GISWebAPIManager">The manager the elevation service client is built from.</param>
+        /// <param name="GISPostgreSQLConverterManager">The GIS PostgreSQL converter manager used to read the areas and write the points.</param>
+        public UIPostgreSQLTerrainPointCreateTableTask(GISWebAPIManager? GISWebAPIManager, GISPostgreSQLConverterManager? GISPostgreSQLConverterManager)
+            : base(WebAPI.Create.HttpClient_GUGiK(GISWebAPIManager), GISPostgreSQLConverterManager)
+        {
+        }
+
+        /// <inheritdoc />
+        protected override async Task<bool> ExecuteAsync(IProgress<long> progress, CancellationToken cancellationToken)
+        {
+            // Asked before the dialog rather than after it: without a client the run cannot sample anything, and
+            // the base task would answer that by returning false once the counties had already been chosen.
+            if (httpClient is null)
+            {
+                Serilog.Modify.Log(Serilog.Enums.LogEventLevel.Error, "Elevation service client could not be created - the terrain point run cannot start");
+                return false;
+            }
+
+            // The dialog is a window, and this runs on a thread pool thread, where a window cannot be created at
+            // all. Without an application there is no user interface thread to move it to.
+            if (System.Windows.Application.Current is not System.Windows.Application application)
+            {
+                Serilog.Modify.Log(Serilog.Enums.LogEventLevel.Error, "No WPF application is running - the terrain point options cannot be asked for");
+                return false;
+            }
+
+            AdministrativeAreal2DPostgreSQLConverter? administrativeAreal2DPostgreSQLConverter = gISPostgreSQLConverterManager.GetPostgreSQLConverter<AdministrativeAreal2DPostgreSQLConverter>();
+            if (administrativeAreal2DPostgreSQLConverter is null)
+            {
+                return false;
+            }
+
+            // References rather than the identifiers GetIdsAsync returns: that method does list every county row
+            // - all 406 polygon parts of the 380 codes, which is exactly what the run iterates - but it carries
+            // neither code nor name, and a list of 406 bare integers is not one a county can be picked from.
+            // uniqueCode stays false, or a multi-part county would collapse to one part and lose the rest of its
+            // territory.
+            List<AdministrativeAreal2DReference>? administrativeAreal2DReferences = await administrativeAreal2DPostgreSQLConverter.GetAdministrativeAreal2DReferencesByAdministrativeArealTypeAsync(PostgreSQL.Enums.AdministrativeArealType.County, parentId: null, uniqueCode: false, cancellationToken: cancellationToken);
+            if (administrativeAreal2DReferences is null || administrativeAreal2DReferences.Count == 0)
+            {
+                Serilog.Modify.Log(Serilog.Enums.LogEventLevel.Error, "Counties could not be retrieved - the terrain point run cannot be scoped");
+                return false;
+            }
+
+            // Read on this thread, shown on the user interface thread. Reading inside the callback below would
+            // hold the interface still for the whole of the query.
+            PostgreSQLTerrainPointCreateTableOptions? postgreSQLTerrainPointCreateTableOptions = null;
+
+            application.Dispatcher.Invoke(() =>
+            {
+                PostgreSQLTerrainPointCreateTableOptionsWindow postgreSQLTerrainPointCreateTableOptionsWindow = new(PostgreSQLTerrainPointCreateTableOptions, administrativeAreal2DReferences);
+
+                if (postgreSQLTerrainPointCreateTableOptionsWindow.ShowDialog() is not bool dialogResult || !dialogResult)
+                {
+                    return;
+                }
+
+                postgreSQLTerrainPointCreateTableOptions = postgreSQLTerrainPointCreateTableOptionsWindow.PostgreSQLTerrainPointCreateTableOptions;
+            });
+
+            // A cancelled dialog leaves the options of an earlier run as they were - the window works on a copy -
+            // and ends the run here rather than starting a national pass nobody asked for.
+            if (postgreSQLTerrainPointCreateTableOptions is null)
+            {
+                Serilog.Modify.Log("Terrain point options were cancelled - nothing was sampled");
+                return false;
+            }
+
+            PostgreSQLTerrainPointCreateTableOptions = postgreSQLTerrainPointCreateTableOptions;
+
+            return await base.ExecuteAsync(progress, cancellationToken);
+        }
+    }
+}

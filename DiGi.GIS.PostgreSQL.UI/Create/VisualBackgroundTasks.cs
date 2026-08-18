@@ -1,4 +1,4 @@
-using DiGi.Core;
+﻿using DiGi.Core;
 using DiGi.GIS.PostgreSQL.Classes;
 using DiGi.GIS.PostgreSQL.Enums;
 using DiGi.GIS.PostgreSQL.UI.Classes;
@@ -112,6 +112,76 @@ namespace DiGi.GIS.PostgreSQL.UI
                     "Refresh OrtoDatas", "Refreshes OrtoDatas table in database"));
 
                     result.Add(Visual(new PostgreSQLUpdateOccupancyTask(gISPostgreSQLConverterManager), "Update occupancy from database", "Update occupancy for Building2Ds and AdministrativeAreal2Ds based on data in database"));
+
+                    // TODO [BuildingModelRowIdentity]: temporary registration for the one-off unique_id migration
+                    // of issue ZiolkowskiJakub/DiGi.GIS.PostgreSQL#5. Remove it with the task itself once every
+                    // deployed database has run it and reports zero pending rows nationally.
+                    // It has to be run against a database BEFORE a DiGi.GIS.WebAPI build converting models with
+                    // their own identifier is deployed against it. In the other order the first upload matches
+                    // no row and inserts a second model for every building, which is the duplication issue #1
+                    // removed. This app and the WebAPI host are deployed separately, which is what makes that
+                    // order achievable from one commit: install this, run the task, then deploy the WebAPI.
+                    // Armed, unlike the cleanup task below. It destroys nothing - the value it overwrites is the
+                    // building's reference, which the row still carries in its own reference column - so a
+                    // migrated row can be read back either way round. Turn DryRun on for a pass that only
+                    // reports the blocked and missing counts.
+                    // The name and the description are derived from DryRun rather than written beside it, for
+                    // the reason recorded above the cleanup task registration.
+                    PostgreSQLBuildingModelUniqueIdMigrationTask postgreSQLBuildingModelUniqueIdMigrationTask = new(gISPostgreSQLConverterManager)
+                    {
+                        PostgreSQLBuildingModelUniqueIdMigrationOptions = new PostgreSQLBuildingModelUniqueIdMigrationOptions()
+                        {
+                            DryRun = false
+                        }
+                    };
+
+                    // DiGi.GIS.PostgreSQL carries no logging dependency, so the task keeps what every county
+                    // part reported and the totals are logged from here, the same way this file already
+                    // reports the exception a failed task would otherwise have kept to itself.
+                    postgreSQLBuildingModelUniqueIdMigrationTask.Stopped += (sender, args) =>
+                    {
+                        if (sender is not PostgreSQLBuildingModelUniqueIdMigrationTask postgreSQLBuildingModelUniqueIdMigrationTask_Temp)
+                        {
+                            return;
+                        }
+
+                        long total = 0;
+                        long done = 0;
+                        long pending = 0;
+                        long blocked = 0;
+                        long missing = 0;
+
+                        List<int> countyIds_Unresolved = [];
+
+                        foreach (UniqueIdMigrationResult uniqueIdMigrationResult in postgreSQLBuildingModelUniqueIdMigrationTask_Temp.UniqueIdMigrationResults)
+                        {
+                            total += uniqueIdMigrationResult.Total;
+                            done += uniqueIdMigrationResult.Done;
+                            pending += uniqueIdMigrationResult.Pending;
+                            blocked += uniqueIdMigrationResult.Blocked;
+                            missing += uniqueIdMigrationResult.Missing;
+
+                            if (uniqueIdMigrationResult.Blocked != 0 || uniqueIdMigrationResult.Missing != 0)
+                            {
+                                countyIds_Unresolved.Add(uniqueIdMigrationResult.CountyId);
+                            }
+                        }
+
+                        // The counts were taken before each part was written, so on an armed run Pending is what
+                        // the migration then moved and on a dry run it is what it would have moved.
+                        Serilog.Modify.Log("{Name} ended. DryRun: {DryRun}. County rows visited: {Count}. Rows {Total}, already keyed on the model {Done}, pending before the run {Pending}, blocked {Blocked}, without an identifier {Missing}", nameof(PostgreSQLBuildingModelUniqueIdMigrationTask), postgreSQLBuildingModelUniqueIdMigrationTask_Temp.PostgreSQLBuildingModelUniqueIdMigrationOptions.DryRun, postgreSQLBuildingModelUniqueIdMigrationTask_Temp.UniqueIdMigrationResults.Count, total, done, pending, blocked, missing);
+
+                        if (countyIds_Unresolved.Count != 0)
+                        {
+                            // These are the rows a converter emitting the model's own identifier cannot match,
+                            // so the building gets a second model on its next upload rather than a replacement.
+                            Serilog.Modify.Log(Serilog.Enums.LogEventLevel.Warning, "County rows the migration could not fully resolve: {CountyIds}", string.Join(", ", countyIds_Unresolved));
+                        }
+                    };
+
+                    result.Add(Visual(postgreSQLBuildingModelUniqueIdMigrationTask,
+                    postgreSQLBuildingModelUniqueIdMigrationTask.PostgreSQLBuildingModelUniqueIdMigrationOptions.DryRun ? "Report BuildingModel unique_id migration (dry run, writes nothing)" : "Migrate BuildingModel unique_id (WRITES rows)",
+                    $"Moves each stored BuildingModel's own identifier into the unique_id column of the row holding it, so building_model follows the same row identity as every other referenced object table. Must be run before a WebAPI build converting models with their own identifier is deployed. Scope: {(postgreSQLBuildingModelUniqueIdMigrationTask.PostgreSQLBuildingModelUniqueIdMigrationOptions.VoivodeshipCodes is null ? "every voivodeship" : $"voivodeship {string.Join(' ', postgreSQLBuildingModelUniqueIdMigrationTask.PostgreSQLBuildingModelUniqueIdMigrationOptions.VoivodeshipCodes)}")}. {(postgreSQLBuildingModelUniqueIdMigrationTask.PostgreSQLBuildingModelUniqueIdMigrationOptions.DryRun ? "Dry run - nothing is written until DryRun is turned off" : "DryRun is OFF - this writes, though it overwrites only a value the row also holds in its reference column")}"));
 
                     // Disarmed again. 2212, 2405 and 2612 were repaired on 2026-08-14: 86 196 copies deleted,
                     // and the parts read back 1/44 809, 42 585/3 and 51 739/1 with their unions intact, so no

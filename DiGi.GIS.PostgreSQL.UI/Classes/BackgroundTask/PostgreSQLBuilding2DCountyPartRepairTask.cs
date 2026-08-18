@@ -2,9 +2,10 @@
 // part repair of issue ZiolkowskiJakub/DiGi.GIS.PostgreSQL#1. It ran on 2026-08-14 over codes 2212,
 // 2405 and 2612 and deleted 86 196 rows. Delete it once no county part holds a building whose
 // footprint lies in a sibling part - imports have assigned by geometry since #1, so only an importer
-// bypassing Query.CountyId could reintroduce that - together with
-// Building2DPostgreSQLConverter.RemoveAsync, whose only caller this is, and the registration in
+// bypassing Query.CountyId could reintroduce that - together with the registration in
 // DiGi.GIS.PostgreSQL.UI Create.VisualBackgroundTasks.
+// Building2DPostgreSQLConverter.RemoveAsync stays: this is its only caller today, but deleting rows
+// of one county part is a general operation worth keeping once the repair itself is gone.
 
 using DiGi.Core.Classes;
 using DiGi.Geometry.Planar.Interfaces;

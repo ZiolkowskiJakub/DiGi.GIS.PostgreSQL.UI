@@ -183,6 +183,9 @@ namespace DiGi.GIS.PostgreSQL.UI
                     postgreSQLBuildingModelUniqueIdMigrationTask.PostgreSQLBuildingModelUniqueIdMigrationOptions.DryRun ? "Report BuildingModel unique_id migration (dry run, writes nothing)" : "Migrate BuildingModel unique_id (WRITES rows)",
                     $"Moves each stored BuildingModel's own identifier into the unique_id column of the row holding it, so building_model follows the same row identity as every other referenced object table. Must be run before a WebAPI build converting models with their own identifier is deployed. Scope: {(postgreSQLBuildingModelUniqueIdMigrationTask.PostgreSQLBuildingModelUniqueIdMigrationOptions.VoivodeshipCodes is null ? "every voivodeship" : $"voivodeship {string.Join(' ', postgreSQLBuildingModelUniqueIdMigrationTask.PostgreSQLBuildingModelUniqueIdMigrationOptions.VoivodeshipCodes)}")}. {(postgreSQLBuildingModelUniqueIdMigrationTask.PostgreSQLBuildingModelUniqueIdMigrationOptions.DryRun ? "Dry run - nothing is written until DryRun is turned off" : "DryRun is OFF - this writes, though it overwrites only a value the row also holds in its reference column")}"));
 
+                    // TODO [CountyPartAssignment]: temporary registration for the one-off county part repair of
+                    // issue #1. Remove it with PostgreSQLBuilding2DCountyPartRepairTask, once no county part holds
+                    // a building whose footprint lies in a sibling part.
                     // Disarmed again. 2212, 2405 and 2612 were repaired on 2026-08-14: 86 196 copies deleted,
                     // and the parts read back 1/44 809, 42 585/3 and 51 739/1 with their unions intact, so no
                     // building lost its last row. Re-running now is a no-op - a reference held by a single part

@@ -127,19 +127,13 @@ public string? ReportDirectory { get; set; }
 
 ## PostgreSQLBuildingModelCleanupTask Class
 
-Removes the [DiGi\.Analytical\.Building\.Classes\.BuildingModel](https://learn.microsoft.com/en-us/dotnet/api/digi.analytical.building.classes.buildingmodel 'DiGi\.Analytical\.Building\.Classes\.BuildingModel') rows a regeneration leaves behind\.
+Removes the [DiGi\.Analytical\.Building\.Classes\.BuildingModel](https://learn.microsoft.com/en-us/dotnet/api/digi.analytical.building.classes.buildingmodel 'DiGi\.Analytical\.Building\.Classes\.BuildingModel') rows whose building no longer exists under the county part holding them\.
 
-A model row is keyed on the reference of the building it describes. Rows written before that were keyed on the model's own identifier, which is a fresh [System\.Guid](https://learn.microsoft.com/en-us/dotnet/api/system.guid 'System\.Guid') on every model created, so the upsert never matched one and inserted a second model for the same building instead of replacing it. Regenerating a county therefore does not replace its models - it adds to them - and this is what takes the old rows out afterwards.
-
-A row is deleted only when a row keyed on the same building's reference exists beside it, so the building keeps a model either way and a part that has never been regenerated is left untouched rather than emptied. That makes the order this runs in irrelevant.
-
-<b>[TEMPORARY] The superseded half of this task is inert against a migrated county row.</b> The unique_id migration of issue ZiolkowskiJakub/DiGi.GIS.PostgreSQL#5 keys every row on the model it holds, so afterwards no row is keyed on its reference, nothing supersedes anything and both the count and the delete answer zero. It cannot delete the wrong thing - the condition simply stops matching - but the reasoning above describes the keying as it was before that migration, not as it is after. It is kept because it remains the right tool if rows written by an un-migrated build reappear. TODO [BuildingModelRowIdentity]: remove the superseded half with the rest of that migration; [RemoveOrphans](DiGi.GIS.PostgreSQL.UI.Classes.md#DiGi.GIS.PostgreSQL.UI.Classes.PostgreSQLBuildingModelCleanupTask.RemoveOrphans 'DiGi\.GIS\.PostgreSQL\.UI\.Classes\.PostgreSQLBuildingModelCleanupTask\.RemoveOrphans') answers a different question and stays.
-
-[RemoveOrphans](DiGi.GIS.PostgreSQL.UI.Classes.md#DiGi.GIS.PostgreSQL.UI.Classes.PostgreSQLBuildingModelCleanupTask.RemoveOrphans 'DiGi\.GIS\.PostgreSQL\.UI\.Classes\.PostgreSQLBuildingModelCleanupTask\.RemoveOrphans') additionally takes out models whose building no longer exists under the part, which is what a [PostgreSQLBuilding2DCountyPartRepairTask](DiGi.GIS.PostgreSQL.UI.Classes.md#DiGi.GIS.PostgreSQL.UI.Classes.PostgreSQLBuilding2DCountyPartRepairTask 'DiGi\.GIS\.PostgreSQL\.UI\.Classes\.PostgreSQLBuilding2DCountyPartRepairTask') run can leave behind. It is off by default because it is decided by a different question - whether the building moved - and should only be turned on once the repair report says buildings moved away from the part holding their models.
+An orphan is a model held under a part whose `building_2d` no longer holds the building it describes, which is what a [PostgreSQLBuilding2DCountyPartRepairTask](DiGi.GIS.PostgreSQL.UI.Classes.md#DiGi.GIS.PostgreSQL.UI.Classes.PostgreSQLBuilding2DCountyPartRepairTask 'DiGi\.GIS\.PostgreSQL\.UI\.Classes\.PostgreSQLBuilding2DCountyPartRepairTask') run can leave behind when it re-files a building under the part its footprint lies in.
 
 <b>Reports by default and writes nothing.</b>[DryRun](DiGi.GIS.PostgreSQL.UI.Classes.md#DiGi.GIS.PostgreSQL.UI.Classes.PostgreSQLBuildingModelCleanupTask.DryRun 'DiGi\.GIS\.PostgreSQL\.UI\.Classes\.PostgreSQLBuildingModelCleanupTask\.DryRun') has to be turned off deliberately, and the counts it reports first are what the delete should be reviewed against - the rows removed here have no undo.
 
-The report is written as files into [ReportDirectory](DiGi.GIS.PostgreSQL.UI.Classes.md#DiGi.GIS.PostgreSQL.UI.Classes.PostgreSQLBuildingModelCleanupTask.ReportDirectory 'DiGi\.GIS\.PostgreSQL\.UI\.Classes\.PostgreSQLBuildingModelCleanupTask\.ReportDirectory') as well as to the log: `BuildingModels_Cleanup.csv` naming every orphaned reference and the superseded count per part, and `BuildingModels_Cleanup_Summary.txt` carrying the totals. The orphans are listed individually because they are the rows that lose their only model; a superseded row has a correctly keyed one beside it by definition, so it is counted rather than named.
+The report is written as files into [ReportDirectory](DiGi.GIS.PostgreSQL.UI.Classes.md#DiGi.GIS.PostgreSQL.UI.Classes.PostgreSQLBuildingModelCleanupTask.ReportDirectory 'DiGi\.GIS\.PostgreSQL\.UI\.Classes\.PostgreSQLBuildingModelCleanupTask\.ReportDirectory') as well as to the log: `BuildingModels_Cleanup.csv` naming every orphaned reference, and `BuildingModels_Cleanup_Summary.txt` carrying the totals. The files are what the decision to delete should rest on - a log is shared with whatever else the application is doing and rolls by day.
 
 ```csharp
 public class PostgreSQLBuildingModelCleanupTask : DiGi.Core.Classes.ReportableBackgroundTask<long>, DiGi.GIS.PostgreSQL.UI.Interfaces.IGISPostgreSQLUIObject
@@ -191,19 +185,6 @@ Gets or sets a value indicating whether the task only reports what it would do\.
 
 ```csharp
 public bool DryRun { get; set; }
-```
-
-#### Property Value
-[System\.Boolean](https://learn.microsoft.com/en-us/dotnet/api/system.boolean 'System\.Boolean')
-
-<a name='DiGi.GIS.PostgreSQL.UI.Classes.PostgreSQLBuildingModelCleanupTask.RemoveOrphans'></a>
-
-## PostgreSQLBuildingModelCleanupTask\.RemoveOrphans Property
-
-Gets or sets a value indicating whether models whose building no longer exists under the part are removed as well\. Defaults to [false](https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/bool 'https://docs\.microsoft\.com/en\-us/dotnet/csharp/language\-reference/builtin\-types/bool')\.
-
-```csharp
-public bool RemoveOrphans { get; set; }
 ```
 
 #### Property Value

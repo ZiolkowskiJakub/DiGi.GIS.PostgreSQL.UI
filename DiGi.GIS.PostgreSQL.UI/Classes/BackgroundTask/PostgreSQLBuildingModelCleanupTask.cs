@@ -13,13 +13,10 @@ using System.Threading.Tasks;
 namespace DiGi.GIS.PostgreSQL.UI.Classes
 {
     /// <summary>
-    /// Removes the <see cref="DiGi.Analytical.Building.Classes.BuildingModel"/> rows a regeneration leaves behind.
-    /// <para>A model row is keyed on the reference of the building it describes. Rows written before that were keyed on the model's own identifier, which is a fresh <see cref="Guid"/> on every model created, so the upsert never matched one and inserted a second model for the same building instead of replacing it. Regenerating a county therefore does not replace its models - it adds to them - and this is what takes the old rows out afterwards.</para>
-    /// <para>A row is deleted only when a row keyed on the same building's reference exists beside it, so the building keeps a model either way and a part that has never been regenerated is left untouched rather than emptied. That makes the order this runs in irrelevant.</para>
-    /// <para><b>[TEMPORARY] The superseded half of this task is inert against a migrated county row.</b> The unique_id migration of issue ZiolkowskiJakub/DiGi.GIS.PostgreSQL#5 keys every row on the model it holds, so afterwards no row is keyed on its reference, nothing supersedes anything and both the count and the delete answer zero. It cannot delete the wrong thing - the condition simply stops matching - but the reasoning above describes the keying as it was before that migration, not as it is after. It is kept because it remains the right tool if rows written by an un-migrated build reappear. TODO [BuildingModelRowIdentity]: remove the superseded half with the rest of that migration; <see cref="RemoveOrphans"/> answers a different question and stays.</para>
-    /// <para><see cref="RemoveOrphans"/> additionally takes out models whose building no longer exists under the part, which is what a <see cref="PostgreSQLBuilding2DCountyPartRepairTask"/> run can leave behind. It is off by default because it is decided by a different question - whether the building moved - and should only be turned on once the repair report says buildings moved away from the part holding their models.</para>
+    /// Removes the <see cref="DiGi.Analytical.Building.Classes.BuildingModel"/> rows whose building no longer exists under the county part holding them.
+    /// <para>An orphan is a model held under a part whose <c>building_2d</c> no longer holds the building it describes, which is what a <see cref="PostgreSQLBuilding2DCountyPartRepairTask"/> run can leave behind when it re-files a building under the part its footprint lies in.</para>
     /// <para><b>Reports by default and writes nothing.</b> <see cref="DryRun"/> has to be turned off deliberately, and the counts it reports first are what the delete should be reviewed against - the rows removed here have no undo.</para>
-    /// <para>The report is written as files into <see cref="ReportDirectory"/> as well as to the log: <c>BuildingModels_Cleanup.csv</c> naming every orphaned reference and the superseded count per part, and <c>BuildingModels_Cleanup_Summary.txt</c> carrying the totals. The orphans are listed individually because they are the rows that lose their only model; a superseded row has a correctly keyed one beside it by definition, so it is counted rather than named.</para>
+    /// <para>The report is written as files into <see cref="ReportDirectory"/> as well as to the log: <c>BuildingModels_Cleanup.csv</c> naming every orphaned reference, and <c>BuildingModels_Cleanup_Summary.txt</c> carrying the totals. The files are what the decision to delete should rest on - a log is shared with whatever else the application is doing and rolls by day.</para>
     /// </summary>
     public class PostgreSQLBuildingModelCleanupTask : ReportableBackgroundTask<long>, IGISPostgreSQLUIObject
     {
@@ -44,11 +41,6 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
         /// Gets or sets a value indicating whether the task only reports what it would do. Defaults to <see langword="true"/>; nothing is written until it is turned off.
         /// </summary>
         public bool DryRun { get; set; } = true;
-
-        /// <summary>
-        /// Gets or sets a value indicating whether models whose building no longer exists under the part are removed as well. Defaults to <see langword="false"/>.
-        /// </summary>
-        public bool RemoveOrphans { get; set; } = false;
 
         /// <summary>
         /// Gets or sets the directory the two report files are written into. When null the directory the application was launched from is used.
@@ -84,10 +76,10 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
 
             // building_2d and building_model live in different databases, so the two reference sets cannot be
             // compared in one statement - the buildings have to be read through their own converter.
-            Building2DPostgreSQLConverter? building2DPostgreSQLConverter = RemoveOrphans ? gISPostgreSQLConverterManager?.GetPostgreSQLConverter<Building2DPostgreSQLConverter>() : null;
-            if (RemoveOrphans && building2DPostgreSQLConverter is null)
+            Building2DPostgreSQLConverter? building2DPostgreSQLConverter = gISPostgreSQLConverterManager?.GetPostgreSQLConverter<Building2DPostgreSQLConverter>();
+            if (building2DPostgreSQLConverter is null)
             {
-                Serilog.Modify.Log(Serilog.Enums.LogEventLevel.Error, "Building2D converter could not be resolved and RemoveOrphans is on");
+                Serilog.Modify.Log(Serilog.Enums.LogEventLevel.Error, "Building2D converter could not be resolved");
                 return false;
             }
 
@@ -121,9 +113,8 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
 
             LongProgressWrapper? longProgressWrapper = Core.Create.LongProgressWrapper(progress);
 
-            Serilog.Modify.Log("{Type} started. DryRun: {DryRun}. RemoveOrphans: {RemoveOrphans}. VoivodeshipCodes: {VoivodeshipCodes}. County rows examined: {Count}", nameof(PostgreSQLBuildingModelCleanupTask), DryRun, RemoveOrphans, voivodeshipCodes is null ? "all" : string.Join(' ', voivodeshipCodes), countyIds_Cleaned.Count);
+            Serilog.Modify.Log("{Type} started. DryRun: {DryRun}. VoivodeshipCodes: {VoivodeshipCodes}. County rows examined: {Count}", nameof(PostgreSQLBuildingModelCleanupTask), DryRun, voivodeshipCodes is null ? "all" : string.Join(' ', voivodeshipCodes), countyIds_Cleaned.Count);
 
-            long count_Superseded = 0;
             long count_Orphaned = 0;
             long count_Deleted = 0;
 
@@ -132,79 +123,45 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
                 "BuildingModel cleanup",
                 $"Started: {DateTime.Now:yyyy-MM-dd HH:mm:ss}",
                 $"DryRun: {DryRun}",
-                $"RemoveOrphans: {RemoveOrphans}",
                 $"VoivodeshipCodes: {(voivodeshipCodes is null ? "all" : string.Join(' ', voivodeshipCodes))}",
                 $"County rows examined: {countyIds_Cleaned.Count}",
                 string.Empty,
-                "CountyId;SupersededRows;OrphanReferences"
+                "CountyId;OrphanReferences"
             ];
 
-            // One row per orphaned reference, because those are the models that lose their only row - a
-            // superseded row by definition has a correctly keyed one beside it and is counted per part.
+            // One row per orphaned reference: these are the models that lose their only row.
             using StreamWriter streamWriter = new(System.IO.Path.Combine(directory, "BuildingModels_Cleanup.csv"), false, Encoding.UTF8);
-            await streamWriter.WriteLineAsync("CountyId;Kind;Reference;Rows");
+            await streamWriter.WriteLineAsync("CountyId;Reference");
 
             foreach (int countyId in countyIds_Cleaned)
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                long count_Superseded_County = await buildingModelPostgreSQLConverter.GetSupersededCountAsync(countyId, cancellationToken);
-                if (count_Superseded_County < 0)
-                {
-                    Serilog.Modify.Log(Serilog.Enums.LogEventLevel.Warning, "Part {CountyId}: superseded rows could not be counted - skipped", countyId);
-                    continue;
-                }
+                List<string> references_Orphaned = await ReferencesOrphanedAsync(buildingModelPostgreSQLConverter, building2DPostgreSQLConverter, countyId, cancellationToken);
 
-                List<string> references_Orphaned = [];
-                if (RemoveOrphans)
-                {
-                    references_Orphaned = await ReferencesOrphanedAsync(buildingModelPostgreSQLConverter, building2DPostgreSQLConverter!, countyId, cancellationToken);
-                }
-
-                if (count_Superseded_County == 0 && references_Orphaned.Count == 0)
+                if (references_Orphaned.Count == 0)
                 {
                     continue;
                 }
 
-                Serilog.Modify.Log("Part {CountyId}: superseded models {Superseded}, references without a building {Orphaned}", countyId, count_Superseded_County, references_Orphaned.Count);
+                Serilog.Modify.Log("Part {CountyId}: references without a building {Orphaned}", countyId, references_Orphaned.Count);
 
-                summaryLines.Add($"{countyId};{count_Superseded_County};{references_Orphaned.Count}");
-
-                if (count_Superseded_County != 0)
-                {
-                    await streamWriter.WriteLineAsync($"{countyId};Superseded;;{count_Superseded_County}");
-                }
+                summaryLines.Add($"{countyId};{references_Orphaned.Count}");
 
                 foreach (string reference_Orphaned in references_Orphaned)
                 {
-                    await streamWriter.WriteLineAsync($"{countyId};Orphan;{reference_Orphaned};");
+                    await streamWriter.WriteLineAsync($"{countyId};{reference_Orphaned}");
                 }
 
                 // Flushed per part so a run interrupted late still leaves everything already decided on disk.
                 await streamWriter.FlushAsync(cancellationToken);
 
-                count_Superseded += count_Superseded_County;
                 count_Orphaned += references_Orphaned.Count;
 
                 if (DryRun)
                 {
-                    longProgressWrapper?.Increment(count_Superseded_County + references_Orphaned.Count);
+                    longProgressWrapper?.Increment(references_Orphaned.Count);
                     continue;
-                }
-
-                if (count_Superseded_County != 0)
-                {
-                    HashSet<long>? ids = await buildingModelPostgreSQLConverter.RemoveSupersededAsync(countyId, cancellationToken);
-
-                    int count = ids?.Count ?? 0;
-                    count_Deleted += count;
-
-                    if (count != count_Superseded_County)
-                    {
-                        Serilog.Modify.Log(Serilog.Enums.LogEventLevel.Warning, "Part {CountyId}: {Deleted}/{Counted} superseded models deleted - the table did not hold what was counted", countyId, count, count_Superseded_County);
-                    }
-
-                    longProgressWrapper?.Increment(count);
                 }
 
                 if (references_Orphaned.Count != 0)
@@ -226,7 +183,6 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
             }
 
             summaryLines.Add(string.Empty);
-            summaryLines.Add($"Superseded model rows: {count_Superseded}");
             summaryLines.Add($"References without a building: {count_Orphaned}");
             summaryLines.Add($"Rows deleted: {count_Deleted}");
             summaryLines.Add($"Ended: {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
@@ -235,7 +191,7 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
 
             await File.WriteAllLinesAsync(System.IO.Path.Combine(directory, "BuildingModels_Cleanup_Summary.txt"), summaryLines, cancellationToken);
 
-            Serilog.Modify.Log("{Type} ended. DryRun: {DryRun}. Superseded models {Superseded}, references without a building {Orphaned}, rows deleted {Deleted}. Report written to {Directory}", nameof(PostgreSQLBuildingModelCleanupTask), DryRun, count_Superseded, count_Orphaned, count_Deleted, directory);
+            Serilog.Modify.Log("{Type} ended. DryRun: {DryRun}. References without a building {Orphaned}, rows deleted {Deleted}. Report written to {Directory}", nameof(PostgreSQLBuildingModelCleanupTask), DryRun, count_Orphaned, count_Deleted, directory);
 
             return true;
         }

@@ -174,3 +174,80 @@ public void InitializeComponent();
 ```
 
 Implements [InitializeComponent\(\)](https://learn.microsoft.com/en-us/dotnet/api/system.windows.markup.icomponentconnector.initializecomponent 'System\.Windows\.Markup\.IComponentConnector\.InitializeComponent')
+
+<a name='DiGi.GIS.PostgreSQL.UI.Windows.PostgreSQLTerrainPointFillGapsOptionsWindow'></a>
+
+## PostgreSQLTerrainPointFillGapsOptionsWindow Class
+
+Interaction logic for PostgreSQLTerrainPointFillGapsOptionsWindow\.xaml
+
+Asks for the two settings that decide what a repair covers - the spacing the counties were sampled at, and the counties to measure. Every other option of the instance it was given is carried over untouched: the origin of the lattice and the tile size are what let this agree with the run it is repairing, and they are not settings to change from a dialog.
+
+The spacing is the one that has to be right. Set finer than a county actually holds, every node in between reads as a gap and the repair turns into a densification of the whole country, so the equivalent spacing measured for each county is shown beside it.
+
+The window works on a copy, so a cancelled dialog leaves the settings of an earlier run exactly as they were.
+
+```csharp
+public class PostgreSQLTerrainPointFillGapsOptionsWindow : System.Windows.Window, System.Windows.Markup.IComponentConnector
+```
+
+Inheritance [System\.Object](https://learn.microsoft.com/en-us/dotnet/api/system.object 'System\.Object') → [System\.Windows\.Threading\.DispatcherObject](https://learn.microsoft.com/en-us/dotnet/api/system.windows.threading.dispatcherobject 'System\.Windows\.Threading\.DispatcherObject') → [System\.Windows\.DependencyObject](https://learn.microsoft.com/en-us/dotnet/api/system.windows.dependencyobject 'System\.Windows\.DependencyObject') → [System\.Windows\.Media\.Visual](https://learn.microsoft.com/en-us/dotnet/api/system.windows.media.visual 'System\.Windows\.Media\.Visual') → [System\.Windows\.UIElement](https://learn.microsoft.com/en-us/dotnet/api/system.windows.uielement 'System\.Windows\.UIElement') → [System\.Windows\.FrameworkElement](https://learn.microsoft.com/en-us/dotnet/api/system.windows.frameworkelement 'System\.Windows\.FrameworkElement') → [System\.Windows\.Controls\.Control](https://learn.microsoft.com/en-us/dotnet/api/system.windows.controls.control 'System\.Windows\.Controls\.Control') → [System\.Windows\.Controls\.ContentControl](https://learn.microsoft.com/en-us/dotnet/api/system.windows.controls.contentcontrol 'System\.Windows\.Controls\.ContentControl') → [System\.Windows\.Window](https://learn.microsoft.com/en-us/dotnet/api/system.windows.window 'System\.Windows\.Window') → PostgreSQLTerrainPointFillGapsOptionsWindow
+
+Implements [System\.Windows\.Markup\.IComponentConnector](https://learn.microsoft.com/en-us/dotnet/api/system.windows.markup.icomponentconnector 'System\.Windows\.Markup\.IComponentConnector')
+### Constructors
+
+<a name='DiGi.GIS.PostgreSQL.UI.Windows.PostgreSQLTerrainPointFillGapsOptionsWindow.PostgreSQLTerrainPointFillGapsOptionsWindow(DiGi.GIS.PostgreSQL.Classes.PostgreSQLTerrainPointFillGapsOptions,System.Collections.Generic.IEnumerable_DiGi.GIS.PostgreSQL.Classes.AdministrativeAreal2DReference_,System.Collections.Generic.IEnumerable_DiGi.GIS.PostgreSQL.Classes.TerrainPointDensityResult_)'></a>
+
+## PostgreSQLTerrainPointFillGapsOptionsWindow\(PostgreSQLTerrainPointFillGapsOptions, IEnumerable\<AdministrativeAreal2DReference\>, IEnumerable\<TerrainPointDensityResult\>\) Constructor
+
+Initializes a new instance of the [PostgreSQLTerrainPointFillGapsOptionsWindow](DiGi.GIS.PostgreSQL.UI.Windows.md#DiGi.GIS.PostgreSQL.UI.Windows.PostgreSQLTerrainPointFillGapsOptionsWindow 'DiGi\.GIS\.PostgreSQL\.UI\.Windows\.PostgreSQLTerrainPointFillGapsOptionsWindow') class\.
+
+```csharp
+public PostgreSQLTerrainPointFillGapsOptionsWindow(DiGi.GIS.PostgreSQL.Classes.PostgreSQLTerrainPointFillGapsOptions? postgreSQLTerrainPointFillGapsOptions, System.Collections.Generic.IEnumerable<DiGi.GIS.PostgreSQL.Classes.AdministrativeAreal2DReference>? administrativeAreal2DReferences, System.Collections.Generic.IEnumerable<DiGi.GIS.PostgreSQL.Classes.TerrainPointDensityResult>? terrainPointDensityResults=null);
+```
+#### Parameters
+
+<a name='DiGi.GIS.PostgreSQL.UI.Windows.PostgreSQLTerrainPointFillGapsOptionsWindow.PostgreSQLTerrainPointFillGapsOptionsWindow(DiGi.GIS.PostgreSQL.Classes.PostgreSQLTerrainPointFillGapsOptions,System.Collections.Generic.IEnumerable_DiGi.GIS.PostgreSQL.Classes.AdministrativeAreal2DReference_,System.Collections.Generic.IEnumerable_DiGi.GIS.PostgreSQL.Classes.TerrainPointDensityResult_).postgreSQLTerrainPointFillGapsOptions'></a>
+
+`postgreSQLTerrainPointFillGapsOptions` [DiGi\.GIS\.PostgreSQL\.Classes\.PostgreSQLTerrainPointFillGapsOptions](https://learn.microsoft.com/en-us/dotnet/api/digi.gis.postgresql.classes.postgresqlterrainpointfillgapsoptions 'DiGi\.GIS\.PostgreSQL\.Classes\.PostgreSQLTerrainPointFillGapsOptions')
+
+The options the controls are filled from\. When null the defaults are used\.
+
+<a name='DiGi.GIS.PostgreSQL.UI.Windows.PostgreSQLTerrainPointFillGapsOptionsWindow.PostgreSQLTerrainPointFillGapsOptionsWindow(DiGi.GIS.PostgreSQL.Classes.PostgreSQLTerrainPointFillGapsOptions,System.Collections.Generic.IEnumerable_DiGi.GIS.PostgreSQL.Classes.AdministrativeAreal2DReference_,System.Collections.Generic.IEnumerable_DiGi.GIS.PostgreSQL.Classes.TerrainPointDensityResult_).administrativeAreal2DReferences'></a>
+
+`administrativeAreal2DReferences` [System\.Collections\.Generic\.IEnumerable&lt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.ienumerable-1 'System\.Collections\.Generic\.IEnumerable\`1')[DiGi\.GIS\.PostgreSQL\.Classes\.AdministrativeAreal2DReference](https://learn.microsoft.com/en-us/dotnet/api/digi.gis.postgresql.classes.administrativeareal2dreference 'DiGi\.GIS\.PostgreSQL\.Classes\.AdministrativeAreal2DReference')[&gt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.ienumerable-1 'System\.Collections\.Generic\.IEnumerable\`1')
+
+The counties to choose from\. A county whose territory is in several pieces is one entry per piece, each with its own identifier, and each has to be selectable on its own\.
+
+<a name='DiGi.GIS.PostgreSQL.UI.Windows.PostgreSQLTerrainPointFillGapsOptionsWindow.PostgreSQLTerrainPointFillGapsOptionsWindow(DiGi.GIS.PostgreSQL.Classes.PostgreSQLTerrainPointFillGapsOptions,System.Collections.Generic.IEnumerable_DiGi.GIS.PostgreSQL.Classes.AdministrativeAreal2DReference_,System.Collections.Generic.IEnumerable_DiGi.GIS.PostgreSQL.Classes.TerrainPointDensityResult_).terrainPointDensityResults'></a>
+
+`terrainPointDensityResults` [System\.Collections\.Generic\.IEnumerable&lt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.ienumerable-1 'System\.Collections\.Generic\.IEnumerable\`1')[DiGi\.GIS\.PostgreSQL\.Classes\.TerrainPointDensityResult](https://learn.microsoft.com/en-us/dotnet/api/digi.gis.postgresql.classes.terrainpointdensityresult 'DiGi\.GIS\.PostgreSQL\.Classes\.TerrainPointDensityResult')[&gt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.ienumerable-1 'System\.Collections\.Generic\.IEnumerable\`1')
+
+The density measurements of the county partitions\. When provided, point count, density and equivalent spacing are shown for each county\.
+### Properties
+
+<a name='DiGi.GIS.PostgreSQL.UI.Windows.PostgreSQLTerrainPointFillGapsOptionsWindow.PostgreSQLTerrainPointFillGapsOptions'></a>
+
+## PostgreSQLTerrainPointFillGapsOptionsWindow\.PostgreSQLTerrainPointFillGapsOptions Property
+
+Gets the options the window holds\. They carry the values of the controls only once the dialog has been closed with OK; until then, and after a cancellation, they are the values it was opened with\.
+
+```csharp
+public DiGi.GIS.PostgreSQL.Classes.PostgreSQLTerrainPointFillGapsOptions PostgreSQLTerrainPointFillGapsOptions { get; }
+```
+
+#### Property Value
+[DiGi\.GIS\.PostgreSQL\.Classes\.PostgreSQLTerrainPointFillGapsOptions](https://learn.microsoft.com/en-us/dotnet/api/digi.gis.postgresql.classes.postgresqlterrainpointfillgapsoptions 'DiGi\.GIS\.PostgreSQL\.Classes\.PostgreSQLTerrainPointFillGapsOptions')
+### Methods
+
+<a name='DiGi.GIS.PostgreSQL.UI.Windows.PostgreSQLTerrainPointFillGapsOptionsWindow.InitializeComponent()'></a>
+
+## PostgreSQLTerrainPointFillGapsOptionsWindow\.InitializeComponent\(\) Method
+
+InitializeComponent
+
+```csharp
+public void InitializeComponent();
+```
+
+Implements [InitializeComponent\(\)](https://learn.microsoft.com/en-us/dotnet/api/system.windows.markup.icomponentconnector.initializecomponent 'System\.Windows\.Markup\.IComponentConnector\.InitializeComponent')

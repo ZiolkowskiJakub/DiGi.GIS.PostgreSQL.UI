@@ -6,8 +6,9 @@
         xmlns:local="clr-namespace:DiGi.GIS.PostgreSQL.UI.Windows"
         xmlns:controls="clr-namespace:DiGi.UI.WPF.Controls;assembly=DiGi.UI.WPF"
         mc:Ignorable="d"
-        Title="GIS PostgreSQL" Height="450" Width="550"
-        ResizeMode="NoResize"
+        Title="GIS PostgreSQL" Height="450" Width="800"
+        MinHeight="450" MinWidth="620"
+        ResizeMode="CanResize"
         WindowStyle="SingleBorderWindow" Initialized="Window_Initialized"
         Icon="pack://application:,,,/DiGi.GIS.PostgreSQL.UI;component/Resources/DiGi.GIS.ico">
     <Grid>

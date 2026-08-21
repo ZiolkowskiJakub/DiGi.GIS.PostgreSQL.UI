@@ -15,6 +15,8 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
     /// </summary>
     public class UIPostgreSQLTerrainPointCreateTableTask : PostgreSQLTerrainPointCreateTableTask, IGISPostgreSQLUIObject
     {
+        private readonly GISWebAPIManager? gISWebAPIManager;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="UIPostgreSQLTerrainPointCreateTableTask"/> class.
         /// </summary>
@@ -23,6 +25,7 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
         public UIPostgreSQLTerrainPointCreateTableTask(GISWebAPIManager? GISWebAPIManager, GISPostgreSQLConverterManager? GISPostgreSQLConverterManager)
             : base(WebAPI.Create.HttpClient_GUGiK(GISWebAPIManager), GISPostgreSQLConverterManager)
         {
+            gISWebAPIManager = GISWebAPIManager;
         }
 
         /// <inheritdoc />
@@ -62,13 +65,64 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
                 return false;
             }
 
+            List<TerrainPointDensityResult>? terrainPointDensityResults = null;
+            if (gISWebAPIManager is not null)
+            {
+                System.Net.Http.HttpClient? httpClient_Terrain = gISWebAPIManager.CreateHttpClient<TerrainController>(nameof(TerrainController.GetDensitiesByCountyIdsAsync), out string? path_Densities);
+                if (httpClient_Terrain is not null && !string.IsNullOrWhiteSpace(path_Densities))
+                {
+                    List<int> countyIds = [];
+                    foreach (AdministrativeAreal2DReference administrativeAreal2DReference in administrativeAreal2DReferences)
+                    {
+                        countyIds.Add(administrativeAreal2DReference.Id);
+                    }
+
+                    terrainPointDensityResults = [];
+                    DiGi.WebAPI.Classes.PostOptions postOptions = new() { RequestResult = true };
+                    int batchSize = WebAPI.Constants.Terrain.MaximumDensityCountyCount;
+
+                    for (int i = 0; i < countyIds.Count; i += batchSize)
+                    {
+                        cancellationToken.ThrowIfCancellationRequested();
+
+                        int count = Math.Min(batchSize, countyIds.Count - i);
+                        List<int> countyIds_Batch = countyIds.GetRange(i, count);
+
+                        System.Text.StringBuilder stringBuilder = new(path_Densities);
+                        for (int j = 0; j < countyIds_Batch.Count; j++)
+                        {
+                            stringBuilder.Append(j == 0 ? "?" : "&");
+                            stringBuilder.Append("countyids=").Append(countyIds_Batch[j]);
+                        }
+
+                        if (PostgreSQLTerrainPointCreateTableOptions.GridSize > 0)
+                        {
+                            stringBuilder.Append("&gridsize=").Append(PostgreSQLTerrainPointCreateTableOptions.GridSize.ToString(System.Globalization.CultureInfo.InvariantCulture));
+                        }
+
+                        try
+                        {
+                            DiGi.WebAPI.Classes.PostResponse<List<TerrainPointDensityResult>?> postResponse = await DiGi.WebAPI.Query.GetAsync<List<TerrainPointDensityResult>>(httpClient_Terrain, stringBuilder.ToString(), postOptions);
+                            if (postResponse is not null && postResponse.Succeeded && postResponse.Result is List<TerrainPointDensityResult> results)
+                            {
+                                terrainPointDensityResults.AddRange(results);
+                            }
+                        }
+                        catch (Exception exception) when (!cancellationToken.IsCancellationRequested)
+                        {
+                            Serilog.Modify.Log(exception, "Terrain point densities could not be retrieved for batch starting at index {Index}", i);
+                        }
+                    }
+                }
+            }
+
             // Read on this thread, shown on the user interface thread. Reading inside the callback below would
             // hold the interface still for the whole of the query.
             PostgreSQLTerrainPointCreateTableOptions? postgreSQLTerrainPointCreateTableOptions = null;
 
             application.Dispatcher.Invoke(() =>
             {
-                PostgreSQLTerrainPointCreateTableOptionsWindow postgreSQLTerrainPointCreateTableOptionsWindow = new(PostgreSQLTerrainPointCreateTableOptions, administrativeAreal2DReferences);
+                PostgreSQLTerrainPointCreateTableOptionsWindow postgreSQLTerrainPointCreateTableOptionsWindow = new(PostgreSQLTerrainPointCreateTableOptions, administrativeAreal2DReferences, terrainPointDensityResults);
 
                 if (postgreSQLTerrainPointCreateTableOptionsWindow.ShowDialog() is not bool dialogResult || !dialogResult)
                 {

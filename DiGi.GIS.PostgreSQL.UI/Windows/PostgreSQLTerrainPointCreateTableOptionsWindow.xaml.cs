@@ -1,4 +1,4 @@
-﻿using DiGi.GIS.PostgreSQL.Classes;
+using DiGi.GIS.PostgreSQL.Classes;
 using DiGi.UI.WPF.Classes;
 using System.Collections.Generic;
 using System.Windows;
@@ -13,17 +13,31 @@ namespace DiGi.GIS.PostgreSQL.UI.Windows
     public partial class PostgreSQLTerrainPointCreateTableOptionsWindow : Window
     {
         private readonly PostgreSQLTerrainPointCreateTableOptions postgreSQLTerrainPointCreateTableOptions;
+        private readonly Dictionary<int, TerrainPointDensityResult>? terrainPointDensityResults_ByCountyId;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="PostgreSQLTerrainPointCreateTableOptionsWindow"/> class.
         /// </summary>
         /// <param name="postgreSQLTerrainPointCreateTableOptions">The options the controls are filled from. When null the defaults are used.</param>
         /// <param name="administrativeAreal2DReferences">The counties to choose from. A county whose territory is in several pieces is one entry per piece, each with its own identifier, and each has to be selectable on its own.</param>
-        public PostgreSQLTerrainPointCreateTableOptionsWindow(PostgreSQLTerrainPointCreateTableOptions? postgreSQLTerrainPointCreateTableOptions, IEnumerable<AdministrativeAreal2DReference>? administrativeAreal2DReferences)
+        /// <param name="terrainPointDensityResults">The density measurements of the county partitions. When provided, point count, density and equivalent spacing are shown for each county.</param>
+        public PostgreSQLTerrainPointCreateTableOptionsWindow(PostgreSQLTerrainPointCreateTableOptions? postgreSQLTerrainPointCreateTableOptions, IEnumerable<AdministrativeAreal2DReference>? administrativeAreal2DReferences, IEnumerable<TerrainPointDensityResult>? terrainPointDensityResults = null)
         {
             InitializeComponent();
 
             this.postgreSQLTerrainPointCreateTableOptions = postgreSQLTerrainPointCreateTableOptions is null ? new PostgreSQLTerrainPointCreateTableOptions() : new PostgreSQLTerrainPointCreateTableOptions(postgreSQLTerrainPointCreateTableOptions);
+
+            if (terrainPointDensityResults is not null)
+            {
+                terrainPointDensityResults_ByCountyId = [];
+                foreach (TerrainPointDensityResult terrainPointDensityResult in terrainPointDensityResults)
+                {
+                    if (terrainPointDensityResult is not null)
+                    {
+                        terrainPointDensityResults_ByCountyId[terrainPointDensityResult.CountyId] = terrainPointDensityResult;
+                    }
+                }
+            }
 
             // The caption stays in the XAML - the designer does not run this constructor, and a caption set here
             // leaves an empty label over an empty box in the preview. Only the values come from the options.
@@ -97,7 +111,24 @@ namespace DiGi.GIS.PostgreSQL.UI.Windows
 
             // The identifier is shown because it is what the run is keyed by, and because two pieces of the same
             // county are told apart by nothing else - they share their code and their name.
-            e.Name = $"{administrativeAreal2DReference.Code} {administrativeAreal2DReference.Name} (id {administrativeAreal2DReference.Id})";
+            string name = $"{administrativeAreal2DReference.Code} {administrativeAreal2DReference.Name} (id {administrativeAreal2DReference.Id})";
+
+            if (terrainPointDensityResults_ByCountyId is not null && terrainPointDensityResults_ByCountyId.TryGetValue(administrativeAreal2DReference.Id, out TerrainPointDensityResult? terrainPointDensityResult) && terrainPointDensityResult is not null)
+            {
+                if (terrainPointDensityResult.Count > 0)
+                {
+                    string densityText = terrainPointDensityResult.Density.HasValue ? $"{terrainPointDensityResult.Density.Value.ToString("0.#####", System.Globalization.CultureInfo.InvariantCulture)} pts/m²" : "0 pts/m²";
+                    string spacingText = terrainPointDensityResult.SpacingEquivalent.HasValue ? $", ~{terrainPointDensityResult.SpacingEquivalent.Value.ToString("0.#", System.Globalization.CultureInfo.InvariantCulture)} m" : string.Empty;
+
+                    name = $"{name} - {terrainPointDensityResult.Count.ToString("N0", System.Globalization.CultureInfo.InvariantCulture)} pts ({densityText}{spacingText})";
+                }
+                else
+                {
+                    name = $"{name} - 0 pts (0 pts/m²)";
+                }
+            }
+
+            e.Name = name;
         }
 
         private void SetCounties(IEnumerable<AdministrativeAreal2DReference>? administrativeAreal2DReferences)

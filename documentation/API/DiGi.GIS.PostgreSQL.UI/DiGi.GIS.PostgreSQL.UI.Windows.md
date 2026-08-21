@@ -119,28 +119,34 @@ Inheritance [System\.Object](https://learn.microsoft.com/en-us/dotnet/api/system
 Implements [System\.Windows\.Markup\.IComponentConnector](https://learn.microsoft.com/en-us/dotnet/api/system.windows.markup.icomponentconnector 'System\.Windows\.Markup\.IComponentConnector')
 ### Constructors
 
-<a name='DiGi.GIS.PostgreSQL.UI.Windows.PostgreSQLTerrainPointCreateTableOptionsWindow.PostgreSQLTerrainPointCreateTableOptionsWindow(DiGi.GIS.PostgreSQL.Classes.PostgreSQLTerrainPointCreateTableOptions,System.Collections.Generic.IEnumerable_DiGi.GIS.PostgreSQL.Classes.AdministrativeAreal2DReference_)'></a>
+<a name='DiGi.GIS.PostgreSQL.UI.Windows.PostgreSQLTerrainPointCreateTableOptionsWindow.PostgreSQLTerrainPointCreateTableOptionsWindow(DiGi.GIS.PostgreSQL.Classes.PostgreSQLTerrainPointCreateTableOptions,System.Collections.Generic.IEnumerable_DiGi.GIS.PostgreSQL.Classes.AdministrativeAreal2DReference_,System.Collections.Generic.IEnumerable_DiGi.GIS.PostgreSQL.Classes.TerrainPointDensityResult_)'></a>
 
-## PostgreSQLTerrainPointCreateTableOptionsWindow\(PostgreSQLTerrainPointCreateTableOptions, IEnumerable\<AdministrativeAreal2DReference\>\) Constructor
+## PostgreSQLTerrainPointCreateTableOptionsWindow\(PostgreSQLTerrainPointCreateTableOptions, IEnumerable\<AdministrativeAreal2DReference\>, IEnumerable\<TerrainPointDensityResult\>\) Constructor
 
 Initializes a new instance of the [PostgreSQLTerrainPointCreateTableOptionsWindow](DiGi.GIS.PostgreSQL.UI.Windows.md#DiGi.GIS.PostgreSQL.UI.Windows.PostgreSQLTerrainPointCreateTableOptionsWindow 'DiGi\.GIS\.PostgreSQL\.UI\.Windows\.PostgreSQLTerrainPointCreateTableOptionsWindow') class\.
 
 ```csharp
-public PostgreSQLTerrainPointCreateTableOptionsWindow(DiGi.GIS.PostgreSQL.Classes.PostgreSQLTerrainPointCreateTableOptions? postgreSQLTerrainPointCreateTableOptions, System.Collections.Generic.IEnumerable<DiGi.GIS.PostgreSQL.Classes.AdministrativeAreal2DReference>? administrativeAreal2DReferences);
+public PostgreSQLTerrainPointCreateTableOptionsWindow(DiGi.GIS.PostgreSQL.Classes.PostgreSQLTerrainPointCreateTableOptions? postgreSQLTerrainPointCreateTableOptions, System.Collections.Generic.IEnumerable<DiGi.GIS.PostgreSQL.Classes.AdministrativeAreal2DReference>? administrativeAreal2DReferences, System.Collections.Generic.IEnumerable<DiGi.GIS.PostgreSQL.Classes.TerrainPointDensityResult>? terrainPointDensityResults=null);
 ```
 #### Parameters
 
-<a name='DiGi.GIS.PostgreSQL.UI.Windows.PostgreSQLTerrainPointCreateTableOptionsWindow.PostgreSQLTerrainPointCreateTableOptionsWindow(DiGi.GIS.PostgreSQL.Classes.PostgreSQLTerrainPointCreateTableOptions,System.Collections.Generic.IEnumerable_DiGi.GIS.PostgreSQL.Classes.AdministrativeAreal2DReference_).postgreSQLTerrainPointCreateTableOptions'></a>
+<a name='DiGi.GIS.PostgreSQL.UI.Windows.PostgreSQLTerrainPointCreateTableOptionsWindow.PostgreSQLTerrainPointCreateTableOptionsWindow(DiGi.GIS.PostgreSQL.Classes.PostgreSQLTerrainPointCreateTableOptions,System.Collections.Generic.IEnumerable_DiGi.GIS.PostgreSQL.Classes.AdministrativeAreal2DReference_,System.Collections.Generic.IEnumerable_DiGi.GIS.PostgreSQL.Classes.TerrainPointDensityResult_).postgreSQLTerrainPointCreateTableOptions'></a>
 
 `postgreSQLTerrainPointCreateTableOptions` [DiGi\.GIS\.PostgreSQL\.Classes\.PostgreSQLTerrainPointCreateTableOptions](https://learn.microsoft.com/en-us/dotnet/api/digi.gis.postgresql.classes.postgresqlterrainpointcreatetableoptions 'DiGi\.GIS\.PostgreSQL\.Classes\.PostgreSQLTerrainPointCreateTableOptions')
 
 The options the controls are filled from\. When null the defaults are used\.
 
-<a name='DiGi.GIS.PostgreSQL.UI.Windows.PostgreSQLTerrainPointCreateTableOptionsWindow.PostgreSQLTerrainPointCreateTableOptionsWindow(DiGi.GIS.PostgreSQL.Classes.PostgreSQLTerrainPointCreateTableOptions,System.Collections.Generic.IEnumerable_DiGi.GIS.PostgreSQL.Classes.AdministrativeAreal2DReference_).administrativeAreal2DReferences'></a>
+<a name='DiGi.GIS.PostgreSQL.UI.Windows.PostgreSQLTerrainPointCreateTableOptionsWindow.PostgreSQLTerrainPointCreateTableOptionsWindow(DiGi.GIS.PostgreSQL.Classes.PostgreSQLTerrainPointCreateTableOptions,System.Collections.Generic.IEnumerable_DiGi.GIS.PostgreSQL.Classes.AdministrativeAreal2DReference_,System.Collections.Generic.IEnumerable_DiGi.GIS.PostgreSQL.Classes.TerrainPointDensityResult_).administrativeAreal2DReferences'></a>
 
 `administrativeAreal2DReferences` [System\.Collections\.Generic\.IEnumerable&lt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.ienumerable-1 'System\.Collections\.Generic\.IEnumerable\`1')[DiGi\.GIS\.PostgreSQL\.Classes\.AdministrativeAreal2DReference](https://learn.microsoft.com/en-us/dotnet/api/digi.gis.postgresql.classes.administrativeareal2dreference 'DiGi\.GIS\.PostgreSQL\.Classes\.AdministrativeAreal2DReference')[&gt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.ienumerable-1 'System\.Collections\.Generic\.IEnumerable\`1')
 
 The counties to choose from\. A county whose territory is in several pieces is one entry per piece, each with its own identifier, and each has to be selectable on its own\.
+
+<a name='DiGi.GIS.PostgreSQL.UI.Windows.PostgreSQLTerrainPointCreateTableOptionsWindow.PostgreSQLTerrainPointCreateTableOptionsWindow(DiGi.GIS.PostgreSQL.Classes.PostgreSQLTerrainPointCreateTableOptions,System.Collections.Generic.IEnumerable_DiGi.GIS.PostgreSQL.Classes.AdministrativeAreal2DReference_,System.Collections.Generic.IEnumerable_DiGi.GIS.PostgreSQL.Classes.TerrainPointDensityResult_).terrainPointDensityResults'></a>
+
+`terrainPointDensityResults` [System\.Collections\.Generic\.IEnumerable&lt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.ienumerable-1 'System\.Collections\.Generic\.IEnumerable\`1')[DiGi\.GIS\.PostgreSQL\.Classes\.TerrainPointDensityResult](https://learn.microsoft.com/en-us/dotnet/api/digi.gis.postgresql.classes.terrainpointdensityresult 'DiGi\.GIS\.PostgreSQL\.Classes\.TerrainPointDensityResult')[&gt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.ienumerable-1 'System\.Collections\.Generic\.IEnumerable\`1')
+
+The density measurements of the county partitions\. When provided, point count, density and equivalent spacing are shown for each county\.
 ### Properties
 
 <a name='DiGi.GIS.PostgreSQL.UI.Windows.PostgreSQLTerrainPointCreateTableOptionsWindow.PostgreSQLTerrainPointCreateTableOptions'></a>

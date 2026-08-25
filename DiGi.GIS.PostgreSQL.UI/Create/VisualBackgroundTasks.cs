@@ -109,11 +109,11 @@ namespace DiGi.GIS.PostgreSQL.UI
                     {
                         PostgreSQLOrtoDatasRefreshOptions = new PostgreSQLOrtoDatasRefreshOptions()
                         {
-                            OverrideExistsing = false,
+                            OverrideExisting = false,
                             UpdateSubdivisionIds = true
                         }
                     },
-                    "Refresh OrtoDatas", "Refreshes OrtoDatas table in database"));
+                    "Refresh OrtoDatas", "Queues the orthophoto downloads each county is short of, for the download task to work through. Stores no orthophoto data itself"));
 
                     result.Add(Visual(new PostgreSQLUpdateOccupancyTask(gISPostgreSQLConverterManager), "Update occupancy from database", "Update occupancy for Building2Ds and AdministrativeAreal2Ds based on data in database"));
 

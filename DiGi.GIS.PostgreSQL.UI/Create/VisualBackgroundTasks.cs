@@ -80,7 +80,7 @@ namespace DiGi.GIS.PostgreSQL.UI
                             return;
                         }
 
-                        List<BuildingDataUpdateType> buildingDataUpdateTypes = [];
+                        HashSet<BuildingDataUpdateType> buildingDataUpdateTypes = [];
                         foreach (string text in texts)
                         {
                             buildingDataUpdateTypes.Add(dictionary[text]);

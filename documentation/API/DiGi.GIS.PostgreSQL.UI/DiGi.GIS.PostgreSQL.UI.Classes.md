@@ -1115,6 +1115,68 @@ The cancellation token used to observe while writing the task to stop executing\
 [System\.Threading\.Tasks\.Task&lt;](https://learn.microsoft.com/en-us/dotnet/api/system.threading.tasks.task-1 'System\.Threading\.Tasks\.Task\`1')[System\.Boolean](https://learn.microsoft.com/en-us/dotnet/api/system.boolean 'System\.Boolean')[&gt;](https://learn.microsoft.com/en-us/dotnet/api/system.threading.tasks.task-1 'System\.Threading\.Tasks\.Task\`1')  
 A task that represents the asynchronous operation\. The task result is true if the operation succeeded; otherwise, false\.
 
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIPostgreSQLBuildingDataUpdateTask'></a>
+
+## UIPostgreSQLBuildingDataUpdateTask Class
+
+A building data run that is scoped from the user interface: the counties, the kinds of column to write and the statement timeout are asked for through [PostgreSQLBuildingDataUpdateOptionsWindow](DiGi.GIS.PostgreSQL.UI.Windows.md#DiGi.GIS.PostgreSQL.UI.Windows.PostgreSQLBuildingDataUpdateOptionsWindow 'DiGi\.GIS\.PostgreSQL\.UI\.Windows\.PostgreSQLBuildingDataUpdateOptionsWindow') each time the task is started, and only then is the run handed to [DiGi\.GIS\.PostgreSQL\.Classes\.PostgreSQLBuildingDataUpdateTask](https://learn.microsoft.com/en-us/dotnet/api/digi.gis.postgresql.classes.postgresqlbuildingdataupdatetask 'DiGi\.GIS\.PostgreSQL\.Classes\.PostgreSQLBuildingDataUpdateTask')\.
+
+That is what the counties are worth asking for. Unscoped the run walks every subdivision in the country - around a hundred thousand of them - reading each subdivision's buildings and writing a row per building; over one named county it is minutes. Neither is a default the other would tolerate, and the base task takes an unset county collection as the whole country.
+
+```csharp
+public class UIPostgreSQLBuildingDataUpdateTask : DiGi.GIS.PostgreSQL.Classes.PostgreSQLBuildingDataUpdateTask, DiGi.GIS.PostgreSQL.UI.Interfaces.IGISPostgreSQLUIObject
+```
+
+Inheritance [System\.Object](https://learn.microsoft.com/en-us/dotnet/api/system.object 'System\.Object') → [DiGi\.Core\.Classes\.BackgroundTask](https://learn.microsoft.com/en-us/dotnet/api/digi.core.classes.backgroundtask 'DiGi\.Core\.Classes\.BackgroundTask') → [DiGi\.Core\.Classes\.CancelableBackgroundTask](https://learn.microsoft.com/en-us/dotnet/api/digi.core.classes.cancelablebackgroundtask 'DiGi\.Core\.Classes\.CancelableBackgroundTask') → [DiGi\.Core\.Classes\.ReportableBackgroundTask&lt;](https://learn.microsoft.com/en-us/dotnet/api/digi.core.classes.reportablebackgroundtask-1 'DiGi\.Core\.Classes\.ReportableBackgroundTask\`1')[System\.Int64](https://learn.microsoft.com/en-us/dotnet/api/system.int64 'System\.Int64')[&gt;](https://learn.microsoft.com/en-us/dotnet/api/digi.core.classes.reportablebackgroundtask-1 'DiGi\.Core\.Classes\.ReportableBackgroundTask\`1') → [DiGi\.GIS\.PostgreSQL\.Classes\.PostgreSQLBuildingDataUpdateTask](https://learn.microsoft.com/en-us/dotnet/api/digi.gis.postgresql.classes.postgresqlbuildingdataupdatetask 'DiGi\.GIS\.PostgreSQL\.Classes\.PostgreSQLBuildingDataUpdateTask') → UIPostgreSQLBuildingDataUpdateTask
+
+Implements [IGISPostgreSQLUIObject](DiGi.GIS.PostgreSQL.UI.Interfaces.md#DiGi.GIS.PostgreSQL.UI.Interfaces.IGISPostgreSQLUIObject 'DiGi\.GIS\.PostgreSQL\.UI\.Interfaces\.IGISPostgreSQLUIObject')
+### Constructors
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIPostgreSQLBuildingDataUpdateTask.UIPostgreSQLBuildingDataUpdateTask(DiGi.GIS.PostgreSQL.Classes.GISPostgreSQLConverterManager)'></a>
+
+## UIPostgreSQLBuildingDataUpdateTask\(GISPostgreSQLConverterManager\) Constructor
+
+Initializes a new instance of the [UIPostgreSQLBuildingDataUpdateTask](DiGi.GIS.PostgreSQL.UI.Classes.md#DiGi.GIS.PostgreSQL.UI.Classes.UIPostgreSQLBuildingDataUpdateTask 'DiGi\.GIS\.PostgreSQL\.UI\.Classes\.UIPostgreSQLBuildingDataUpdateTask') class\.
+
+```csharp
+public UIPostgreSQLBuildingDataUpdateTask(DiGi.GIS.PostgreSQL.Classes.GISPostgreSQLConverterManager GISPostgreSQLConverterManager);
+```
+#### Parameters
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIPostgreSQLBuildingDataUpdateTask.UIPostgreSQLBuildingDataUpdateTask(DiGi.GIS.PostgreSQL.Classes.GISPostgreSQLConverterManager).GISPostgreSQLConverterManager'></a>
+
+`GISPostgreSQLConverterManager` [DiGi\.GIS\.PostgreSQL\.Classes\.GISPostgreSQLConverterManager](https://learn.microsoft.com/en-us/dotnet/api/digi.gis.postgresql.classes.gispostgresqlconvertermanager 'DiGi\.GIS\.PostgreSQL\.Classes\.GISPostgreSQLConverterManager')
+
+The GIS PostgreSQL converter manager used to read the areas and buildings and write the building data\.
+### Methods
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIPostgreSQLBuildingDataUpdateTask.ExecuteAsync(System.IProgress_long_,System.Threading.CancellationToken)'></a>
+
+## UIPostgreSQLBuildingDataUpdateTask\.ExecuteAsync\(IProgress\<long\>, CancellationToken\) Method
+
+Executes the background task to update building data from AdministrativeAreal2D and Building2D sources\.
+
+```csharp
+protected override System.Threading.Tasks.Task<bool> ExecuteAsync(System.IProgress<long> progress, System.Threading.CancellationToken cancellationToken);
+```
+#### Parameters
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIPostgreSQLBuildingDataUpdateTask.ExecuteAsync(System.IProgress_long_,System.Threading.CancellationToken).progress'></a>
+
+`progress` [System\.IProgress&lt;](https://learn.microsoft.com/en-us/dotnet/api/system.iprogress-1 'System\.IProgress\`1')[System\.Int64](https://learn.microsoft.com/en-us/dotnet/api/system.int64 'System\.Int64')[&gt;](https://learn.microsoft.com/en-us/dotnet/api/system.iprogress-1 'System\.IProgress\`1')
+
+A progress reporter for reporting the number of processed items\.
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIPostgreSQLBuildingDataUpdateTask.ExecuteAsync(System.IProgress_long_,System.Threading.CancellationToken).cancellationToken'></a>
+
+`cancellationToken` [System\.Threading\.CancellationToken](https://learn.microsoft.com/en-us/dotnet/api/system.threading.cancellationtoken 'System\.Threading\.CancellationToken')
+
+A cancellation token that can be used to cancel the operation\.
+
+#### Returns
+[System\.Threading\.Tasks\.Task&lt;](https://learn.microsoft.com/en-us/dotnet/api/system.threading.tasks.task-1 'System\.Threading\.Tasks\.Task\`1')[System\.Boolean](https://learn.microsoft.com/en-us/dotnet/api/system.boolean 'System\.Boolean')[&gt;](https://learn.microsoft.com/en-us/dotnet/api/system.threading.tasks.task-1 'System\.Threading\.Tasks\.Task\`1')  
+A task representing the asynchronous operation\. Returns true when the run could be attempted and every subdivision in scope was updated without error; otherwise, false\.
+
 <a name='DiGi.GIS.PostgreSQL.UI.Classes.UIPostgreSQLTerrainPointCreateTableTask'></a>
 
 ## UIPostgreSQLTerrainPointCreateTableTask Class

@@ -57,39 +57,7 @@ namespace DiGi.GIS.PostgreSQL.UI
                     result.Add(Visual(new UIPostgreSQLTerrainPointCreateTableTask(GISWebAPIManager, gISPostgreSQLConverterManager), "Create TerrainPoint table", "Creates the TerrainPoint table and fills it by sampling terrain elevations onto a shared grid. Grid size, override existing and the counties are asked for when the task is started"));
                     result.Add(Visual(new UIPostgreSQLTerrainPointFillGapsTask(GISWebAPIManager, gISPostgreSQLConverterManager), "Fill TerrainPoint gaps", "Measures each county against the lattice and samples only the nodes it is short of, recovering the points a sampling run lost. Grid size and the counties are asked for when the task is started"));
 
-                    PostgreSQLBuildingDataUpdateTask postgreSQLBuildingDataUpdateTask = new(gISPostgreSQLConverterManager);
-                    postgreSQLBuildingDataUpdateTask.Starting += (sender, args) =>
-                    {
-                        if (sender is not PostgreSQLBuildingDataUpdateTask postgreSQLBuildingDataUpdateTask_Temp)
-                        {
-                            return;
-                        }
-
-                        Dictionary<string, BuildingDataUpdateType> dictionary = [];
-                        foreach (BuildingDataUpdateType buildingDataUpdateType in System.Enum.GetValues<BuildingDataUpdateType>())
-                        {
-                            dictionary[buildingDataUpdateType.Description() ?? buildingDataUpdateType.ToString()] = buildingDataUpdateType;
-                        }
-
-                        DiGi.UI.WPF.Windows.ListBoxWindow listBoxWindow = new("Update building data");
-                        listBoxWindow.SetItems(dictionary.Keys);
-
-                        if (listBoxWindow.ShowDialog() is not bool dialogResult || !dialogResult || listBoxWindow.GetItems<string>() is not List<string> texts)
-                        {
-                            postgreSQLBuildingDataUpdateTask_Temp.PostgreSQLBuildingDataUpdateOptions.BuildingDataUpdateTypes = [];
-                            return;
-                        }
-
-                        HashSet<BuildingDataUpdateType> buildingDataUpdateTypes = [];
-                        foreach (string text in texts)
-                        {
-                            buildingDataUpdateTypes.Add(dictionary[text]);
-                        }
-
-                        postgreSQLBuildingDataUpdateTask_Temp.PostgreSQLBuildingDataUpdateOptions.BuildingDataUpdateTypes = buildingDataUpdateTypes;
-                    };
-
-                    result.Add(Visual(postgreSQLBuildingDataUpdateTask, "Update building data", "Update building data base on Buidling2D and other data sources (database, OrtoDatas etc.)"));
+                    result.Add(Visual(new UIPostgreSQLBuildingDataUpdateTask(gISPostgreSQLConverterManager), "Update building data", "Updates building data from Building2D and the other stored sources. The counties, the kinds of column to write and the statement timeout are asked for when the task is started - unscoped it walks every subdivision in the country"));
 
                     Building2DPostgreSQLConverter? building2DPostgreSQLConverter = gISPostgreSQLConverterManager.GetPostgreSQLConverter<Building2DPostgreSQLConverter>();
                     if (building2DPostgreSQLConverter is not null)

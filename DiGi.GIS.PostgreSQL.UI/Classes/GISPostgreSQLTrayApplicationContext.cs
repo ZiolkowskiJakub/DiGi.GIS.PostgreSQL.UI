@@ -14,7 +14,7 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
 
         private readonly GISPostgreSQLConverterManager? gISPostgreSQLConverterManager = PostgreSQL.Create.GISPostgreSQLConverterManager();
 
-        private readonly GISWebAPIManager? GISWebAPIManager = WebAPI.Create.GISWebAPIManager();
+        private readonly GISWebAPIManager? GISWebAPIManager = WebAPI.Create.GISWebAPIManager(Create.GISPostgreSQLConverterManagerConfigurationFile()?.Key);
 
         /// <summary>
         /// Initializes a new instance of the <see cref="GISPostgreSQLTrayApplicationContext"/> class.

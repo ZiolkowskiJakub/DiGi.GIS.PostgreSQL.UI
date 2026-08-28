@@ -3,6 +3,79 @@
 ## DiGi\.GIS\.PostgreSQL\.UI\.Classes Namespace
 ### Classes
 
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.GISPostgreSQLConverterManagerConfigurationFile'></a>
+
+## GISPostgreSQLConverterManagerConfigurationFile Class
+
+Represents a configuration file specifically for the GIS PostgreSQL converter manager settings, extending the base configuration file functionality\.
+
+```csharp
+public class GISPostgreSQLConverterManagerConfigurationFile : DiGi.Core.Classes.ConfigurationFile, DiGi.GIS.PostgreSQL.UI.Interfaces.IGISPostgreSQLUIObject
+```
+
+Inheritance [System\.Object](https://learn.microsoft.com/en-us/dotnet/api/system.object 'System\.Object') → [DiGi\.Core\.Classes\.Object](https://learn.microsoft.com/en-us/dotnet/api/digi.core.classes.object 'DiGi\.Core\.Classes\.Object') → [DiGi\.Core\.Classes\.SerializableObject](https://learn.microsoft.com/en-us/dotnet/api/digi.core.classes.serializableobject 'DiGi\.Core\.Classes\.SerializableObject') → [DiGi\.Core\.Classes\.ConfigurationFile](https://learn.microsoft.com/en-us/dotnet/api/digi.core.classes.configurationfile 'DiGi\.Core\.Classes\.ConfigurationFile') → GISPostgreSQLConverterManagerConfigurationFile
+
+Implements [IGISPostgreSQLUIObject](DiGi.GIS.PostgreSQL.UI.Interfaces.md#DiGi.GIS.PostgreSQL.UI.Interfaces.IGISPostgreSQLUIObject 'DiGi\.GIS\.PostgreSQL\.UI\.Interfaces\.IGISPostgreSQLUIObject')
+### Constructors
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.GISPostgreSQLConverterManagerConfigurationFile.GISPostgreSQLConverterManagerConfigurationFile()'></a>
+
+## GISPostgreSQLConverterManagerConfigurationFile\(\) Constructor
+
+Initializes a new empty instance of the [GISPostgreSQLConverterManagerConfigurationFile](DiGi.GIS.PostgreSQL.UI.Classes.md#DiGi.GIS.PostgreSQL.UI.Classes.GISPostgreSQLConverterManagerConfigurationFile 'DiGi\.GIS\.PostgreSQL\.UI\.Classes\.GISPostgreSQLConverterManagerConfigurationFile') class\.
+
+```csharp
+public GISPostgreSQLConverterManagerConfigurationFile();
+```
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.GISPostgreSQLConverterManagerConfigurationFile.GISPostgreSQLConverterManagerConfigurationFile(DiGi.Core.Classes.ConfigurationFile)'></a>
+
+## GISPostgreSQLConverterManagerConfigurationFile\(ConfigurationFile\) Constructor
+
+Initializes a new instance of the [GISPostgreSQLConverterManagerConfigurationFile](DiGi.GIS.PostgreSQL.UI.Classes.md#DiGi.GIS.PostgreSQL.UI.Classes.GISPostgreSQLConverterManagerConfigurationFile 'DiGi\.GIS\.PostgreSQL\.UI\.Classes\.GISPostgreSQLConverterManagerConfigurationFile') class by copying settings from another [DiGi\.Core\.Classes\.ConfigurationFile](https://learn.microsoft.com/en-us/dotnet/api/digi.core.classes.configurationfile 'DiGi\.Core\.Classes\.ConfigurationFile')\.
+
+```csharp
+public GISPostgreSQLConverterManagerConfigurationFile(DiGi.Core.Classes.ConfigurationFile? configurationFile);
+```
+#### Parameters
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.GISPostgreSQLConverterManagerConfigurationFile.GISPostgreSQLConverterManagerConfigurationFile(DiGi.Core.Classes.ConfigurationFile).configurationFile'></a>
+
+`configurationFile` [DiGi\.Core\.Classes\.ConfigurationFile](https://learn.microsoft.com/en-us/dotnet/api/digi.core.classes.configurationfile 'DiGi\.Core\.Classes\.ConfigurationFile')
+
+The source configuration file to copy settings from\.
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.GISPostgreSQLConverterManagerConfigurationFile.GISPostgreSQLConverterManagerConfigurationFile(System.Text.Json.Nodes.JsonObject)'></a>
+
+## GISPostgreSQLConverterManagerConfigurationFile\(JsonObject\) Constructor
+
+Initializes a new instance of the [GISPostgreSQLConverterManagerConfigurationFile](DiGi.GIS.PostgreSQL.UI.Classes.md#DiGi.GIS.PostgreSQL.UI.Classes.GISPostgreSQLConverterManagerConfigurationFile 'DiGi\.GIS\.PostgreSQL\.UI\.Classes\.GISPostgreSQLConverterManagerConfigurationFile') class from a [System\.Text\.Json\.Nodes\.JsonObject](https://learn.microsoft.com/en-us/dotnet/api/system.text.json.nodes.jsonobject 'System\.Text\.Json\.Nodes\.JsonObject')\.
+
+```csharp
+public GISPostgreSQLConverterManagerConfigurationFile(System.Text.Json.Nodes.JsonObject? jsonObject);
+```
+#### Parameters
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.GISPostgreSQLConverterManagerConfigurationFile.GISPostgreSQLConverterManagerConfigurationFile(System.Text.Json.Nodes.JsonObject).jsonObject'></a>
+
+`jsonObject` [System\.Text\.Json\.Nodes\.JsonObject](https://learn.microsoft.com/en-us/dotnet/api/system.text.json.nodes.jsonobject 'System\.Text\.Json\.Nodes\.JsonObject')
+
+The JSON object containing the configuration data\.
+### Properties
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.GISPostgreSQLConverterManagerConfigurationFile.Key'></a>
+
+## GISPostgreSQLConverterManagerConfigurationFile\.Key Property
+
+Gets or sets the API authorization key used for authenticating requests to protected Web API endpoints\.
+
+```csharp
+public string? Key { get; set; }
+```
+
+#### Property Value
+[System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
+
 <a name='DiGi.GIS.PostgreSQL.UI.Classes.GISPostgreSQLTrayApplicationContext'></a>
 
 ## GISPostgreSQLTrayApplicationContext Class

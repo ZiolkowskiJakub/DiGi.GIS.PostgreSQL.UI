@@ -493,7 +493,22 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
 
                 Serilog.Modify.Log("County {Code} (id {CountyId}) started", code, countyId);
 
-                if (!await ExecuteCountyAsync(administrativeAreal2DReference, countyId))
+                bool countySucceeded;
+                try
+                {
+                    countySucceeded = await ExecuteCountyAsync(administrativeAreal2DReference, countyId);
+                }
+                catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+                {
+                    throw;
+                }
+                catch (Exception exception)
+                {
+                    Serilog.Modify.Log(exception, "County {Code} (id {CountyId}) failed with exception - it is not checkpointed and the run continues with the next county", code, countyId);
+                    countySucceeded = false;
+                }
+
+                if (!countySucceeded)
                 {
                     Serilog.Modify.Log(Serilog.Enums.LogEventLevel.Error, "County {Code} (id {CountyId}) failed - it is not checkpointed and the run continues with the next county", code, countyId);
                     countyIds_Failed.Add(countyId);

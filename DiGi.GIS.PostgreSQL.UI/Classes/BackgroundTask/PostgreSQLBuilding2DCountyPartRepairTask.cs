@@ -144,7 +144,7 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
 
                 foreach (AdministrativeAreal2D administrativeAreal2D in administrativeAreal2Ds_Code)
                 {
-                    List<Building2D>? building2Ds = await building2DPostgreSQLConverter.GetBuilding2DsByCountyIdAsync(administrativeAreal2D.Id, cancellationToken);
+                    List<Building2D>? building2Ds = await building2DPostgreSQLConverter.GetBuilding2DsByCountyIdAsync(administrativeAreal2D.Id, cancellationToken: cancellationToken);
                     if (building2Ds is null || building2Ds.Count == 0)
                     {
                         continue;
@@ -279,7 +279,7 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
                 {
                     cancellationToken.ThrowIfCancellationRequested();
 
-                    HashSet<long>? ids = await building2DPostgreSQLConverter.RemoveAsync(keyValuePair_Delete.Value, keyValuePair_Delete.Key, cancellationToken);
+                    HashSet<long>? ids = await building2DPostgreSQLConverter.RemoveAsync(keyValuePair_Delete.Value, keyValuePair_Delete.Key, cancellationToken: cancellationToken);
 
                     int count = ids?.Count ?? 0;
                     count_Deleted += count;

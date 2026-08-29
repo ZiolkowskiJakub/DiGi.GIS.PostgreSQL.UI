@@ -1,4 +1,4 @@
-﻿using DiGi.Core.Classes;
+using DiGi.Core.Classes;
 using DiGi.GIS.PostgreSQL.Classes;
 using DiGi.GIS.PostgreSQL.Enums;
 using DiGi.GIS.PostgreSQL.UI.Interfaces;
@@ -166,7 +166,7 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
 
                 if (references_Orphaned.Count != 0)
                 {
-                    HashSet<long>? ids = await buildingModelPostgreSQLConverter.RemoveAsync(references_Orphaned, countyId, cancellationToken);
+                    HashSet<long>? ids = await buildingModelPostgreSQLConverter.RemoveAsync(references_Orphaned, countyId, cancellationToken: cancellationToken);
 
                     int count = ids?.Count ?? 0;
                     count_Deleted += count;
@@ -206,7 +206,7 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
         /// <returns>A task that represents the asynchronous operation. The task result contains the orphaned references, empty when either side could not be read.</returns>
         private static async Task<List<string>> ReferencesOrphanedAsync(BuildingModelPostgreSQLConverter buildingModelPostgreSQLConverter, Building2DPostgreSQLConverter building2DPostgreSQLConverter, int countyId, CancellationToken cancellationToken)
         {
-            HashSet<string>? references_Model = await buildingModelPostgreSQLConverter.GetReferencesAsync(countyId, cancellationToken);
+            HashSet<string>? references_Model = await buildingModelPostgreSQLConverter.GetReferencesAsync(countyId, cancellationToken: cancellationToken);
             if (references_Model is null || references_Model.Count == 0)
             {
                 return [];

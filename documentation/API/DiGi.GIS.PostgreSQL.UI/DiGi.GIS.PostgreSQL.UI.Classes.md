@@ -114,95 +114,13 @@ protected override DiGi.GIS.PostgreSQL.UI.Windows.MainWindow GetWindow();
 [MainWindow](DiGi.GIS.PostgreSQL.UI.Windows.md#DiGi.GIS.PostgreSQL.UI.Windows.MainWindow 'DiGi\.GIS\.PostgreSQL\.UI\.Windows\.MainWindow')  
 An instance of the [MainWindow](DiGi.GIS.PostgreSQL.UI.Windows.md#DiGi.GIS.PostgreSQL.UI.Windows.MainWindow 'DiGi\.GIS\.PostgreSQL\.UI\.Windows\.MainWindow') class\.
 
-<a name='DiGi.GIS.PostgreSQL.UI.Classes.PostgreSQLBuilding2DCountyPartRepairTask'></a>
-
-## PostgreSQLBuilding2DCountyPartRepairTask Class
-
-Repairs the county part each [DiGi\.GIS\.Classes\.Building2D](https://learn.microsoft.com/en-us/dotnet/api/digi.gis.classes.building2d 'DiGi\.GIS\.Classes\.Building2D') of a multi\-part county is filed under\.
-
-A county code names one `administrative_areal_2d` row per polygon part. Imports that resolved a code to a single part filed a whole county's buildings there, and imports that resolved it differently filed them again somewhere else - so the same reference is held under several parts at once. Three codes carry roughly 86 000 such rows today.
-
-Each affected building is re-filed under the part its footprint actually lies in, using the same decision the import now makes (`Query.CountyId`), and the copies left under the other parts are deleted. A reference held by exactly one part is left untouched, so running this over a healthy county does nothing.
-
-<b>Reports by default and writes nothing.</b>[DryRun](DiGi.GIS.PostgreSQL.UI.Classes.md#DiGi.GIS.PostgreSQL.UI.Classes.PostgreSQLBuilding2DCountyPartRepairTask.DryRun 'DiGi\.GIS\.PostgreSQL\.UI\.Classes\.PostgreSQLBuilding2DCountyPartRepairTask\.DryRun') has to be turned off deliberately, and the report it produces first is what the delete should be reviewed against - the buildings removed here have no undo.
-
-The report is written as files into [ReportDirectory](DiGi.GIS.PostgreSQL.UI.Classes.md#DiGi.GIS.PostgreSQL.UI.Classes.PostgreSQLBuilding2DCountyPartRepairTask.ReportDirectory 'DiGi\.GIS\.PostgreSQL\.UI\.Classes\.PostgreSQLBuilding2DCountyPartRepairTask\.ReportDirectory') as well as to the log: one row per affected reference in `Building2D_CountyPartRepair.csv` and per-code totals in `Building2D_CountyPartRepair_Summary.txt`. The files are what the decision to delete should rest on - a log is shared with whatever else the application is doing and rolls by day, which is no place for the only record of an irreversible change. The row file is flushed per code, so a run interrupted late still leaves everything it had already decided.
-
-```csharp
-public class PostgreSQLBuilding2DCountyPartRepairTask : DiGi.Core.Classes.ReportableBackgroundTask<long>, DiGi.GIS.PostgreSQL.UI.Interfaces.IGISPostgreSQLUIObject
-```
-
-Inheritance [System\.Object](https://learn.microsoft.com/en-us/dotnet/api/system.object 'System\.Object') → [DiGi\.Core\.Classes\.BackgroundTask](https://learn.microsoft.com/en-us/dotnet/api/digi.core.classes.backgroundtask 'DiGi\.Core\.Classes\.BackgroundTask') → [DiGi\.Core\.Classes\.CancelableBackgroundTask](https://learn.microsoft.com/en-us/dotnet/api/digi.core.classes.cancelablebackgroundtask 'DiGi\.Core\.Classes\.CancelableBackgroundTask') → [DiGi\.Core\.Classes\.ReportableBackgroundTask&lt;](https://learn.microsoft.com/en-us/dotnet/api/digi.core.classes.reportablebackgroundtask-1 'DiGi\.Core\.Classes\.ReportableBackgroundTask\`1')[System\.Int64](https://learn.microsoft.com/en-us/dotnet/api/system.int64 'System\.Int64')[&gt;](https://learn.microsoft.com/en-us/dotnet/api/digi.core.classes.reportablebackgroundtask-1 'DiGi\.Core\.Classes\.ReportableBackgroundTask\`1') → PostgreSQLBuilding2DCountyPartRepairTask
-
-Implements [IGISPostgreSQLUIObject](DiGi.GIS.PostgreSQL.UI.Interfaces.md#DiGi.GIS.PostgreSQL.UI.Interfaces.IGISPostgreSQLUIObject 'DiGi\.GIS\.PostgreSQL\.UI\.Interfaces\.IGISPostgreSQLUIObject')
-### Constructors
-
-<a name='DiGi.GIS.PostgreSQL.UI.Classes.PostgreSQLBuilding2DCountyPartRepairTask.PostgreSQLBuilding2DCountyPartRepairTask(DiGi.GIS.PostgreSQL.Classes.GISPostgreSQLConverterManager)'></a>
-
-## PostgreSQLBuilding2DCountyPartRepairTask\(GISPostgreSQLConverterManager\) Constructor
-
-Initializes a new instance of the [PostgreSQLBuilding2DCountyPartRepairTask](DiGi.GIS.PostgreSQL.UI.Classes.md#DiGi.GIS.PostgreSQL.UI.Classes.PostgreSQLBuilding2DCountyPartRepairTask 'DiGi\.GIS\.PostgreSQL\.UI\.Classes\.PostgreSQLBuilding2DCountyPartRepairTask') class\.
-
-```csharp
-public PostgreSQLBuilding2DCountyPartRepairTask(DiGi.GIS.PostgreSQL.Classes.GISPostgreSQLConverterManager gISPostgreSQLConverterManager);
-```
-#### Parameters
-
-<a name='DiGi.GIS.PostgreSQL.UI.Classes.PostgreSQLBuilding2DCountyPartRepairTask.PostgreSQLBuilding2DCountyPartRepairTask(DiGi.GIS.PostgreSQL.Classes.GISPostgreSQLConverterManager).gISPostgreSQLConverterManager'></a>
-
-`gISPostgreSQLConverterManager` [DiGi\.GIS\.PostgreSQL\.Classes\.GISPostgreSQLConverterManager](https://learn.microsoft.com/en-us/dotnet/api/digi.gis.postgresql.classes.gispostgresqlconvertermanager 'DiGi\.GIS\.PostgreSQL\.Classes\.GISPostgreSQLConverterManager')
-
-The manager holding the PostgreSQL converters\.
-### Properties
-
-<a name='DiGi.GIS.PostgreSQL.UI.Classes.PostgreSQLBuilding2DCountyPartRepairTask.Codes'></a>
-
-## PostgreSQLBuilding2DCountyPartRepairTask\.Codes Property
-
-Gets or sets the county codes to repair\. When null every code holding more than one part is examined\.
-
-```csharp
-public System.Collections.Generic.IEnumerable<string>? Codes { get; set; }
-```
-
-#### Property Value
-[System\.Collections\.Generic\.IEnumerable&lt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.ienumerable-1 'System\.Collections\.Generic\.IEnumerable\`1')[System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')[&gt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.ienumerable-1 'System\.Collections\.Generic\.IEnumerable\`1')
-
-<a name='DiGi.GIS.PostgreSQL.UI.Classes.PostgreSQLBuilding2DCountyPartRepairTask.DryRun'></a>
-
-## PostgreSQLBuilding2DCountyPartRepairTask\.DryRun Property
-
-Gets or sets a value indicating whether the task only reports what it would do\. Defaults to [true](https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/bool 'https://docs\.microsoft\.com/en\-us/dotnet/csharp/language\-reference/builtin\-types/bool'); nothing is written until it is turned off\.
-
-```csharp
-public bool DryRun { get; set; }
-```
-
-#### Property Value
-[System\.Boolean](https://learn.microsoft.com/en-us/dotnet/api/system.boolean 'System\.Boolean')
-
-<a name='DiGi.GIS.PostgreSQL.UI.Classes.PostgreSQLBuilding2DCountyPartRepairTask.ReportDirectory'></a>
-
-## PostgreSQLBuilding2DCountyPartRepairTask\.ReportDirectory Property
-
-Gets or sets the directory the two report files are written into\. When null the directory the application was launched from is used\.
-
-Deliberately not a folder dialog: this runs on a thread pool thread, where a WPF common dialog needs an STA apartment and throws instead of opening. A report that cannot be written is the one thing this task must not fail on.
-
-```csharp
-public string? ReportDirectory { get; set; }
-```
-
-#### Property Value
-[System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
-
 <a name='DiGi.GIS.PostgreSQL.UI.Classes.PostgreSQLBuildingModelCleanupTask'></a>
 
 ## PostgreSQLBuildingModelCleanupTask Class
 
 Removes the [DiGi\.Analytical\.Building\.Classes\.BuildingModel](https://learn.microsoft.com/en-us/dotnet/api/digi.analytical.building.classes.buildingmodel 'DiGi\.Analytical\.Building\.Classes\.BuildingModel') rows whose building no longer exists under the county part holding them\.
 
-An orphan is a model held under a part whose `building_2d` no longer holds the building it describes, which is what a [PostgreSQLBuilding2DCountyPartRepairTask](DiGi.GIS.PostgreSQL.UI.Classes.md#DiGi.GIS.PostgreSQL.UI.Classes.PostgreSQLBuilding2DCountyPartRepairTask 'DiGi\.GIS\.PostgreSQL\.UI\.Classes\.PostgreSQLBuilding2DCountyPartRepairTask') run can leave behind when it re-files a building under the part its footprint lies in.
+An orphan is a model held under a part whose `building_2d` no longer holds the building it describes, which is what a county part repair run can leave behind when it re-files a building under the part its footprint lies in.
 
 <b>Reports by default and writes nothing.</b>[DryRun](DiGi.GIS.PostgreSQL.UI.Classes.md#DiGi.GIS.PostgreSQL.UI.Classes.PostgreSQLBuildingModelCleanupTask.DryRun 'DiGi\.GIS\.PostgreSQL\.UI\.Classes\.PostgreSQLBuildingModelCleanupTask\.DryRun') has to be turned off deliberately, and the counts it reports first are what the delete should be reviewed against - the rows removed here have no undo.
 

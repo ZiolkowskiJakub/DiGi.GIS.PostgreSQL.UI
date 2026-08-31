@@ -85,29 +85,12 @@ namespace DiGi.GIS.PostgreSQL.UI
 
                     result.Add(Visual(new PostgreSQLUpdateOccupancyTask(gISPostgreSQLConverterManager), "Update occupancy from database", "Update occupancy for Building2Ds and AdministrativeAreal2Ds based on data in database"));
 
-                    // TODO [CountyPartAssignment]: temporary registration for the one-off county part repair of
-                    // issue #1. Remove it with PostgreSQLBuilding2DCountyPartRepairTask, once no county part holds
-                    // a building whose footprint lies in a sibling part.
-                    // Disarmed again. 2212, 2405 and 2612 were repaired on 2026-08-14: 86 196 copies deleted,
-                    // and the parts read back 1/44 809, 42 585/3 and 51 739/1 with their unions intact, so no
-                    // building lost its last row. Re-running now is a no-op - a reference held by a single part
-                    // is skipped - but the delete has no undo, so it goes back behind DryRun.
-                    // Scoped to the three codes whose parts both held buildings; clear Codes to sweep all 18
-                    // multi-part codes, of which 15 are still latent and become live once an import lands on a
-                    // currently-empty part.
-                    result.Add(Visual(new PostgreSQLBuilding2DCountyPartRepairTask(gISPostgreSQLConverterManager)
-                    {
-                        Codes = ["2212", "2405", "2612"],
-                        DryRun = true
-                    },
-                    "Report Building2D county part duplicates", "Reports Building2Ds held under more than one polygon part of the same county and which part each belongs to. Dry run - deletes nothing until DryRun is turned off"));
-
                     // Orphan cleanup only. The superseded half went with the unique_id migration of issue
                     // ZiolkowskiJakub/DiGi.GIS.PostgreSQL#5: rows are keyed on the model they hold, so nothing is
                     // keyed on its reference any more and nothing supersedes anything.
                     // What remains answers a different question - whether the building moved. A model whose part no
-                    // longer holds its building_2d is what a PostgreSQLBuilding2DCountyPartRepairTask run can leave
-                    // behind, and it loses its only row when deleted, which is why this stays behind DryRun.
+                    // longer holds its building_2d is what a county part repair run can leave behind,
+                    // and it loses its only row when deleted, which is why this stays behind DryRun.
                     // The name and the description are derived from DryRun rather than written beside it, so a row
                     // whose button deletes rows with no undo cannot end up labelled as though it were reporting.
                     PostgreSQLBuildingModelCleanupTask postgreSQLBuildingModelCleanupTask = new(gISPostgreSQLConverterManager)

@@ -14,7 +14,7 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
 {
     /// <summary>
     /// Removes the <see cref="DiGi.Analytical.Building.Classes.BuildingModel"/> rows whose building no longer exists under the county part holding them.
-    /// <para>An orphan is a model held under a part whose <c>building_2d</c> no longer holds the building it describes, which is what a <see cref="PostgreSQLBuilding2DCountyPartRepairTask"/> run can leave behind when it re-files a building under the part its footprint lies in.</para>
+    /// <para>An orphan is a model held under a part whose <c>building_2d</c> no longer holds the building it describes, which is what a county part repair run can leave behind when it re-files a building under the part its footprint lies in.</para>
     /// <para><b>Reports by default and writes nothing.</b> <see cref="DryRun"/> has to be turned off deliberately, and the counts it reports first are what the delete should be reviewed against - the rows removed here have no undo.</para>
     /// <para>The report is written as files into <see cref="ReportDirectory"/> as well as to the log: <c>BuildingModels_Cleanup.csv</c> naming every orphaned reference, and <c>BuildingModels_Cleanup_Summary.txt</c> carrying the totals. The files are what the decision to delete should rest on - a log is shared with whatever else the application is doing and rolls by day.</para>
     /// </summary>

@@ -16,13 +16,28 @@ namespace DiGi.GIS.PostgreSQL.UI
         {
             if (string.IsNullOrWhiteSpace(path))
             {
-                string? directory_ExecutingAssembly = System.IO.Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-                if (string.IsNullOrWhiteSpace(directory_ExecutingAssembly) || !Directory.Exists(directory_ExecutingAssembly))
+                string? directory = null;
+                try
                 {
-                    return null;
+                    string? location = Assembly.GetExecutingAssembly().Location;
+                    if (!string.IsNullOrWhiteSpace(location))
+                    {
+                        directory = System.IO.Path.GetDirectoryName(location);
+                    }
+                }
+                catch
+                {
                 }
 
-                path = System.IO.Path.Combine(directory_ExecutingAssembly, Constants.FileName.GISWebAPIClientConfigurationFile);
+                if (string.IsNullOrWhiteSpace(directory) || !Directory.Exists(directory) || !File.Exists(System.IO.Path.Combine(directory, Constants.FileName.GISWebAPIClientConfigurationFile)))
+                {
+                    directory = System.AppDomain.CurrentDomain.BaseDirectory;
+                }
+
+                if (!string.IsNullOrWhiteSpace(directory) && Directory.Exists(directory))
+                {
+                    path = System.IO.Path.Combine(directory, Constants.FileName.GISWebAPIClientConfigurationFile);
+                }
             }
 
             if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))

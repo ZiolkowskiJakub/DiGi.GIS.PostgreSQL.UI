@@ -1304,6 +1304,83 @@ A cancellation token that can be used to cancel the operation\.
 [System\.Threading\.Tasks\.Task&lt;](https://learn.microsoft.com/en-us/dotnet/api/system.threading.tasks.task-1 'System\.Threading\.Tasks\.Task\`1')[System\.Boolean](https://learn.microsoft.com/en-us/dotnet/api/system.boolean 'System\.Boolean')[&gt;](https://learn.microsoft.com/en-us/dotnet/api/system.threading.tasks.task-1 'System\.Threading\.Tasks\.Task\`1')  
 A task representing the asynchronous operation\. Returns true unless the run was cancelled\.
 
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIPostgreSQLUnitInsertFromFileTask'></a>
+
+## UIPostgreSQLUnitInsertFromFileTask Class
+
+Represents a task for populating territorial units into a PostgreSQL database from a JSON file selected through the user interface\.
+
+```csharp
+public class UIPostgreSQLUnitInsertFromFileTask : DiGi.GIS.PostgreSQL.Classes.PostgreSQLUnitInsertFromFileTask, DiGi.GIS.PostgreSQL.UI.Interfaces.IGISPostgreSQLUIObject
+```
+
+Inheritance [System\.Object](https://learn.microsoft.com/en-us/dotnet/api/system.object 'System\.Object') → [DiGi\.Core\.Classes\.BackgroundTask](https://learn.microsoft.com/en-us/dotnet/api/digi.core.classes.backgroundtask 'DiGi\.Core\.Classes\.BackgroundTask') → [DiGi\.Core\.Classes\.CancelableBackgroundTask](https://learn.microsoft.com/en-us/dotnet/api/digi.core.classes.cancelablebackgroundtask 'DiGi\.Core\.Classes\.CancelableBackgroundTask') → [DiGi\.Core\.Classes\.ReportableBackgroundTask&lt;](https://learn.microsoft.com/en-us/dotnet/api/digi.core.classes.reportablebackgroundtask-1 'DiGi\.Core\.Classes\.ReportableBackgroundTask\`1')[System\.Int64](https://learn.microsoft.com/en-us/dotnet/api/system.int64 'System\.Int64')[&gt;](https://learn.microsoft.com/en-us/dotnet/api/digi.core.classes.reportablebackgroundtask-1 'DiGi\.Core\.Classes\.ReportableBackgroundTask\`1') → [DiGi\.GIS\.PostgreSQL\.Classes\.PostgreSQLUnitInsertFromFileTask](https://learn.microsoft.com/en-us/dotnet/api/digi.gis.postgresql.classes.postgresqlunitinsertfromfiletask 'DiGi\.GIS\.PostgreSQL\.Classes\.PostgreSQLUnitInsertFromFileTask') → UIPostgreSQLUnitInsertFromFileTask
+
+Implements [IGISPostgreSQLUIObject](DiGi.GIS.PostgreSQL.UI.Interfaces.md#DiGi.GIS.PostgreSQL.UI.Interfaces.IGISPostgreSQLUIObject 'DiGi\.GIS\.PostgreSQL\.UI\.Interfaces\.IGISPostgreSQLUIObject')
+### Constructors
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIPostgreSQLUnitInsertFromFileTask.UIPostgreSQLUnitInsertFromFileTask(DiGi.GIS.PostgreSQL.Classes.GISPostgreSQLConverterManager)'></a>
+
+## UIPostgreSQLUnitInsertFromFileTask\(GISPostgreSQLConverterManager\) Constructor
+
+Initializes a new instance of the [UIPostgreSQLUnitInsertFromFileTask](DiGi.GIS.PostgreSQL.UI.Classes.md#DiGi.GIS.PostgreSQL.UI.Classes.UIPostgreSQLUnitInsertFromFileTask 'DiGi\.GIS\.PostgreSQL\.UI\.Classes\.UIPostgreSQLUnitInsertFromFileTask') class from a manager\.
+
+```csharp
+public UIPostgreSQLUnitInsertFromFileTask(DiGi.GIS.PostgreSQL.Classes.GISPostgreSQLConverterManager gISPostgreSQLConverterManager);
+```
+#### Parameters
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIPostgreSQLUnitInsertFromFileTask.UIPostgreSQLUnitInsertFromFileTask(DiGi.GIS.PostgreSQL.Classes.GISPostgreSQLConverterManager).gISPostgreSQLConverterManager'></a>
+
+`gISPostgreSQLConverterManager` [DiGi\.GIS\.PostgreSQL\.Classes\.GISPostgreSQLConverterManager](https://learn.microsoft.com/en-us/dotnet/api/digi.gis.postgresql.classes.gispostgresqlconvertermanager 'DiGi\.GIS\.PostgreSQL\.Classes\.GISPostgreSQLConverterManager')
+
+The GIS PostgreSQL converter manager containing the unit converter\.
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIPostgreSQLUnitInsertFromFileTask.UIPostgreSQLUnitInsertFromFileTask(DiGi.GIS.PostgreSQL.Classes.UnitPostgreSQLConverter)'></a>
+
+## UIPostgreSQLUnitInsertFromFileTask\(UnitPostgreSQLConverter\) Constructor
+
+Initializes a new instance of the [UIPostgreSQLUnitInsertFromFileTask](DiGi.GIS.PostgreSQL.UI.Classes.md#DiGi.GIS.PostgreSQL.UI.Classes.UIPostgreSQLUnitInsertFromFileTask 'DiGi\.GIS\.PostgreSQL\.UI\.Classes\.UIPostgreSQLUnitInsertFromFileTask') class with a unit PostgreSQL converter\.
+
+```csharp
+public UIPostgreSQLUnitInsertFromFileTask(DiGi.GIS.PostgreSQL.Classes.UnitPostgreSQLConverter unitPostgreSQLConverter);
+```
+#### Parameters
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIPostgreSQLUnitInsertFromFileTask.UIPostgreSQLUnitInsertFromFileTask(DiGi.GIS.PostgreSQL.Classes.UnitPostgreSQLConverter).unitPostgreSQLConverter'></a>
+
+`unitPostgreSQLConverter` [DiGi\.GIS\.PostgreSQL\.Classes\.UnitPostgreSQLConverter](https://learn.microsoft.com/en-us/dotnet/api/digi.gis.postgresql.classes.unitpostgresqlconverter 'DiGi\.GIS\.PostgreSQL\.Classes\.UnitPostgreSQLConverter')
+
+The unit PostgreSQL converter used to populate the table\.
+### Methods
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIPostgreSQLUnitInsertFromFileTask.ExecuteAsync(System.IProgress_long_,System.Threading.CancellationToken)'></a>
+
+## UIPostgreSQLUnitInsertFromFileTask\.ExecuteAsync\(IProgress\<long\>, CancellationToken\) Method
+
+Executes the background task to read territorial units from JSON file\(s\) and insert them into PostgreSQL\.
+
+```csharp
+protected override System.Threading.Tasks.Task<bool> ExecuteAsync(System.IProgress<long> progress, System.Threading.CancellationToken cancellationToken);
+```
+#### Parameters
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIPostgreSQLUnitInsertFromFileTask.ExecuteAsync(System.IProgress_long_,System.Threading.CancellationToken).progress'></a>
+
+`progress` [System\.IProgress&lt;](https://learn.microsoft.com/en-us/dotnet/api/system.iprogress-1 'System\.IProgress\`1')[System\.Int64](https://learn.microsoft.com/en-us/dotnet/api/system.int64 'System\.Int64')[&gt;](https://learn.microsoft.com/en-us/dotnet/api/system.iprogress-1 'System\.IProgress\`1')
+
+A progress reporter for reporting the number of processed items\.
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIPostgreSQLUnitInsertFromFileTask.ExecuteAsync(System.IProgress_long_,System.Threading.CancellationToken).cancellationToken'></a>
+
+`cancellationToken` [System\.Threading\.CancellationToken](https://learn.microsoft.com/en-us/dotnet/api/system.threading.cancellationtoken 'System\.Threading\.CancellationToken')
+
+A cancellation token that can be used to cancel the operation\.
+
+#### Returns
+[System\.Threading\.Tasks\.Task&lt;](https://learn.microsoft.com/en-us/dotnet/api/system.threading.tasks.task-1 'System\.Threading\.Tasks\.Task\`1')[System\.Boolean](https://learn.microsoft.com/en-us/dotnet/api/system.boolean 'System\.Boolean')[&gt;](https://learn.microsoft.com/en-us/dotnet/api/system.threading.tasks.task-1 'System\.Threading\.Tasks\.Task\`1')  
+A task representing the asynchronous operation\. Returns true if the population was successful; otherwise, false\.
+
 <a name='DiGi.GIS.PostgreSQL.UI.Classes.UIUpdateFromFilePostTask'></a>
 
 ## UIUpdateFromFilePostTask Class

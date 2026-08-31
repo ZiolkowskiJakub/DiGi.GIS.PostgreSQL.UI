@@ -77,6 +77,7 @@ namespace DiGi.GIS.PostgreSQL.UI
                     if (unitPostgreSQLConverter is not null)
                     {
                         result.Add(Visual(new PostgreSQLUnitPopulateTask(unitPostgreSQLConverter), "Populate Units from BDL API", "Downloads territorial Units from Central Statistical Office (BDL) API and populates the Unit table in database"));
+                        result.Add(Visual(new UIPostgreSQLUnitInsertFromFileTask(unitPostgreSQLConverter), "Populate Units from JSON file", "Populates territorial Units from a JSON file into the Unit table in database"));
                         result.Add(Visual(new PostgreSQLUnitCreateTableTask(unitPostgreSQLConverter), "Create Unit table", "Creates or updates Unit table in database"));
                     }
 

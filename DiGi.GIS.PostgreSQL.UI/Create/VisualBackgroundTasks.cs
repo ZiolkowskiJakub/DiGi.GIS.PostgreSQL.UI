@@ -84,7 +84,7 @@ namespace DiGi.GIS.PostgreSQL.UI
                     StatisticalDataCollectionPostgreSQLConverter? statisticalDataCollectionPostgreSQLConverter = gISPostgreSQLConverterManager.GetPostgreSQLConverter<StatisticalDataCollectionPostgreSQLConverter>();
                     if (statisticalDataCollectionPostgreSQLConverter is not null)
                     {
-                        result.Add(Visual(new PostgreSQLStatisticalDataCollectionPopulateTask(statisticalDataCollectionPostgreSQLConverter), "Populate StatisticalDataCollections from directory", "Populates statistical data collections from .sdcf files in a directory into PostgreSQL database"));
+                        result.Add(Visual(new UIPostgreSQLStatisticalDataCollectionPopulateTask(statisticalDataCollectionPostgreSQLConverter), "Populate StatisticalDataCollections from directory", "Populates statistical data collections from .sdcf files in a directory into PostgreSQL database"));
                         result.Add(Visual(new UIPostgreSQLStatisticalDataCollectionCreateTableTask(statisticalDataCollectionPostgreSQLConverter), "Create & Populate StatisticalDataCollection table", "Creates StatisticalDataCollection table in database and populates it from .sdcf files in a directory asked for when the task is started"));
                         result.Add(Visual(new PostgreSQLStatisticalDataCollectionCreateTableTask(statisticalDataCollectionPostgreSQLConverter), "Create StatisticalDataCollection table", "Creates or updates StatisticalDataCollection table in database"));
                     }

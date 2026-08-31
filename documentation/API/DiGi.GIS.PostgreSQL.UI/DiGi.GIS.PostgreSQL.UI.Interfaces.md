@@ -26,6 +26,7 @@ Derived
 ↳ [UIOccupancyDatasFromFilePostTask](DiGi.GIS.PostgreSQL.UI.Classes.md#DiGi.GIS.PostgreSQL.UI.Classes.UIOccupancyDatasFromFilePostTask 'DiGi\.GIS\.PostgreSQL\.UI\.Classes\.UIOccupancyDatasFromFilePostTask')  
 ↳ [UIOrtoDatasFromFilePostTask](DiGi.GIS.PostgreSQL.UI.Classes.md#DiGi.GIS.PostgreSQL.UI.Classes.UIOrtoDatasFromFilePostTask 'DiGi\.GIS\.PostgreSQL\.UI\.Classes\.UIOrtoDatasFromFilePostTask')  
 ↳ [UIPostgreSQLBuildingDataUpdateTask](DiGi.GIS.PostgreSQL.UI.Classes.md#DiGi.GIS.PostgreSQL.UI.Classes.UIPostgreSQLBuildingDataUpdateTask 'DiGi\.GIS\.PostgreSQL\.UI\.Classes\.UIPostgreSQLBuildingDataUpdateTask')  
+↳ [UIPostgreSQLStatisticalDataCollectionCreateTableTask](DiGi.GIS.PostgreSQL.UI.Classes.md#DiGi.GIS.PostgreSQL.UI.Classes.UIPostgreSQLStatisticalDataCollectionCreateTableTask 'DiGi\.GIS\.PostgreSQL\.UI\.Classes\.UIPostgreSQLStatisticalDataCollectionCreateTableTask')  
 ↳ [UIPostgreSQLTerrainPointCreateTableTask](DiGi.GIS.PostgreSQL.UI.Classes.md#DiGi.GIS.PostgreSQL.UI.Classes.UIPostgreSQLTerrainPointCreateTableTask 'DiGi\.GIS\.PostgreSQL\.UI\.Classes\.UIPostgreSQLTerrainPointCreateTableTask')  
 ↳ [UIPostgreSQLTerrainPointFillGapsTask](DiGi.GIS.PostgreSQL.UI.Classes.md#DiGi.GIS.PostgreSQL.UI.Classes.UIPostgreSQLTerrainPointFillGapsTask 'DiGi\.GIS\.PostgreSQL\.UI\.Classes\.UIPostgreSQLTerrainPointFillGapsTask')  
 ↳ [UIPostgreSQLUnitInsertFromFileTask](DiGi.GIS.PostgreSQL.UI.Classes.md#DiGi.GIS.PostgreSQL.UI.Classes.UIPostgreSQLUnitInsertFromFileTask 'DiGi\.GIS\.PostgreSQL\.UI\.Classes\.UIPostgreSQLUnitInsertFromFileTask')  

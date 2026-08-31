@@ -1168,6 +1168,70 @@ A cancellation token that can be used to cancel the operation\.
 [System\.Threading\.Tasks\.Task&lt;](https://learn.microsoft.com/en-us/dotnet/api/system.threading.tasks.task-1 'System\.Threading\.Tasks\.Task\`1')[System\.Boolean](https://learn.microsoft.com/en-us/dotnet/api/system.boolean 'System\.Boolean')[&gt;](https://learn.microsoft.com/en-us/dotnet/api/system.threading.tasks.task-1 'System\.Threading\.Tasks\.Task\`1')  
 A task representing the asynchronous operation\. Returns true when the run could be attempted and every subdivision in scope was updated without error; otherwise, false\.
 
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIPostgreSQLStatisticalDataCollectionCreateTableTask'></a>
+
+## UIPostgreSQLStatisticalDataCollectionCreateTableTask Class
+
+Represents a task for creating the statistical data collection table in PostgreSQL and populating it from \.sdcf files in a directory selected through the user interface\.
+
+```csharp
+public class UIPostgreSQLStatisticalDataCollectionCreateTableTask : DiGi.GIS.PostgreSQL.Classes.PostgreSQLStatisticalDataCollectionCreateTableTask, DiGi.GIS.PostgreSQL.UI.Interfaces.IGISPostgreSQLUIObject
+```
+
+Inheritance [System\.Object](https://learn.microsoft.com/en-us/dotnet/api/system.object 'System\.Object') → [DiGi\.Core\.Classes\.BackgroundTask](https://learn.microsoft.com/en-us/dotnet/api/digi.core.classes.backgroundtask 'DiGi\.Core\.Classes\.BackgroundTask') → [DiGi\.GIS\.PostgreSQL\.Classes\.PostgreSQLStatisticalDataCollectionCreateTableTask](https://learn.microsoft.com/en-us/dotnet/api/digi.gis.postgresql.classes.postgresqlstatisticaldatacollectioncreatetabletask 'DiGi\.GIS\.PostgreSQL\.Classes\.PostgreSQLStatisticalDataCollectionCreateTableTask') → UIPostgreSQLStatisticalDataCollectionCreateTableTask
+
+Implements [IGISPostgreSQLUIObject](DiGi.GIS.PostgreSQL.UI.Interfaces.md#DiGi.GIS.PostgreSQL.UI.Interfaces.IGISPostgreSQLUIObject 'DiGi\.GIS\.PostgreSQL\.UI\.Interfaces\.IGISPostgreSQLUIObject')
+### Constructors
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIPostgreSQLStatisticalDataCollectionCreateTableTask.UIPostgreSQLStatisticalDataCollectionCreateTableTask(DiGi.GIS.PostgreSQL.Classes.GISPostgreSQLConverterManager)'></a>
+
+## UIPostgreSQLStatisticalDataCollectionCreateTableTask\(GISPostgreSQLConverterManager\) Constructor
+
+Initializes a new instance of the [UIPostgreSQLStatisticalDataCollectionCreateTableTask](DiGi.GIS.PostgreSQL.UI.Classes.md#DiGi.GIS.PostgreSQL.UI.Classes.UIPostgreSQLStatisticalDataCollectionCreateTableTask 'DiGi\.GIS\.PostgreSQL\.UI\.Classes\.UIPostgreSQLStatisticalDataCollectionCreateTableTask') class from a manager\.
+
+```csharp
+public UIPostgreSQLStatisticalDataCollectionCreateTableTask(DiGi.GIS.PostgreSQL.Classes.GISPostgreSQLConverterManager gISPostgreSQLConverterManager);
+```
+#### Parameters
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIPostgreSQLStatisticalDataCollectionCreateTableTask.UIPostgreSQLStatisticalDataCollectionCreateTableTask(DiGi.GIS.PostgreSQL.Classes.GISPostgreSQLConverterManager).gISPostgreSQLConverterManager'></a>
+
+`gISPostgreSQLConverterManager` [DiGi\.GIS\.PostgreSQL\.Classes\.GISPostgreSQLConverterManager](https://learn.microsoft.com/en-us/dotnet/api/digi.gis.postgresql.classes.gispostgresqlconvertermanager 'DiGi\.GIS\.PostgreSQL\.Classes\.GISPostgreSQLConverterManager')
+
+The GIS PostgreSQL converter manager containing the statistical data collection converter\.
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIPostgreSQLStatisticalDataCollectionCreateTableTask.UIPostgreSQLStatisticalDataCollectionCreateTableTask(DiGi.GIS.PostgreSQL.Classes.StatisticalDataCollectionPostgreSQLConverter)'></a>
+
+## UIPostgreSQLStatisticalDataCollectionCreateTableTask\(StatisticalDataCollectionPostgreSQLConverter\) Constructor
+
+Initializes a new instance of the [UIPostgreSQLStatisticalDataCollectionCreateTableTask](DiGi.GIS.PostgreSQL.UI.Classes.md#DiGi.GIS.PostgreSQL.UI.Classes.UIPostgreSQLStatisticalDataCollectionCreateTableTask 'DiGi\.GIS\.PostgreSQL\.UI\.Classes\.UIPostgreSQLStatisticalDataCollectionCreateTableTask') class with a statistical data collection PostgreSQL converter\.
+
+```csharp
+public UIPostgreSQLStatisticalDataCollectionCreateTableTask(DiGi.GIS.PostgreSQL.Classes.StatisticalDataCollectionPostgreSQLConverter statisticalDataCollectionPostgreSQLConverter);
+```
+#### Parameters
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIPostgreSQLStatisticalDataCollectionCreateTableTask.UIPostgreSQLStatisticalDataCollectionCreateTableTask(DiGi.GIS.PostgreSQL.Classes.StatisticalDataCollectionPostgreSQLConverter).statisticalDataCollectionPostgreSQLConverter'></a>
+
+`statisticalDataCollectionPostgreSQLConverter` [DiGi\.GIS\.PostgreSQL\.Classes\.StatisticalDataCollectionPostgreSQLConverter](https://learn.microsoft.com/en-us/dotnet/api/digi.gis.postgresql.classes.statisticaldatacollectionpostgresqlconverter 'DiGi\.GIS\.PostgreSQL\.Classes\.StatisticalDataCollectionPostgreSQLConverter')
+
+The statistical data collection PostgreSQL converter used to create and populate the table\.
+### Methods
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIPostgreSQLStatisticalDataCollectionCreateTableTask.ExecuteAsync()'></a>
+
+## UIPostgreSQLStatisticalDataCollectionCreateTableTask\.ExecuteAsync\(\) Method
+
+Executes the background task to create the statistical data collection table in PostgreSQL\.
+
+```csharp
+protected override System.Threading.Tasks.Task<bool> ExecuteAsync();
+```
+
+#### Returns
+[System\.Threading\.Tasks\.Task&lt;](https://learn.microsoft.com/en-us/dotnet/api/system.threading.tasks.task-1 'System\.Threading\.Tasks\.Task\`1')[System\.Boolean](https://learn.microsoft.com/en-us/dotnet/api/system.boolean 'System\.Boolean')[&gt;](https://learn.microsoft.com/en-us/dotnet/api/system.threading.tasks.task-1 'System\.Threading\.Tasks\.Task\`1')  
+A task representing the asynchronous operation\. Returns true if the table was created successfully; otherwise, false\.
+
 <a name='DiGi.GIS.PostgreSQL.UI.Classes.UIPostgreSQLTerrainPointCreateTableTask'></a>
 
 ## UIPostgreSQLTerrainPointCreateTableTask Class

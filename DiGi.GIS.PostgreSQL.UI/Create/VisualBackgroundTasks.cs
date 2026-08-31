@@ -73,6 +73,13 @@ namespace DiGi.GIS.PostgreSQL.UI
                         result.Add(Visual(new PostgreSQLAdministrativeAreal2DCreateTableTask(administrativeAreal2DPostgreSQLConverter), "Create AdministrativeAreal2D table", "Creates or updates (table indexes etc.) AdministrativeAreal2D table in database"));
                     }
 
+                    UnitPostgreSQLConverter? unitPostgreSQLConverter = gISPostgreSQLConverterManager.GetPostgreSQLConverter<UnitPostgreSQLConverter>();
+                    if (unitPostgreSQLConverter is not null)
+                    {
+                        result.Add(Visual(new PostgreSQLUnitPopulateTask(unitPostgreSQLConverter), "Populate Units from BDL API", "Downloads territorial Units from Central Statistical Office (BDL) API and populates the Unit table in database"));
+                        result.Add(Visual(new PostgreSQLUnitCreateTableTask(unitPostgreSQLConverter), "Create Unit table", "Creates or updates Unit table in database"));
+                    }
+
                     result.Add(Visual(new PostgreSQLOrtoDatasRefreshTask(gISPostgreSQLConverterManager)
                     {
                         PostgreSQLOrtoDatasRefreshOptions = new PostgreSQLOrtoDatasRefreshOptions()

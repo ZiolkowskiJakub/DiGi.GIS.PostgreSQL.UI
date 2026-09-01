@@ -33,8 +33,6 @@ Derived
 ↳ [UIPostgreSQLUnitInsertFromFileTask](DiGi.GIS.PostgreSQL.UI.Classes.md#DiGi.GIS.PostgreSQL.UI.Classes.UIPostgreSQLUnitInsertFromFileTask 'DiGi\.GIS\.PostgreSQL\.UI\.Classes\.UIPostgreSQLUnitInsertFromFileTask')  
 ↳ [UIUpdateFromFilePostTask](DiGi.GIS.PostgreSQL.UI.Classes.md#DiGi.GIS.PostgreSQL.UI.Classes.UIUpdateFromFilePostTask 'DiGi\.GIS\.PostgreSQL\.UI\.Classes\.UIUpdateFromFilePostTask')  
 ↳ [UIYearBuiltDatasFromFilePostTask](DiGi.GIS.PostgreSQL.UI.Classes.md#DiGi.GIS.PostgreSQL.UI.Classes.UIYearBuiltDatasFromFilePostTask 'DiGi\.GIS\.PostgreSQL\.UI\.Classes\.UIYearBuiltDatasFromFilePostTask')  
-↳ [YearBuiltPredictionPipelineOptions](DiGi.GIS.PostgreSQL.UI.Classes.md#DiGi.GIS.PostgreSQL.UI.Classes.YearBuiltPredictionPipelineOptions 'DiGi\.GIS\.PostgreSQL\.UI\.Classes\.YearBuiltPredictionPipelineOptions')  
-↳ [YearBuiltPredictionResult](DiGi.GIS.PostgreSQL.UI.Classes.md#DiGi.GIS.PostgreSQL.UI.Classes.YearBuiltPredictionResult 'DiGi\.GIS\.PostgreSQL\.UI\.Classes\.YearBuiltPredictionResult')  
 ↳ [IGISPostgreSQLUISerializableObject](DiGi.GIS.PostgreSQL.UI.Interfaces.md#DiGi.GIS.PostgreSQL.UI.Interfaces.IGISPostgreSQLUISerializableObject 'DiGi\.GIS\.PostgreSQL\.UI\.Interfaces\.IGISPostgreSQLUISerializableObject')
 
 <a name='DiGi.GIS.PostgreSQL.UI.Interfaces.IGISPostgreSQLUISerializableObject'></a>
@@ -46,9 +44,5 @@ Defines a marker interface for serializable objects used within the PostgreSQL G
 ```csharp
 public interface IGISPostgreSQLUISerializableObject : DiGi.GIS.PostgreSQL.UI.Interfaces.IGISPostgreSQLUIObject, DiGi.Core.Interfaces.ISerializableObject, DiGi.Core.Interfaces.ICloneableObject<DiGi.Core.Interfaces.ISerializableObject>, DiGi.Core.Interfaces.ICloneableObject, DiGi.Core.Interfaces.IObject
 ```
-
-Derived  
-↳ [YearBuiltPredictionPipelineOptions](DiGi.GIS.PostgreSQL.UI.Classes.md#DiGi.GIS.PostgreSQL.UI.Classes.YearBuiltPredictionPipelineOptions 'DiGi\.GIS\.PostgreSQL\.UI\.Classes\.YearBuiltPredictionPipelineOptions')  
-↳ [YearBuiltPredictionResult](DiGi.GIS.PostgreSQL.UI.Classes.md#DiGi.GIS.PostgreSQL.UI.Classes.YearBuiltPredictionResult 'DiGi\.GIS\.PostgreSQL\.UI\.Classes\.YearBuiltPredictionResult')
 
 Implements [IGISPostgreSQLUIObject](DiGi.GIS.PostgreSQL.UI.Interfaces.md#DiGi.GIS.PostgreSQL.UI.Interfaces.IGISPostgreSQLUIObject 'DiGi\.GIS\.PostgreSQL\.UI\.Interfaces\.IGISPostgreSQLUIObject'), [DiGi\.Core\.Interfaces\.ISerializableObject](https://learn.microsoft.com/en-us/dotnet/api/digi.core.interfaces.iserializableobject 'DiGi\.Core\.Interfaces\.ISerializableObject'), [DiGi\.Core\.Interfaces\.ICloneableObject&lt;](https://learn.microsoft.com/en-us/dotnet/api/digi.core.interfaces.icloneableobject-1 'DiGi\.Core\.Interfaces\.ICloneableObject\`1')[DiGi\.Core\.Interfaces\.ISerializableObject](https://learn.microsoft.com/en-us/dotnet/api/digi.core.interfaces.iserializableobject 'DiGi\.Core\.Interfaces\.ISerializableObject')[&gt;](https://learn.microsoft.com/en-us/dotnet/api/digi.core.interfaces.icloneableobject-1 'DiGi\.Core\.Interfaces\.ICloneableObject\`1'), [DiGi\.Core\.Interfaces\.ICloneableObject](https://learn.microsoft.com/en-us/dotnet/api/digi.core.interfaces.icloneableobject 'DiGi\.Core\.Interfaces\.ICloneableObject'), [DiGi\.Core\.Interfaces\.IObject](https://learn.microsoft.com/en-us/dotnet/api/digi.core.interfaces.iobject 'DiGi\.Core\.Interfaces\.IObject')

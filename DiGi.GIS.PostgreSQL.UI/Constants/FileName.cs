@@ -1,4 +1,4 @@
-﻿namespace DiGi.GIS.PostgreSQL.UI.Constants
+namespace DiGi.GIS.PostgreSQL.UI.Constants
 {
     /// <summary>
     /// Provides constant values for configuration file names used within the GIS PostgreSQL UI.
@@ -13,7 +13,7 @@
         /// <summary>
         /// Gets the file name of the headless Year Built prediction runner.
         /// </summary>
-        /// <remarks>The pipeline itself is not hosted in this application - it carries the machine learning closure, which is about a gigabyte of native libraries against an application that publishes self-contained and single-file. The run is handed to this executable instead, and <see cref="Query.YearBuiltPredictionConsoleAppPath(string)"/> is what finds it.</remarks>
+        /// <remarks>The pipeline itself is not hosted in this application - it carries the machine learning closure, which is about a gigabyte of native libraries against an application that publishes self-contained and single-file. The run is handed to this executable instead, and <see cref="Query.YearBuiltPredictionConsoleAppPath"/> is what finds it.</remarks>
         public const string YearBuiltPredictionConsoleApp = "DiGi.GIS.YOLO.UI.ConsoleApp.exe";
     }
 }

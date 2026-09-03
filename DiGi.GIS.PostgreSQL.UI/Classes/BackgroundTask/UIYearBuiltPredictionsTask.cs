@@ -38,7 +38,7 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
         }
 
         /// <summary>
-        /// Gets or sets the path of the headless runner. When null it is resolved by <see cref="Query.YearBuiltPredictionConsoleAppPath(string)"/>, which probes this application's own output and then the runner's build output in a workspace checkout.
+        /// Gets or sets the path of the headless runner. When null it is resolved by <see cref="Query.YearBuiltPredictionConsoleAppPath"/>, which probes this application's own output, the runner's folder beside it, and the runner's build output in a workspace checkout.
         /// </summary>
         public string? ConsoleAppPath { get; set; } = null;
 

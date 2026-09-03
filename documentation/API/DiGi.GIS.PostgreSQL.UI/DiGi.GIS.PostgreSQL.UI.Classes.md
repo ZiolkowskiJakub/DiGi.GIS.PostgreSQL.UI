@@ -1685,7 +1685,7 @@ The [DiGi\.GIS\.WebAPI\.Classes\.GISWebAPIManager](https://learn.microsoft.com/e
 
 ## UIYearBuiltPredictionsTask\.ConsoleAppPath Property
 
-Gets or sets the path of the headless runner\. When null it is resolved by [YearBuiltPredictionConsoleAppPath\(string\)](DiGi.GIS.PostgreSQL.UI.md#DiGi.GIS.PostgreSQL.UI.Query.YearBuiltPredictionConsoleAppPath(string) 'DiGi\.GIS\.PostgreSQL\.UI\.Query\.YearBuiltPredictionConsoleAppPath\(string\)'), which probes this application's own output and then the runner's build output in a workspace checkout\.
+Gets or sets the path of the headless runner\. When null it is resolved by [YearBuiltPredictionConsoleAppPath\(string, string\)](DiGi.GIS.PostgreSQL.UI.md#DiGi.GIS.PostgreSQL.UI.Query.YearBuiltPredictionConsoleAppPath(string,string) 'DiGi\.GIS\.PostgreSQL\.UI\.Query\.YearBuiltPredictionConsoleAppPath\(string, string\)'), which probes this application's own output, the runner's folder beside it, and the runner's build output in a workspace checkout\.
 
 ```csharp
 public string? ConsoleAppPath { get; set; }

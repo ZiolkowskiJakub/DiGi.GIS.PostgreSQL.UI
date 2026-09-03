@@ -97,7 +97,7 @@ public const string YearBuiltPredictionConsoleApp = "DiGi.GIS.YOLO.UI.ConsoleApp
 [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
 
 ### Remarks
-The pipeline itself is not hosted in this application \- it carries the machine learning closure, which is about a gigabyte of native libraries against an application that publishes self\-contained and single\-file\. The run is handed to this executable instead, and [YearBuiltPredictionConsoleAppPath\(string\)](DiGi.GIS.PostgreSQL.UI.md#DiGi.GIS.PostgreSQL.UI.Query.YearBuiltPredictionConsoleAppPath(string) 'DiGi\.GIS\.PostgreSQL\.UI\.Query\.YearBuiltPredictionConsoleAppPath\(string\)') is what finds it\.
+The pipeline itself is not hosted in this application \- it carries the machine learning closure, which is about a gigabyte of native libraries against an application that publishes self\-contained and single\-file\. The run is handed to this executable instead, and [YearBuiltPredictionConsoleAppPath\(string, string\)](DiGi.GIS.PostgreSQL.UI.md#DiGi.GIS.PostgreSQL.UI.Query.YearBuiltPredictionConsoleAppPath(string,string) 'DiGi\.GIS\.PostgreSQL\.UI\.Query\.YearBuiltPredictionConsoleAppPath\(string, string\)') is what finds it\.
 
 <a name='DiGi.GIS.PostgreSQL.UI.Constants.Names'></a>
 

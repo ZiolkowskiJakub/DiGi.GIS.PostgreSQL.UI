@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net10.0-windows7.0</TargetFramework>
@@ -103,6 +103,14 @@
     </Reference>
     <Reference Include="DiGi.GIS.YOLO">
       <HintPath>..\..\DiGi.GIS.YOLO\bin\DiGi.GIS.YOLO.dll</HintPath>
+    </Reference>
+    <!-- The Year Built prediction pipeline lives here since 923e5d5 relocated it out of this project.
+         Referenced for its options class, its exit codes and its progress reader - never for DiGi.GIS.ML,
+         which this application deliberately does not reach: that closure carries about a gigabyte of native
+         libraries and this one publishes self-contained and single-file. The run itself is handed to
+         DiGi.GIS.YOLO.UI.ConsoleApp. -->
+    <Reference Include="DiGi.GIS.YOLO.UI">
+      <HintPath>..\..\DiGi.GIS.YOLO.UI\bin\DiGi.GIS.YOLO.UI.dll</HintPath>
     </Reference>
     <Reference Include="DiGi.YOLO">
       <HintPath>..\..\DiGi.YOLO\bin\DiGi.YOLO.dll</HintPath>

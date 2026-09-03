@@ -1641,3 +1641,68 @@ The token to monitor for cancellation requests\.
 #### Returns
 [System\.Threading\.Tasks\.Task&lt;](https://learn.microsoft.com/en-us/dotnet/api/system.threading.tasks.task-1 'System\.Threading\.Tasks\.Task\`1')[System\.Boolean](https://learn.microsoft.com/en-us/dotnet/api/system.boolean 'System\.Boolean')[&gt;](https://learn.microsoft.com/en-us/dotnet/api/system.threading.tasks.task-1 'System\.Threading\.Tasks\.Task\`1')  
 A task that represents the asynchronous operation\. The task result is true if the process succeeded; otherwise, false\.
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIYearBuiltPredictionsTask'></a>
+
+## UIYearBuiltPredictionsTask Class
+
+A Year Built prediction run that is scoped from the user interface: the counties, the interpreter and weights that score the imagery, and which of the pipeline's steps run are asked for through [YearBuiltPredictionsOptionsWindow](DiGi.GIS.PostgreSQL.UI.Windows.md#DiGi.GIS.PostgreSQL.UI.Windows.YearBuiltPredictionsOptionsWindow 'DiGi\.GIS\.PostgreSQL\.UI\.Windows\.YearBuiltPredictionsOptionsWindow') each time the task is started\.
+
+<b>The run happens in another process.</b> The pipeline needs a regressor, and the only implementation of it carries the machine learning closure - about a gigabyte of native libraries, against an application that publishes self-contained and single-file. The `IYearBuiltPredictor` seam exists to keep that weight out of hosts that only need to start a run, so this task writes the options out and hands them to `DiGi.GIS.YOLO.UI.ConsoleApp`, which already hosts the pipeline and is already exercised end to end.
+
+Two consequences of that are worth knowing before a run. <b>The runner authorizes with its own key</b>, read from the `GIS_WebAPI_Client.conf` beside its executable rather than from this application's - a run that ends in [DiGi\.GIS\.YOLO\.UI\.Enums\.YearBuiltPredictionExitCode\.Authorization](https://learn.microsoft.com/en-us/dotnet/api/digi.gis.yolo.ui.enums.yearbuiltpredictionexitcode.authorization 'DiGi\.GIS\.YOLO\.UI\.Enums\.YearBuiltPredictionExitCode\.Authorization') is usually that file rather than the one this application uses. And <b>stopping the task kills the run rather than winding it down</b>: the whole process tree goes, the detector included, so a batch that was being written may be half written. Every step of the pipeline is idempotent and a stopped run is re-runnable, but its tallies are not a record of what was stored.
+
+The environment preflight runs here, before anything is launched, so a machine with no CPython carrying ultralytics says so in front of whoever opened the dialog instead of an hour later as an exit code. The pipeline repeats the check inside the run; that costs one interpreter start and is what makes the reason legible.
+
+```csharp
+public class UIYearBuiltPredictionsTask : DiGi.Core.Classes.ReportableBackgroundTask<long>, DiGi.GIS.PostgreSQL.UI.Interfaces.IGISPostgreSQLUIObject
+```
+
+Inheritance [System\.Object](https://learn.microsoft.com/en-us/dotnet/api/system.object 'System\.Object') → [DiGi\.Core\.Classes\.BackgroundTask](https://learn.microsoft.com/en-us/dotnet/api/digi.core.classes.backgroundtask 'DiGi\.Core\.Classes\.BackgroundTask') → [DiGi\.Core\.Classes\.CancelableBackgroundTask](https://learn.microsoft.com/en-us/dotnet/api/digi.core.classes.cancelablebackgroundtask 'DiGi\.Core\.Classes\.CancelableBackgroundTask') → [DiGi\.Core\.Classes\.ReportableBackgroundTask&lt;](https://learn.microsoft.com/en-us/dotnet/api/digi.core.classes.reportablebackgroundtask-1 'DiGi\.Core\.Classes\.ReportableBackgroundTask\`1')[System\.Int64](https://learn.microsoft.com/en-us/dotnet/api/system.int64 'System\.Int64')[&gt;](https://learn.microsoft.com/en-us/dotnet/api/digi.core.classes.reportablebackgroundtask-1 'DiGi\.Core\.Classes\.ReportableBackgroundTask\`1') → UIYearBuiltPredictionsTask
+
+Implements [IGISPostgreSQLUIObject](DiGi.GIS.PostgreSQL.UI.Interfaces.md#DiGi.GIS.PostgreSQL.UI.Interfaces.IGISPostgreSQLUIObject 'DiGi\.GIS\.PostgreSQL\.UI\.Interfaces\.IGISPostgreSQLUIObject')
+### Constructors
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIYearBuiltPredictionsTask.UIYearBuiltPredictionsTask(DiGi.GIS.WebAPI.Classes.GISWebAPIManager)'></a>
+
+## UIYearBuiltPredictionsTask\(GISWebAPIManager\) Constructor
+
+Initializes a new instance of the [UIYearBuiltPredictionsTask](DiGi.GIS.PostgreSQL.UI.Classes.md#DiGi.GIS.PostgreSQL.UI.Classes.UIYearBuiltPredictionsTask 'DiGi\.GIS\.PostgreSQL\.UI\.Classes\.UIYearBuiltPredictionsTask') class\.
+
+```csharp
+public UIYearBuiltPredictionsTask(DiGi.GIS.WebAPI.Classes.GISWebAPIManager GISWebAPIManager);
+```
+#### Parameters
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIYearBuiltPredictionsTask.UIYearBuiltPredictionsTask(DiGi.GIS.WebAPI.Classes.GISWebAPIManager).GISWebAPIManager'></a>
+
+`GISWebAPIManager` [DiGi\.GIS\.WebAPI\.Classes\.GISWebAPIManager](https://learn.microsoft.com/en-us/dotnet/api/digi.gis.webapi.classes.giswebapimanager 'DiGi\.GIS\.WebAPI\.Classes\.GISWebAPIManager')
+
+The [DiGi\.GIS\.WebAPI\.Classes\.GISWebAPIManager](https://learn.microsoft.com/en-us/dotnet/api/digi.gis.webapi.classes.giswebapimanager 'DiGi\.GIS\.WebAPI\.Classes\.GISWebAPIManager') instance the county rows behind the dialog are read with\. The run itself authorizes with the runner's own key, not with this one\.
+### Properties
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIYearBuiltPredictionsTask.ConsoleAppPath'></a>
+
+## UIYearBuiltPredictionsTask\.ConsoleAppPath Property
+
+Gets or sets the path of the headless runner\. When null it is resolved by [YearBuiltPredictionConsoleAppPath\(string\)](DiGi.GIS.PostgreSQL.UI.md#DiGi.GIS.PostgreSQL.UI.Query.YearBuiltPredictionConsoleAppPath(string) 'DiGi\.GIS\.PostgreSQL\.UI\.Query\.YearBuiltPredictionConsoleAppPath\(string\)'), which probes this application's own output and then the runner's build output in a workspace checkout\.
+
+```csharp
+public string? ConsoleAppPath { get; set; }
+```
+
+#### Property Value
+[System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIYearBuiltPredictionsTask.YearBuiltPredictionPipelineOptions'></a>
+
+## UIYearBuiltPredictionsTask\.YearBuiltPredictionPipelineOptions Property
+
+Gets or sets the options the dialog opens with, and which it writes back to when it is closed with OK\. When null the defaults are used, which name no county and therefore ask for nothing\.
+
+```csharp
+public DiGi.GIS.YOLO.UI.Classes.YearBuiltPredictionPipelineOptions? YearBuiltPredictionPipelineOptions { get; set; }
+```
+
+#### Property Value
+[DiGi\.GIS\.YOLO\.UI\.Classes\.YearBuiltPredictionPipelineOptions](https://learn.microsoft.com/en-us/dotnet/api/digi.gis.yolo.ui.classes.yearbuiltpredictionpipelineoptions 'DiGi\.GIS\.YOLO\.UI\.Classes\.YearBuiltPredictionPipelineOptions')

@@ -67,3 +67,41 @@ The operation mode \(Server, Client, or both\) that determines which tasks are i
 #### Returns
 [System\.Collections\.Generic\.List&lt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.list-1 'System\.Collections\.Generic\.List\`1')[DiGi\.UI\.WPF\.Interfaces\.IVisualBackgroundTask](https://learn.microsoft.com/en-us/dotnet/api/digi.ui.wpf.interfaces.ivisualbackgroundtask 'DiGi\.UI\.WPF\.Interfaces\.IVisualBackgroundTask')[&gt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.list-1 'System\.Collections\.Generic\.List\`1')  
 A list of [DiGi\.UI\.WPF\.Interfaces\.IVisualBackgroundTask](https://learn.microsoft.com/en-us/dotnet/api/digi.ui.wpf.interfaces.ivisualbackgroundtask 'DiGi\.UI\.WPF\.Interfaces\.IVisualBackgroundTask') objects sorted by name, or null if not applicable\.
+
+<a name='DiGi.GIS.PostgreSQL.UI.Query'></a>
+
+## Query Class
+
+```csharp
+public static class Query
+```
+
+Inheritance [System\.Object](https://learn.microsoft.com/en-us/dotnet/api/system.object 'System\.Object') → Query
+### Methods
+
+<a name='DiGi.GIS.PostgreSQL.UI.Query.YearBuiltPredictionConsoleAppPath(string)'></a>
+
+## Query\.YearBuiltPredictionConsoleAppPath\(string\) Method
+
+Finds the headless Year Built prediction runner this application hands a run to\.
+
+The runner is a separate deployment unit rather than an assembly this application loads, because hosting the pipeline here would mean referencing the machine learning closure - about a gigabyte of native libraries against an application that publishes self-contained and single-file. The cost of that choice is that the executable has to be found rather than linked, which is what this answers.
+
+Three candidates in order: the path given, then beside this application's own output, then the runner's build output in a workspace checkout. The last is what makes the task runnable from a development machine without deploying anything.
+
+A candidate that does not exist is not returned. A path that only looks resolved would be discovered as a failure to start a process, after the counties had been chosen and the imagery scoped.
+
+```csharp
+public static string? YearBuiltPredictionConsoleAppPath(string? path=null);
+```
+#### Parameters
+
+<a name='DiGi.GIS.PostgreSQL.UI.Query.YearBuiltPredictionConsoleAppPath(string).path'></a>
+
+`path` [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
+
+An explicit path to the runner, or null to search the candidates below it\.
+
+#### Returns
+[System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')  
+The full path of an executable that exists, or null when none of the candidates does\.

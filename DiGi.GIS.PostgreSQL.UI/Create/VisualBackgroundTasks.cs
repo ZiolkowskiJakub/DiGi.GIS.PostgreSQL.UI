@@ -175,6 +175,13 @@ namespace DiGi.GIS.PostgreSQL.UI
                     "Verify BuildingModels from database", "Reads BuildingModels stored in database and reports completeness and space enclosure. Read only - nothing is uploaded"));
 
 
+                    // Scoped from a dialog rather than from defaults written here, and run in another process: the
+                    // pipeline needs the machine learning closure, which is about a gigabyte of native libraries
+                    // against an application that publishes self-contained and single-file, so the run is handed to
+                    // DiGi.GIS.YOLO.UI.ConsoleApp instead of hosted here. The runner has to be deployed beside this
+                    // application, and it authorizes with its own GIS_WebAPI_Client.conf rather than with this one's.
+                    result.Add(Visual(new UIYearBuiltPredictionsTask(GISWebAPIManager), "Predict year built", "Runs the Year Built prediction pipeline over the chosen counties - exports the orthophoto imagery, scores it with the frozen detector and stores the predicted construction year. The counties, the interpreter, the weights and which steps run are asked for when the task is started; the three steps that write stored data are off unless they are turned on"));
+
                     result.Add(Visual(new UIOrtoDatasFromFilePostTask(GISWebAPIManager)
                     {
                         SerializableObjectsPostOptions = new SerializableObjectsPostOptions()

@@ -1,4 +1,4 @@
-namespace DiGi.GIS.PostgreSQL.UI.Constants
+﻿namespace DiGi.GIS.PostgreSQL.UI.Constants
 {
     /// <summary>
     /// Provides constant values for configuration file names used within the GIS PostgreSQL UI.
@@ -11,9 +11,9 @@ namespace DiGi.GIS.PostgreSQL.UI.Constants
         public const string GISWebAPIClientConfigurationFile = "GIS_WebAPI_Client.conf";
 
         /// <summary>
-        /// Gets the name of the file a county's year built detections are written to by the prediction script.
+        /// Gets the file name of the headless Year Built prediction runner.
         /// </summary>
-        /// <remarks>The script opens it for writing rather than appending, so a repeated run over one county replaces the previous answer instead of doubling it.</remarks>
-        public const string PredictionResults = "results.bbrf";
+        /// <remarks>The pipeline itself is not hosted in this application - it carries the machine learning closure, which is about a gigabyte of native libraries against an application that publishes self-contained and single-file. The run is handed to this executable instead, and <see cref="Query.YearBuiltPredictionConsoleAppPath(string)"/> is what finds it.</remarks>
+        public const string YearBuiltPredictionConsoleApp = "DiGi.GIS.YOLO.UI.ConsoleApp.exe";
     }
 }

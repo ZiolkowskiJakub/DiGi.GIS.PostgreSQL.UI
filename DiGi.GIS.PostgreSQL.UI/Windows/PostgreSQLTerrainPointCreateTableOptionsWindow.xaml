@@ -23,7 +23,7 @@
 
         <CheckBox x:Name="CheckBox_OverrideExisting" Grid.Row="1" Content="Override existing points" Margin="10,0,10,0" HorizontalAlignment="Left" VerticalAlignment="Center" />
 
-        <Label x:Name="Label_Counties" Grid.Row="2" Content="Counties" Margin="5,0,5,0" HorizontalAlignment="Stretch" VerticalAlignment="Center" />
+        <Label x:Name="Label_Counties" Grid.Row="2" Content="Counties - a multi-part county is one entry per piece; select them all" Margin="5,0,5,0" HorizontalAlignment="Stretch" VerticalAlignment="Center" />
 
         <controls:ListBoxControl x:Name="ListBoxControl_Counties" Grid.Row="3" SelectionMode="Extended" Margin="10,0,10,0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
 

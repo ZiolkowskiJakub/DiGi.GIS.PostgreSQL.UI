@@ -24,7 +24,7 @@
 
         <controls:ListBoxControl x:Name="ListBoxControl_UpdateTypes" Grid.Row="1" SelectionMode="Extended" Margin="10,0,10,0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
 
-        <Label x:Name="Label_Counties" Grid.Row="2" Content="Counties - a county whose territory is in several pieces is one entry per piece" Margin="5,0,5,0" HorizontalAlignment="Stretch" VerticalAlignment="Center" />
+        <Label x:Name="Label_Counties" Grid.Row="2" Content="Counties - a multi-part county is one entry per piece; select them all" Margin="5,0,5,0" HorizontalAlignment="Stretch" VerticalAlignment="Center" />
 
         <controls:ListBoxControl x:Name="ListBoxControl_Counties" Grid.Row="3" SelectionMode="Extended" Margin="10,0,10,0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
 

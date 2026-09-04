@@ -8,9 +8,11 @@ namespace DiGi.GIS.PostgreSQL.UI.Windows
 {
     /// <summary>
     /// Interaction logic for YearBuiltPredictionsOptionsWindow.xaml
-    /// <para>Asks for what one Year Built prediction run covers and does - the counties, where its imagery goes, which interpreter and weights score it, which of its steps run, and how the run talks to the server: the concurrency of its requests and the two batch sizes. The year range and the radiuses are not asked for, deliberately: they have to match what the regressor was trained on, and a projection that disagrees with them hands the model defaults rather than features, which scores without failing (ZiolkowskiJakub/DiGi.GIS.ML#6).</para>
-    /// <para>The three write steps change stored production data, so they are shown apart from the rest and start from whatever the options already ask for - which the template ships as off. A first pass over a county reads everything, scores everything and stores nothing.</para>
-    /// <para>The window works on a copy, so a cancelled dialog leaves the settings of an earlier run exactly as they were.</para>
+    /// <para>Asks for the scope of one Year Built prediction run and nothing else: the counties, where its imagery goes, which interpreter runs the detector, and how hard the export leans on the server.</para>
+    /// <para><b>A tray run has one shape - the full six step flow - and it writes.</b> The steps are not offered because they are not a choice here: ZiolkowskiJakub/DiGi.GIS.YOLO.UI#8 made export, detector, detection write, score, history write and column write a single run per county precisely so that no step could be left out of sequence, and it decided that the granular flags stay on the options class and the console app for hand-driven diagnostics while the tray driven flow collapses them. Eight checkboxes offered two hundred and fifty six combinations, of which three were real - and the rest failed late, after the half hour of export and the hour and a half of inference had already been paid for. The OK handler writes all six on, so the run the operator gets is the run the standing recipe describes.</para>
+    /// <para><b>What settles the model is deliberately not here either.</b> The weights, the confidence threshold, the year range and the radiuses all decide what the regressor is handed, and a value that disagrees with what it was trained on scores without failing - the predictions are worse by an amount nothing measures (ZiolkowskiJakub/DiGi.GIS.ML#6). They belong to the deployment and to the options file rather than to a dialog opened before every run. The working directory and the two batch sizes are out for a different reason: none of the three is a choice - see the comment in the OK handler.</para>
+    /// <para>The scratch cleanup is the one flag that survives, because its reason is about this run rather than about the sequence: a cancelled county is cleaned, so a run that is meant to be interrupted has to be able to say so beforehand.</para>
+    /// <para>The window works on a copy, so a cancelled dialog leaves the settings of an earlier run exactly as they were, and every member the window has no control for carries through untouched.</para>
     /// </summary>
     public partial class YearBuiltPredictionsOptionsWindow : Window
     {
@@ -31,22 +33,9 @@ namespace DiGi.GIS.PostgreSQL.UI.Windows
             // leaves an empty label over an empty box in the preview. Only the values come from the options.
             TextBoxControl_ScratchDirectory.Value = this.yearBuiltPredictionPipelineOptions.ScratchDirectory;
             TextBoxControl_PythonPath.Value = this.yearBuiltPredictionPipelineOptions.PythonPath;
-            TextBoxControl_ModelPath.Value = this.yearBuiltPredictionPipelineOptions.ModelPath;
-            TextBoxControl_WorkingDirectory.Value = this.yearBuiltPredictionPipelineOptions.WorkingDirectory;
-            TextBoxControl_Confidence.Value = this.yearBuiltPredictionPipelineOptions.Confidence.ToString();
             TextBoxControl_MaxConcurrentRequests.Value = this.yearBuiltPredictionPipelineOptions.MaxConcurrentRequests.ToString();
-            TextBoxControl_BatchSize.Value = this.yearBuiltPredictionPipelineOptions.BatchSize.ToString();
-            TextBoxControl_ReferenceBatchSize.Value = this.yearBuiltPredictionPipelineOptions.ReferenceBatchSize.ToString();
 
-            CheckBox_ExportImages.IsChecked = this.yearBuiltPredictionPipelineOptions.ExportImages;
-            CheckBox_RunPrediction.IsChecked = this.yearBuiltPredictionPipelineOptions.RunPrediction;
-            CheckBox_Score.IsChecked = this.yearBuiltPredictionPipelineOptions.Score;
-            CheckBox_Resume.IsChecked = this.yearBuiltPredictionPipelineOptions.Resume;
             CheckBox_CleanScratchDirectory.IsChecked = this.yearBuiltPredictionPipelineOptions.CleanScratchDirectory;
-
-            CheckBox_UpdateDetections.IsChecked = this.yearBuiltPredictionPipelineOptions.UpdateDetections;
-            CheckBox_UpdateYearBuiltData.IsChecked = this.yearBuiltPredictionPipelineOptions.UpdateYearBuiltData;
-            CheckBox_UpdatePredictedYearBuilt.IsChecked = this.yearBuiltPredictionPipelineOptions.UpdatePredictedYearBuilt;
 
             // Subscribed before the list is filled - the text of an item is decided as it is added.
             ListBoxControl_Counties.ItemAdding += ListBoxControl_Counties_ItemAdding;
@@ -78,34 +67,13 @@ namespace DiGi.GIS.PostgreSQL.UI.Windows
             {
                 // The run refuses this itself, but only after the counties have been chosen and only into a log.
                 // Refusing it here is the one place the reason reaches whoever is looking at the dialog.
-                MessageBox.Show("A scratch directory is needed - the imagery has nowhere else to go.", Title ?? string.Empty, MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
-            if (!TextBoxControl_Confidence.TryGetValue(out double confidence) || double.IsNaN(confidence) || double.IsInfinity(confidence) || confidence <= 0 || confidence > 1)
-            {
-                MessageBox.Show("Confidence has to be a number greater than zero and no greater than one.", Title ?? string.Empty, MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show("A scratch directory has to be given.", Title ?? string.Empty, MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
             if (!TextBoxControl_MaxConcurrentRequests.TryGetValue(out int maxConcurrentRequests) || maxConcurrentRequests < 1)
             {
                 MessageBox.Show("Max concurrent requests has to be a whole number of at least one.", Title ?? string.Empty, MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
-            if (!TextBoxControl_BatchSize.TryGetValue(out int batchSize) || batchSize < 1)
-            {
-                MessageBox.Show("Batch size has to be a whole number of at least one.", Title ?? string.Empty, MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
-            // The runner clamps whatever arrives here to the endpoint's cap before it sends anything, but it
-            // does so silently - refusing it in front of the operator is the difference between a value nobody
-            // meant and a value nobody was told about.
-            if (!TextBoxControl_ReferenceBatchSize.TryGetValue(out int referenceBatchSize) || referenceBatchSize < 1 || referenceBatchSize > Constants.Count.BuildingDataReference_Maximum)
-            {
-                MessageBox.Show($"Reference batch size has to be a whole number between one and {Constants.Count.BuildingDataReference_Maximum} - the building data endpoint refuses more.", Title ?? string.Empty, MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
@@ -125,37 +93,59 @@ namespace DiGi.GIS.PostgreSQL.UI.Windows
             }
 
             yearBuiltPredictionPipelineOptions.ScratchDirectory = scratchDirectory;
-            yearBuiltPredictionPipelineOptions.Confidence = confidence;
             yearBuiltPredictionPipelineOptions.CountyIds = countyIds;
-
             yearBuiltPredictionPipelineOptions.MaxConcurrentRequests = maxConcurrentRequests;
-            yearBuiltPredictionPipelineOptions.BatchSize = batchSize;
-            yearBuiltPredictionPipelineOptions.ReferenceBatchSize = referenceBatchSize;
 
-            // An empty path is not a path: null is what makes the runner search PATH for an interpreter and the
-            // script search for its own weights, while an empty string is a path that resolves to nothing.
+            // An empty path is not a path: null is what makes the runner search PATH for an interpreter, while an
+            // empty string is a path that resolves to nothing.
             yearBuiltPredictionPipelineOptions.PythonPath = Value(TextBoxControl_PythonPath.Value);
-            yearBuiltPredictionPipelineOptions.ModelPath = Value(TextBoxControl_ModelPath.Value);
-            yearBuiltPredictionPipelineOptions.WorkingDirectory = Value(TextBoxControl_WorkingDirectory.Value);
 
-            // Resume and CleanScratchDirectory interact: with cleanup on, a county that completes leaves nothing
-            // on disk for a later run to resume into, so the two checkboxes sit together in the dialog and only
-            // a combination the operator actually asked for is written.
-            yearBuiltPredictionPipelineOptions.ExportImages = CheckBox_ExportImages.IsChecked == true;
-            yearBuiltPredictionPipelineOptions.RunPrediction = CheckBox_RunPrediction.IsChecked == true;
-            yearBuiltPredictionPipelineOptions.Score = CheckBox_Score.IsChecked == true;
-            yearBuiltPredictionPipelineOptions.Resume = CheckBox_Resume.IsChecked == true;
+            // The full six step flow, written rather than left to the defaults: the three write flags default to
+            // false, and the window is handed the previous run's options, so a tray run that did not set them
+            // here would read a county, score it and store nothing while reporting that it had run.
+            yearBuiltPredictionPipelineOptions.ExportImages = true;
+            yearBuiltPredictionPipelineOptions.RunPrediction = true;
+            yearBuiltPredictionPipelineOptions.Score = true;
+            yearBuiltPredictionPipelineOptions.UpdateDetections = true;
+            yearBuiltPredictionPipelineOptions.UpdateYearBuiltData = true;
+            yearBuiltPredictionPipelineOptions.UpdatePredictedYearBuilt = true;
+
+            // Resume is fixed on rather than offered. With the cleanup on it only helps inside a single run and
+            // on the retry of a county that failed - which keeps its scratch folder for exactly that reason - and
+            // there is no run for which off is the better answer.
+            yearBuiltPredictionPipelineOptions.Resume = true;
+
+            // The one flag that is a choice: a cancelled county is cleaned, so a run that is meant to be
+            // interrupted has to be able to keep what it exported.
             yearBuiltPredictionPipelineOptions.CleanScratchDirectory = CheckBox_CleanScratchDirectory.IsChecked == true;
 
-            yearBuiltPredictionPipelineOptions.UpdateDetections = CheckBox_UpdateDetections.IsChecked == true;
-            yearBuiltPredictionPipelineOptions.UpdateYearBuiltData = CheckBox_UpdateYearBuiltData.IsChecked == true;
-            yearBuiltPredictionPipelineOptions.UpdatePredictedYearBuilt = CheckBox_UpdatePredictedYearBuilt.IsChecked == true;
-
-            // Years and Radiuses have no control here on purpose: they decide which columns the feature
-            // projection asks for, and a range narrower than the one the regressor was trained on hands the
-            // model type defaults instead of features - it scores without failing, and the predictions are
-            // worse by an amount nothing measures (ZiolkowskiJakub/DiGi.GIS.ML#6). They carry through the copy
-            // untouched, as does anything else this window is not responsible for.
+            // Seven members have no control here on purpose, and unlike the step flags above they are not set
+            // either - they carry through the copy untouched, as does anything else this window is not
+            // responsible for.
+            //
+            // Years, Radiuses, Confidence and ModelPath all decide what the regressor is handed. The year range
+            // and the radiuses decide which columns the feature projection asks for; the confidence threshold is
+            // passed to the detector as --conf, and every detection it lets through is written into the ninety
+            // "Prediction Confidence <year>" columns the model reads back - so a run at anything other than the
+            // value the weights were trained against hands the model a feature distribution it has never seen.
+            // It scores without failing, and a tray run always writes those columns, so the mistake outlives the
+            // run that made it. The feature coverage guard cannot catch it either: it refuses only a group that
+            // is wholly absent. Naming different weights is the same failure through the same path,
+            // and a ModelPath typed here would be resolved in the runner's directory rather than in this
+            // application's, so the box could not even say whether the file exists
+            // (ZiolkowskiJakub/DiGi.GIS.ML#6). A control for any of them invites the mistake no guard catches; if
+            // they are ever exposed it needs a validation against the model's own trained range.
+            //
+            // WorkingDirectory is not a choice: DiGi.YOLO.Modify.Predict writes predict.py and utils.py into it,
+            // so there is nothing for the operator to point at, and left null it resolves to the county's own
+            // scratch folder, which is already correct and is cleaned up with the rest of it.
+            //
+            // BatchSize and ReferenceBatchSize are not choices either. BatchSize sizes the write requests - it
+            // never reaches the detector, whose image batch is its own - and five thousand is what a county of
+            // buildings against ninety odd detection columns was tuned to. ReferenceBatchSize has one sensible
+            // value: above the endpoint's cap is refused server side, below it is the same work in more
+            // requests. Max concurrent requests is the one knob that answers a server which has started
+            // refusing, and it is the one that is offered.
 
             DialogResult = true;
             Close();

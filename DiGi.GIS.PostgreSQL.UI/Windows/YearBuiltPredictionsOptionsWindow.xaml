@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:DiGi.GIS.PostgreSQL.UI.Windows"
         xmlns:controls="clr-namespace:DiGi.UI.WPF.Controls;assembly=DiGi.UI.WPF"
         mc:Ignorable="d"
-        Title="Predict year built" Height="880" Width="620" MinHeight="560" MinWidth="480" MaxHeight="{Binding Source={x:Static SystemParameters.WorkArea}, Path=Height}"
+        Title="Predict year built" Height="550" Width="620" MinHeight="440" MinWidth="480" MaxHeight="{Binding Source={x:Static SystemParameters.WorkArea}, Path=Height}"
         WindowStartupLocation="CenterScreen"
         WindowStyle="SingleBorderWindow"
         Icon="pack://application:,,,/DiGi.GIS.PostgreSQL.UI;component/Resources/DiGi.GIS.ico">
@@ -16,7 +16,7 @@
             <RowDefinition Height="33" />
         </Grid.RowDefinitions>
 
-        <!-- The window has more controls than a small screen has height for, so everything above the buttons
+        <!-- The window can still be taller than a small screen's work area, so everything above the buttons
              scrolls and the buttons themselves stay pinned: a dialog whose OK can be pushed off the bottom of
              the work area is one whose only exit is the window's close box. MaxHeight on the window keeps it
              inside the work area, and the fixed row heights below are what the scroll is measured against. -->
@@ -26,56 +26,27 @@
                     <RowDefinition Height="60" />
                     <RowDefinition Height="60" />
                     <RowDefinition Height="60" />
-                    <RowDefinition Height="60" />
-                    <RowDefinition Height="60" />
-                    <RowDefinition Height="60" />
-                    <RowDefinition Height="60" />
-                    <RowDefinition Height="60" />
-                    <RowDefinition Height="26" />
-                    <RowDefinition Height="28" />
                     <RowDefinition Height="26" />
                     <RowDefinition Height="28" />
                     <RowDefinition Height="28" />
                     <RowDefinition Height="200" />
                 </Grid.RowDefinitions>
 
-                <controls:TextBoxControl x:Name="TextBoxControl_ScratchDirectory" Grid.Row="0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Text="Scratch directory - each county gets a folder under it, named after its identifier" Value="" />
+                <controls:TextBoxControl x:Name="TextBoxControl_ScratchDirectory" Grid.Row="0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Text="Scratch directory - one folder per county, named after its identifier" Value="" />
 
-                <controls:TextBoxControl x:Name="TextBoxControl_PythonPath" Grid.Row="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Text="Python interpreter - CPython carrying ultralytics and torch. Empty searches PATH" Value="" />
+                <controls:TextBoxControl x:Name="TextBoxControl_PythonPath" Grid.Row="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Text="Python interpreter - a path, or a name on PATH; empty tries python then python3" Value="" />
 
-                <controls:TextBoxControl x:Name="TextBoxControl_ModelPath" Grid.Row="2" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Text="Weights - name the file, or the script picks whichever training run is newest on disk" Value="" />
+                <controls:TextBoxControl x:Name="TextBoxControl_MaxConcurrentRequests" Grid.Row="2" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Text="Max concurrent requests - image export; turn it down when the server starts refusing" Value="" />
 
-                <controls:TextBoxControl x:Name="TextBoxControl_WorkingDirectory" Grid.Row="3" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Text="Working directory - where the prediction scripts and the ultralytics caches sit. Empty uses temporary storage" Value="" />
+                <!-- Said before the counties are chosen rather than only in the confirmation the task raises
+                     afterwards: the run has one shape now, and that shape writes. -->
+                <Label x:Name="Label_Writes" Grid.Row="3" Content="Every run writes to stored data - detections, year built data and predicted year built" Margin="5,0,5,0" HorizontalAlignment="Stretch" VerticalAlignment="Center" />
 
-                <controls:TextBoxControl x:Name="TextBoxControl_Confidence" Grid.Row="4" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Text="Confidence - the threshold a detection has to reach to be reported" Value="" />
+                <CheckBox x:Name="CheckBox_CleanScratchDirectory" Grid.Row="4" Content="Clean scratch directory unless the county failed" Margin="10,0,10,0" HorizontalAlignment="Left" VerticalAlignment="Center" />
 
-                <controls:TextBoxControl x:Name="TextBoxControl_MaxConcurrentRequests" Grid.Row="5" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Text="Max concurrent requests - how many requests the run keeps in flight. Turn it down when the server or GUGiK starts refusing" Value="" />
+                <Label x:Name="Label_Counties" Grid.Row="5" Content="Counties - a multi-part county is one entry per piece; select them all" Margin="5,0,5,0" HorizontalAlignment="Stretch" VerticalAlignment="Center" />
 
-                <controls:TextBoxControl x:Name="TextBoxControl_BatchSize" Grid.Row="6" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Text="Batch size - buildings sent to the detector in one batch" Value="" />
-
-                <controls:TextBoxControl x:Name="TextBoxControl_ReferenceBatchSize" Grid.Row="7" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Text="Reference batch size - building references read in one request, at most 10000 - the endpoint refuses more" Value="" />
-
-                <Label x:Name="Label_Steps" Grid.Row="8" Content="Steps" Margin="5,0,5,0" HorizontalAlignment="Stretch" VerticalAlignment="Center" />
-
-                <StackPanel Grid.Row="9" Orientation="Horizontal" Margin="10,0,10,0" HorizontalAlignment="Left" VerticalAlignment="Center">
-                    <CheckBox x:Name="CheckBox_ExportImages" Content="Export images" Margin="0,0,15,0" VerticalAlignment="Center" />
-                    <CheckBox x:Name="CheckBox_RunPrediction" Content="Run detector" Margin="0,0,15,0" VerticalAlignment="Center" />
-                    <CheckBox x:Name="CheckBox_Score" Content="Score" Margin="0,0,15,0" VerticalAlignment="Center" />
-                    <CheckBox x:Name="CheckBox_Resume" Content="Resume" Margin="0,0,15,0" VerticalAlignment="Center" />
-                    <CheckBox x:Name="CheckBox_CleanScratchDirectory" Content="Clean scratch directory" Margin="0,0,15,0" VerticalAlignment="Center" />
-                </StackPanel>
-
-                <Label x:Name="Label_WriteSteps" Grid.Row="10" Content="Write steps - these change stored production data" Margin="5,0,5,0" HorizontalAlignment="Stretch" VerticalAlignment="Center" />
-
-                <StackPanel Grid.Row="11" Orientation="Horizontal" Margin="10,0,10,0" HorizontalAlignment="Left" VerticalAlignment="Center">
-                    <CheckBox x:Name="CheckBox_UpdateDetections" Content="Write detections" Margin="0,0,15,0" VerticalAlignment="Center" />
-                    <CheckBox x:Name="CheckBox_UpdateYearBuiltData" Content="Write year built data" Margin="0,0,15,0" VerticalAlignment="Center" />
-                    <CheckBox x:Name="CheckBox_UpdatePredictedYearBuilt" Content="Write predicted year built" Margin="0,0,15,0" VerticalAlignment="Center" />
-                </StackPanel>
-
-                <Label x:Name="Label_Counties" Grid.Row="12" Content="Counties" Margin="5,0,5,0" HorizontalAlignment="Stretch" VerticalAlignment="Center" />
-
-                <controls:ListBoxControl x:Name="ListBoxControl_Counties" Grid.Row="13" SelectionMode="Extended" Margin="10,0,10,0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
+                <controls:ListBoxControl x:Name="ListBoxControl_Counties" Grid.Row="6" SelectionMode="Extended" Margin="10,0,10,0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
             </Grid>
         </ScrollViewer>
 

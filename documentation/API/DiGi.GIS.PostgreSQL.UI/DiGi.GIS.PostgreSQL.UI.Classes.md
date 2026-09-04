@@ -1646,7 +1646,9 @@ A task that represents the asynchronous operation\. The task result is true if t
 
 ## UIYearBuiltPredictionsTask Class
 
-A Year Built prediction run that is scoped from the user interface: the counties, the interpreter and weights that score the imagery, which of the pipeline's steps run, and how the run talks to the server \- the request concurrency and the two batch sizes \- are asked for through [YearBuiltPredictionsOptionsWindow](DiGi.GIS.PostgreSQL.UI.Windows.md#DiGi.GIS.PostgreSQL.UI.Windows.YearBuiltPredictionsOptionsWindow 'DiGi\.GIS\.PostgreSQL\.UI\.Windows\.YearBuiltPredictionsOptionsWindow') each time the task is started\.
+A Year Built prediction run that is scoped from the user interface: the counties, the scratch directory, the interpreter, the request concurrency and the scratch cleanup are asked for through [YearBuiltPredictionsOptionsWindow](DiGi.GIS.PostgreSQL.UI.Windows.md#DiGi.GIS.PostgreSQL.UI.Windows.YearBuiltPredictionsOptionsWindow 'DiGi\.GIS\.PostgreSQL\.UI\.Windows\.YearBuiltPredictionsOptionsWindow') each time the task is started\.
+
+<b>A tray run has one shape, and it writes.</b> The pipeline's steps are not offered - ZiolkowskiJakub/DiGi.GIS.YOLO.UI#8 made the six of them a single run per county and left the granular flags to the options class and the console app - so the dialog settles the scope and the run does the rest. Because OK now means the deployed data of every county selected, the scope is named back in a confirmation before anything is launched.
 
 <b>The run happens in another process.</b> The pipeline needs a regressor, and the only implementation of it carries the machine learning closure - about a gigabyte of native libraries, against an application that publishes self-contained and single-file. The `IYearBuiltPredictor` seam exists to keep that weight out of hosts that only need to start a run, so this task writes the options out and hands them to `DiGi.GIS.YOLO.UI.ConsoleApp`, which already hosts the pipeline and is already exercised end to end.
 

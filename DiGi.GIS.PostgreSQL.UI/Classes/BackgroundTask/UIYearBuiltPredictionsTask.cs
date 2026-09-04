@@ -19,7 +19,8 @@ using System.Threading.Tasks;
 namespace DiGi.GIS.PostgreSQL.UI.Classes
 {
     /// <summary>
-    /// A Year Built prediction run that is scoped from the user interface: the counties, the interpreter and weights that score the imagery, which of the pipeline's steps run, and how the run talks to the server - the request concurrency and the two batch sizes - are asked for through <see cref="YearBuiltPredictionsOptionsWindow"/> each time the task is started.
+    /// A Year Built prediction run that is scoped from the user interface: the counties, the scratch directory, the interpreter, the request concurrency and the scratch cleanup are asked for through <see cref="YearBuiltPredictionsOptionsWindow"/> each time the task is started.
+    /// <para><b>A tray run has one shape, and it writes.</b> The pipeline's steps are not offered - ZiolkowskiJakub/DiGi.GIS.YOLO.UI#8 made the six of them a single run per county and left the granular flags to the options class and the console app - so the dialog settles the scope and the run does the rest. Because OK now means the deployed data of every county selected, the scope is named back in a confirmation before anything is launched.</para>
     /// <para><b>The run happens in another process.</b> The pipeline needs a regressor, and the only implementation of it carries the machine learning closure - about a gigabyte of native libraries, against an application that publishes self-contained and single-file. The <c>IYearBuiltPredictor</c> seam exists to keep that weight out of hosts that only need to start a run, so this task writes the options out and hands them to <c>DiGi.GIS.YOLO.UI.ConsoleApp</c>, which already hosts the pipeline and is already exercised end to end.</para>
     /// <para>Two consequences of that are worth knowing before a run. <b>The runner authorizes with its own key</b>, read from the <c>GIS_WebAPI_Client.conf</c> beside its executable rather than from this application's - a run that ends in <see cref="YearBuiltPredictionExitCode.Authorization"/> is usually that file rather than the one this application uses. And <b>stopping the task kills the run rather than winding it down</b>: the whole process tree goes, the detector included, so a batch that was being written may be half written. Every step of the pipeline is idempotent and a stopped run is re-runnable, but its tallies are not a record of what was stored.</para>
     /// <para>The environment preflight runs here, before anything is launched, so a machine with no CPython carrying ultralytics says so in front of whoever opened the dialog instead of an hour later as an exit code. The pipeline repeats the check inside the run; that costs one interpreter start and is what makes the reason legible.</para>
@@ -99,11 +100,21 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
                     return;
                 }
 
+                // Raised here rather than in the dialog. Every tray run now writes - the steps are no longer
+                // offered, so OK means the whole six step flow over the deployed data of whichever counties are
+                // selected - and that is worth naming them back once before it starts. Keeping it out of the
+                // window also keeps the window testable: a fact that raises its OK click would otherwise hang on
+                // a modal box nothing can answer.
+                if (!Confirmed(yearBuiltPredictionsOptionsWindow.YearBuiltPredictionPipelineOptions, administrativeAreal2DReferences))
+                {
+                    return;
+                }
+
                 yearBuiltPredictionPipelineOptions = yearBuiltPredictionsOptionsWindow.YearBuiltPredictionPipelineOptions;
             });
 
-            // A cancelled dialog leaves the options of an earlier run as they were - the window works on a copy -
-            // and ends the run here rather than starting one nobody scoped.
+            // A cancelled dialog, or a declined confirmation, leaves the options of an earlier run as they were -
+            // the window works on a copy - and ends the run here rather than starting one nobody scoped.
             if (yearBuiltPredictionPipelineOptions is null)
             {
                 Serilog.Modify.Log("Year built prediction options were cancelled - nothing was run");
@@ -154,6 +165,42 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
             }
 
             return await RunAsync(path_ConsoleApp!, path_Options!, progress, cancellationToken);
+        }
+
+        private static bool Confirmed(YearBuiltPredictionPipelineOptions yearBuiltPredictionPipelineOptions, List<AdministrativeAreal2DReference> administrativeAreal2DReferences)
+        {
+            HashSet<int>? countyIds = yearBuiltPredictionPipelineOptions.CountyIds;
+            if (countyIds is null || countyIds.Count == 0)
+            {
+                // The dialog refuses an empty selection itself, so this is not the message for it - it is the
+                // one thing that must never be confirmed.
+                return false;
+            }
+
+            // Named back rather than counted. A run is scoped by identifier, the two parts of a multi-part county
+            // differ by nothing else, and the identifier is what each written row is filed under.
+            List<string> names = [];
+            foreach (AdministrativeAreal2DReference administrativeAreal2DReference in administrativeAreal2DReferences)
+            {
+                if (countyIds.Contains(administrativeAreal2DReference.Id))
+                {
+                    names.Add(string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0} {1} (id {2})", administrativeAreal2DReference.Code, administrativeAreal2DReference.Name, administrativeAreal2DReference.Id));
+                }
+            }
+
+            const int count_Listed = 10;
+
+            string listed = names.Count <= count_Listed
+                ? string.Join(Environment.NewLine, names)
+                : string.Join(Environment.NewLine, names.GetRange(0, count_Listed)) + string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0}and {1} more", Environment.NewLine, names.Count - count_Listed);
+
+            string message = string.Format(
+                System.Globalization.CultureInfo.InvariantCulture,
+                "This run writes to the stored data of these counties:{0}{0}{1}{0}{0}It updates the detection columns, the year built data and the predicted year built column.{0}{0}Start it?",
+                Environment.NewLine,
+                listed);
+
+            return System.Windows.MessageBox.Show(message, "Predict year built", System.Windows.MessageBoxButton.OKCancel, System.Windows.MessageBoxImage.Warning) == System.Windows.MessageBoxResult.OK;
         }
 
         private static string? FullPath(string? path)

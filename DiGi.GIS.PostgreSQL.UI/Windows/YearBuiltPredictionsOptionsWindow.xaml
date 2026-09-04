@@ -6,58 +6,80 @@
         xmlns:local="clr-namespace:DiGi.GIS.PostgreSQL.UI.Windows"
         xmlns:controls="clr-namespace:DiGi.UI.WPF.Controls;assembly=DiGi.UI.WPF"
         mc:Ignorable="d"
-        Title="Predict year built" Height="700" Width="620" MinHeight="560" MinWidth="480"
+        Title="Predict year built" Height="880" Width="620" MinHeight="560" MinWidth="480" MaxHeight="{Binding Source={x:Static SystemParameters.WorkArea}, Path=Height}"
         WindowStartupLocation="CenterScreen"
         WindowStyle="SingleBorderWindow"
         Icon="pack://application:,,,/DiGi.GIS.PostgreSQL.UI;component/Resources/DiGi.GIS.ico">
     <Grid Margin="5,5,5,5">
         <Grid.RowDefinitions>
-            <RowDefinition Height="60" />
-            <RowDefinition Height="60" />
-            <RowDefinition Height="60" />
-            <RowDefinition Height="60" />
-            <RowDefinition Height="60" />
-            <RowDefinition Height="26" />
-            <RowDefinition Height="28" />
-            <RowDefinition Height="26" />
-            <RowDefinition Height="28" />
-            <RowDefinition Height="28" />
             <RowDefinition Height="*" />
             <RowDefinition Height="33" />
         </Grid.RowDefinitions>
 
-        <controls:TextBoxControl x:Name="TextBoxControl_ScratchDirectory" Grid.Row="0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Text="Scratch directory - each county gets a folder under it, named after its identifier" Value="" />
+        <!-- The window has more controls than a small screen has height for, so everything above the buttons
+             scrolls and the buttons themselves stay pinned: a dialog whose OK can be pushed off the bottom of
+             the work area is one whose only exit is the window's close box. MaxHeight on the window keeps it
+             inside the work area, and the fixed row heights below are what the scroll is measured against. -->
+        <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="60" />
+                    <RowDefinition Height="60" />
+                    <RowDefinition Height="60" />
+                    <RowDefinition Height="60" />
+                    <RowDefinition Height="60" />
+                    <RowDefinition Height="60" />
+                    <RowDefinition Height="60" />
+                    <RowDefinition Height="60" />
+                    <RowDefinition Height="26" />
+                    <RowDefinition Height="28" />
+                    <RowDefinition Height="26" />
+                    <RowDefinition Height="28" />
+                    <RowDefinition Height="28" />
+                    <RowDefinition Height="200" />
+                </Grid.RowDefinitions>
 
-        <controls:TextBoxControl x:Name="TextBoxControl_PythonPath" Grid.Row="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Text="Python interpreter - CPython carrying ultralytics and torch. Empty searches PATH" Value="" />
+                <controls:TextBoxControl x:Name="TextBoxControl_ScratchDirectory" Grid.Row="0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Text="Scratch directory - each county gets a folder under it, named after its identifier" Value="" />
 
-        <controls:TextBoxControl x:Name="TextBoxControl_ModelPath" Grid.Row="2" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Text="Weights - name the file, or the script picks whichever training run is newest on disk" Value="" />
+                <controls:TextBoxControl x:Name="TextBoxControl_PythonPath" Grid.Row="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Text="Python interpreter - CPython carrying ultralytics and torch. Empty searches PATH" Value="" />
 
-        <controls:TextBoxControl x:Name="TextBoxControl_WorkingDirectory" Grid.Row="3" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Text="Working directory - where the prediction scripts and the ultralytics caches sit. Empty uses temporary storage" Value="" />
+                <controls:TextBoxControl x:Name="TextBoxControl_ModelPath" Grid.Row="2" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Text="Weights - name the file, or the script picks whichever training run is newest on disk" Value="" />
 
-        <controls:TextBoxControl x:Name="TextBoxControl_Confidence" Grid.Row="4" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Text="Confidence - the threshold a detection has to reach to be reported" Value="" />
+                <controls:TextBoxControl x:Name="TextBoxControl_WorkingDirectory" Grid.Row="3" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Text="Working directory - where the prediction scripts and the ultralytics caches sit. Empty uses temporary storage" Value="" />
 
-        <Label x:Name="Label_Steps" Grid.Row="5" Content="Steps" Margin="5,0,5,0" HorizontalAlignment="Stretch" VerticalAlignment="Center" />
+                <controls:TextBoxControl x:Name="TextBoxControl_Confidence" Grid.Row="4" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Text="Confidence - the threshold a detection has to reach to be reported" Value="" />
 
-        <StackPanel Grid.Row="6" Orientation="Horizontal" Margin="10,0,10,0" HorizontalAlignment="Left" VerticalAlignment="Center">
-            <CheckBox x:Name="CheckBox_ExportImages" Content="Export images" Margin="0,0,15,0" VerticalAlignment="Center" />
-            <CheckBox x:Name="CheckBox_RunPrediction" Content="Run detector" Margin="0,0,15,0" VerticalAlignment="Center" />
-            <CheckBox x:Name="CheckBox_Score" Content="Score" Margin="0,0,15,0" VerticalAlignment="Center" />
-            <CheckBox x:Name="CheckBox_Resume" Content="Resume" Margin="0,0,15,0" VerticalAlignment="Center" />
-        </StackPanel>
+                <controls:TextBoxControl x:Name="TextBoxControl_MaxConcurrentRequests" Grid.Row="5" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Text="Max concurrent requests - how many requests the run keeps in flight. Turn it down when the server or GUGiK starts refusing" Value="" />
 
-        <Label x:Name="Label_WriteSteps" Grid.Row="7" Content="Write steps - these change stored production data" Margin="5,0,5,0" HorizontalAlignment="Stretch" VerticalAlignment="Center" />
+                <controls:TextBoxControl x:Name="TextBoxControl_BatchSize" Grid.Row="6" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Text="Batch size - buildings sent to the detector in one batch" Value="" />
 
-        <StackPanel Grid.Row="8" Orientation="Horizontal" Margin="10,0,10,0" HorizontalAlignment="Left" VerticalAlignment="Center">
-            <CheckBox x:Name="CheckBox_UpdateDetections" Content="Write detections" Margin="0,0,15,0" VerticalAlignment="Center" />
-            <CheckBox x:Name="CheckBox_UpdateYearBuiltData" Content="Write year built data" Margin="0,0,15,0" VerticalAlignment="Center" />
-            <CheckBox x:Name="CheckBox_UpdatePredictedYearBuilt" Content="Write predicted year built" Margin="0,0,15,0" VerticalAlignment="Center" />
-        </StackPanel>
+                <controls:TextBoxControl x:Name="TextBoxControl_ReferenceBatchSize" Grid.Row="7" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Text="Reference batch size - building references read in one request, at most 10000 - the endpoint refuses more" Value="" />
 
-        <Label x:Name="Label_Counties" Grid.Row="9" Content="Counties" Margin="5,0,5,0" HorizontalAlignment="Stretch" VerticalAlignment="Center" />
+                <Label x:Name="Label_Steps" Grid.Row="8" Content="Steps" Margin="5,0,5,0" HorizontalAlignment="Stretch" VerticalAlignment="Center" />
 
-        <controls:ListBoxControl x:Name="ListBoxControl_Counties" Grid.Row="10" SelectionMode="Extended" Margin="10,0,10,0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
+                <StackPanel Grid.Row="9" Orientation="Horizontal" Margin="10,0,10,0" HorizontalAlignment="Left" VerticalAlignment="Center">
+                    <CheckBox x:Name="CheckBox_ExportImages" Content="Export images" Margin="0,0,15,0" VerticalAlignment="Center" />
+                    <CheckBox x:Name="CheckBox_RunPrediction" Content="Run detector" Margin="0,0,15,0" VerticalAlignment="Center" />
+                    <CheckBox x:Name="CheckBox_Score" Content="Score" Margin="0,0,15,0" VerticalAlignment="Center" />
+                    <CheckBox x:Name="CheckBox_Resume" Content="Resume" Margin="0,0,15,0" VerticalAlignment="Center" />
+                    <CheckBox x:Name="CheckBox_CleanScratchDirectory" Content="Clean scratch directory" Margin="0,0,15,0" VerticalAlignment="Center" />
+                </StackPanel>
 
-        <StackPanel Grid.Row="11" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="5,5,5,5">
+                <Label x:Name="Label_WriteSteps" Grid.Row="10" Content="Write steps - these change stored production data" Margin="5,0,5,0" HorizontalAlignment="Stretch" VerticalAlignment="Center" />
+
+                <StackPanel Grid.Row="11" Orientation="Horizontal" Margin="10,0,10,0" HorizontalAlignment="Left" VerticalAlignment="Center">
+                    <CheckBox x:Name="CheckBox_UpdateDetections" Content="Write detections" Margin="0,0,15,0" VerticalAlignment="Center" />
+                    <CheckBox x:Name="CheckBox_UpdateYearBuiltData" Content="Write year built data" Margin="0,0,15,0" VerticalAlignment="Center" />
+                    <CheckBox x:Name="CheckBox_UpdatePredictedYearBuilt" Content="Write predicted year built" Margin="0,0,15,0" VerticalAlignment="Center" />
+                </StackPanel>
+
+                <Label x:Name="Label_Counties" Grid.Row="12" Content="Counties" Margin="5,0,5,0" HorizontalAlignment="Stretch" VerticalAlignment="Center" />
+
+                <controls:ListBoxControl x:Name="ListBoxControl_Counties" Grid.Row="13" SelectionMode="Extended" Margin="10,0,10,0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
+            </Grid>
+        </ScrollViewer>
+
+        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="5,5,5,5">
             <Button x:Name="Button_OK" Content="OK" Width="70" Height="23" Margin="5,0,5,0" IsDefault="True" Click="Button_OK_Click" />
             <Button x:Name="Button_Cancel" Content="Cancel" Width="70" Height="23" Margin="5,0,5,0" IsCancel="True" Click="Button_Cancel_Click" />
         </StackPanel>

@@ -329,7 +329,7 @@ Implements [InitializeComponent\(\)](https://learn.microsoft.com/en-us/dotnet/ap
 
 Interaction logic for YearBuiltPredictionsOptionsWindow\.xaml
 
-Asks for what one Year Built prediction run covers and does - the counties, where its imagery goes, which interpreter and weights score it, and which of its steps run. Every other option of the instance it was given is carried over untouched, deliberately: the batch sizes, the year range and the radiuses have to match what the regressor was trained on, and a projection that disagrees with them hands the model defaults rather than features, which scores without failing.
+Asks for what one Year Built prediction run covers and does - the counties, where its imagery goes, which interpreter and weights score it, which of its steps run, and how the run talks to the server: the concurrency of its requests and the two batch sizes. The year range and the radiuses are not asked for, deliberately: they have to match what the regressor was trained on, and a projection that disagrees with them hands the model defaults rather than features, which scores without failing (ZiolkowskiJakub/DiGi.GIS.ML#6).
 
 The three write steps change stored production data, so they are shown apart from the rest and start from whatever the options already ask for - which the template ships as off. A first pass over a county reads everything, scores everything and stores nothing.
 

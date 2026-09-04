@@ -190,7 +190,7 @@ namespace DiGi.GIS.PostgreSQL.UI
                     // up running something other than what the row was offered for.
                     if (Query.YearBuiltPredictionConsoleAppPath(yearBuiltPredictionConsoleAppPath) is string path_YearBuiltPredictionConsoleApp)
                     {
-                        result.Add(Visual(new UIYearBuiltPredictionsTask(GISWebAPIManager) { ConsoleAppPath = path_YearBuiltPredictionConsoleApp }, "Predict year built", "Runs the Year Built prediction pipeline over the chosen counties - exports the orthophoto imagery, scores it with the frozen detector and stores the predicted construction year. The counties, the interpreter, the weights and which steps run are asked for when the task is started; the three steps that write stored data are off unless they are turned on"));
+                        result.Add(Visual(new UIYearBuiltPredictionsTask(GISWebAPIManager) { ConsoleAppPath = path_YearBuiltPredictionConsoleApp }, "Predict year built", "Runs the Year Built prediction pipeline over the chosen counties - exports the orthophoto imagery, scores it with the frozen detector and stores the predicted construction year. The counties, the interpreter, the weights, which steps run and how the run talks to the server are asked for when the task is started; the three steps that write stored data are off unless they are turned on"));
                     }
 
                     result.Add(Visual(new UIOrtoDatasFromFilePostTask(GISWebAPIManager)

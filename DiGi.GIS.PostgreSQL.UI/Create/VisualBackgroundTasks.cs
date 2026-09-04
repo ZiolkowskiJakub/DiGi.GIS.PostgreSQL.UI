@@ -17,8 +17,9 @@ namespace DiGi.GIS.PostgreSQL.UI
         /// <param name="gISPostgreSQLConverterManager">The manager responsible for PostgreSQL conversion operations.</param>
         /// <param name="GISWebAPIManager">The manager responsible for interacting with the PostgreSQL Web API.</param>
         /// <param name="mode">The operation mode (Server, Client, or both) that determines which tasks are instantiated.</param>
+        /// <param name="yearBuiltPredictionConsoleAppPath">An explicit path to the headless Year Built prediction runner, or null to let <see cref="Query.YearBuiltPredictionConsoleAppPath"/> probe for it. A test supplies one to decide whether that task is offered without deploying the runner, the same seam its resolver already carries.</param>
         /// <returns>A list of <see cref="IVisualBackgroundTask"/> objects sorted by name, or null if not applicable.</returns>
-        public static List<IVisualBackgroundTask>? VisualBackgroundTasks(GISPostgreSQLConverterManager? gISPostgreSQLConverterManager, GISWebAPIManager? GISWebAPIManager, Mode mode)
+        public static List<IVisualBackgroundTask>? VisualBackgroundTasks(GISPostgreSQLConverterManager? gISPostgreSQLConverterManager, GISWebAPIManager? GISWebAPIManager, Mode mode, string? yearBuiltPredictionConsoleAppPath = null)
         {
             List<IVisualBackgroundTask> result = [];
 
@@ -176,11 +177,21 @@ namespace DiGi.GIS.PostgreSQL.UI
 
 
                     // Scoped from a dialog rather than from defaults written here, and run in another process: the
-                    // pipeline needs the machine learning closure, which is about a gigabyte of native libraries
-                    // against an application that publishes self-contained and single-file, so the run is handed to
-                    // DiGi.GIS.YOLO.UI.ConsoleApp instead of hosted here. The runner has to be deployed beside this
-                    // application, and it authorizes with its own GIS_WebAPI_Client.conf rather than with this one's.
-                    result.Add(Visual(new UIYearBuiltPredictionsTask(GISWebAPIManager), "Predict year built", "Runs the Year Built prediction pipeline over the chosen counties - exports the orthophoto imagery, scores it with the frozen detector and stores the predicted construction year. The counties, the interpreter, the weights and which steps run are asked for when the task is started; the three steps that write stored data are off unless they are turned on"));
+                    // pipeline needs the machine learning closure, which this application deliberately does not
+                    // reach, so the run is handed to DiGi.GIS.YOLO.UI.ConsoleApp instead of hosted here. That runner
+                    // authorizes with its own GIS_WebAPI_Client.conf rather than with this one's.
+                    //
+                    // Offered only where it can actually run. The runner is an optional part of the deployment - a
+                    // database host that will never score a building is deployed without it - and a row whose only
+                    // possible outcome is "no executable found" is worse than no row at all, because that is
+                    // discovered after the counties have been chosen and the imagery scoped.
+                    //
+                    // Resolved once here and handed to the task, so it does not probe a second time and cannot end
+                    // up running something other than what the row was offered for.
+                    if (Query.YearBuiltPredictionConsoleAppPath(yearBuiltPredictionConsoleAppPath) is string path_YearBuiltPredictionConsoleApp)
+                    {
+                        result.Add(Visual(new UIYearBuiltPredictionsTask(GISWebAPIManager) { ConsoleAppPath = path_YearBuiltPredictionConsoleApp }, "Predict year built", "Runs the Year Built prediction pipeline over the chosen counties - exports the orthophoto imagery, scores it with the frozen detector and stores the predicted construction year. The counties, the interpreter, the weights and which steps run are asked for when the task is started; the three steps that write stored data are off unless they are turned on"));
+                    }
 
                     result.Add(Visual(new UIOrtoDatasFromFilePostTask(GISWebAPIManager)
                     {

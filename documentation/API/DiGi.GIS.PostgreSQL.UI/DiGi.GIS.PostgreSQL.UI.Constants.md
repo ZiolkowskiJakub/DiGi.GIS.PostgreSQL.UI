@@ -44,6 +44,22 @@ public static class DirectoryName
 Inheritance [System\.Object](https://learn.microsoft.com/en-us/dotnet/api/system.object 'System\.Object') → DirectoryName
 ### Fields
 
+<a name='DiGi.GIS.PostgreSQL.UI.Constants.DirectoryName.Extensions'></a>
+
+## DirectoryName\.Extensions Field
+
+Gets the name of the folder beside this application's executable that standalone tools are deployed into\.
+
+```csharp
+public const string Extensions = "extensions";
+```
+
+#### Field Value
+[System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
+
+### Remarks
+Not the same convention as `DiGi.WebAPI.WindowsService`'s `extensions` folder, which holds plugin assemblies loaded into the host process through an `AssemblyLoadContext`\. Nothing under this one is loaded into this application at all \- each subfolder is a self contained executable started as its own process, with its own dependency closure and its own configuration files\.
+
 <a name='DiGi.GIS.PostgreSQL.UI.Constants.DirectoryName.PredictionImages'></a>
 
 ## DirectoryName\.PredictionImages Field
@@ -56,6 +72,22 @@ public const string PredictionImages = "images";
 
 #### Field Value
 [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
+
+<a name='DiGi.GIS.PostgreSQL.UI.Constants.DirectoryName.YearBuiltPredictionExtension'></a>
+
+## DirectoryName\.YearBuiltPredictionExtension Field
+
+Gets the name of the folder under [Extensions](DiGi.GIS.PostgreSQL.UI.Constants.md#DiGi.GIS.PostgreSQL.UI.Constants.DirectoryName.Extensions 'DiGi\.GIS\.PostgreSQL\.UI\.Constants\.DirectoryName\.Extensions') that the headless Year Built prediction runner is deployed into\.
+
+```csharp
+public const string YearBuiltPredictionExtension = "DiGi.GIS.YOLO.UI.ConsoleApp";
+```
+
+#### Field Value
+[System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
+
+### Remarks
+Assembled by `DiGi.Maintenance/Scripts/SyncDirectories.ps1` when `IncludeYearBuiltPredictionExtension` is set, into this application's own build output, so that the deployment carries it as part of this application rather than as a folder of its own\. A machine that will never score a building is deployed without it and simply does not offer the task\.
 
 <a name='DiGi.GIS.PostgreSQL.UI.Constants.FileName'></a>
 

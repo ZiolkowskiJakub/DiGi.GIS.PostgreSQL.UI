@@ -9,7 +9,7 @@ namespace DiGi.GIS.PostgreSQL.UI
         /// <summary>
         /// Finds the headless Year Built prediction runner this application hands a run to.
         /// <para>The runner is a separate deployment unit rather than an assembly this application loads, because hosting the pipeline here would mean referencing the machine learning closure - about a gigabyte of native libraries against an application that publishes self-contained and single-file. The cost of that choice is that the executable has to be found rather than linked, which is what this answers.</para>
-        /// <para>Four candidates in order: the path given, then beside this application's own output, then the runner's own folder beside this one's, then the runner's build output in a workspace checkout. The last is what makes the task runnable from a development machine without deploying anything.</para>
+        /// <para>Five candidates in order: the path given, then beside this application's own output, then the optional extensions folder inside it, then the runner's own folder beside this one's, then the runner's build output in a workspace checkout. The last is what makes the task runnable from a development machine without deploying anything.</para>
         /// <para>A candidate that does not exist is not returned. A path that only looks resolved would be discovered as a failure to start a process, after the counties had been chosen and the imagery scoped.</para>
         /// </summary>
         /// <param name="path">An explicit path to the runner, or null to search the candidates below it.</param>
@@ -75,7 +75,21 @@ namespace DiGi.GIS.PostgreSQL.UI
                 return path_Deployed;
             }
 
-            // Deployed layout: the runner is its own folder beside this application's, under the software directory.
+            // The deployed layout: the runner is assembled into this application's own output under extensions\ before
+            // the deployment copies that output to the host, so a workspace checkout and a deployed machine resolve it
+            // the same way. It is optional - a machine that will never score a building is deployed without it.
+            //
+            // This is NOT DiGi.WebAPI.WindowsService's extensions\<name> convention, which holds plugin assemblies
+            // loaded into that host through an AssemblyLoadContext. Nothing here is loaded into this process: the
+            // runner is a standalone executable started with Process.Start, carrying its own dependency closure and
+            // authorizing with its own GIS_WebAPI_Client.conf rather than with this application's.
+            if (Existing(Path.Combine(directory!, Constants.DirectoryName.Extensions, Constants.DirectoryName.YearBuiltPredictionExtension, Constants.FileName.YearBuiltPredictionConsoleApp)) is string path_Extension)
+            {
+                return path_Extension;
+            }
+
+            // The layout deployments used before the extensions folder: the runner as its own folder beside this
+            // application's, under the software directory. Kept so an existing installation keeps working.
             if (Existing(Path.Combine(directory!, "..", "DiGi.GIS.YOLO.UI", Constants.FileName.YearBuiltPredictionConsoleApp)) is string path_Sibling)
             {
                 return path_Sibling;

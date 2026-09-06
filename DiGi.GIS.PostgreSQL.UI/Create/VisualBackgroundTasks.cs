@@ -102,6 +102,23 @@ namespace DiGi.GIS.PostgreSQL.UI
 
                     result.Add(Visual(new PostgreSQLUpdateOccupancyTask(gISPostgreSQLConverterManager), "Update occupancy from database", "Update occupancy for Building2Ds and AdministrativeAreal2Ds based on data in database"));
 
+                    // TODO [CountyPartAssignment]: this registration goes with the task itself, once
+                    // gis/building2d/countypartmismatches reports zero for every code
+                    // (ZiolkowskiJakub/DiGi.GIS.PostgreSQL#68).
+                    // The scope and the two labels are derived from the options rather than written beside
+                    // them, so a row that moves rows between partitions cannot end up labelled as a report.
+                    PostgreSQLBuilding2DCountyPartRefreshTask postgreSQLBuilding2DCountyPartRefreshTask = new(gISPostgreSQLConverterManager)
+                    {
+                        PostgreSQLBuilding2DCountyPartRefreshOptions = new PostgreSQLBuilding2DCountyPartRefreshOptions()
+                        {
+                            DryRun = true
+                        }
+                    };
+
+                    result.Add(Visual(postgreSQLBuilding2DCountyPartRefreshTask,
+                    postgreSQLBuilding2DCountyPartRefreshTask.PostgreSQLBuilding2DCountyPartRefreshOptions.DryRun ? "Report Building2Ds under the wrong county part (dry run, writes nothing)" : "Re-file Building2Ds under the county part they belong to (MOVES rows)",
+                    $"Decides, by footprint, which polygon part of a multi-part county each building belongs to, and moves the ones filed under another part - together with everything keyed on them. Scope: {(postgreSQLBuilding2DCountyPartRefreshTask.PostgreSQLBuilding2DCountyPartRefreshOptions.Codes is null ? "every multi-part county code" : $"codes {string.Join(' ', postgreSQLBuilding2DCountyPartRefreshTask.PostgreSQLBuilding2DCountyPartRefreshOptions.Codes)}")}. {(postgreSQLBuilding2DCountyPartRefreshTask.PostgreSQLBuilding2DCountyPartRefreshOptions.DryRun ? "Dry run - nothing is written until DryRun is turned off" : "DryRun is OFF - this moves rows between partitions")}"));
+
                     // Orphan cleanup only. The superseded half went with the unique_id migration of issue
                     // ZiolkowskiJakub/DiGi.GIS.PostgreSQL#5: rows are keyed on the model they hold, so nothing is
                     // keyed on its reference any more and nothing supersedes anything.

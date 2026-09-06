@@ -107,11 +107,18 @@ namespace DiGi.GIS.PostgreSQL.UI
                     // (ZiolkowskiJakub/DiGi.GIS.PostgreSQL#68).
                     // The scope and the two labels are derived from the options rather than written beside
                     // them, so a row that moves rows between partitions cannot end up labelled as a report.
+                    // DryRun is OFF for the national repair of issue #68: the dry run of 2026-09-06 read
+                    // 989 341 buildings across the 18 multi-part codes, found 758 394 filed under a part
+                    // their footprint does not lie in, and left nothing undecided. Codes is null, so every
+                    // multi-part code is repaired in one pass. Turn DryRun back on once the run has been
+                    // made and countypartmismatches reports zero.
                     PostgreSQLBuilding2DCountyPartRefreshTask postgreSQLBuilding2DCountyPartRefreshTask = new(gISPostgreSQLConverterManager)
                     {
                         PostgreSQLBuilding2DCountyPartRefreshOptions = new PostgreSQLBuilding2DCountyPartRefreshOptions()
                         {
-                            DryRun = true
+                            Codes = null,
+                            DryRun = false,
+                            ReferencedObjects = true
                         }
                     };
 

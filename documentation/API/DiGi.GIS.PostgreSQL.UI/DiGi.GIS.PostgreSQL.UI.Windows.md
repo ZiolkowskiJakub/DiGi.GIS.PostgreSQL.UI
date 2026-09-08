@@ -18,30 +18,36 @@ Inheritance [System\.Object](https://learn.microsoft.com/en-us/dotnet/api/system
 Implements [System\.Windows\.Markup\.IComponentConnector](https://learn.microsoft.com/en-us/dotnet/api/system.windows.markup.icomponentconnector 'System\.Windows\.Markup\.IComponentConnector')
 ### Constructors
 
-<a name='DiGi.GIS.PostgreSQL.UI.Windows.MainWindow.MainWindow(DiGi.GIS.PostgreSQL.Classes.GISPostgreSQLConverterManager,DiGi.GIS.WebAPI.Classes.GISWebAPIManager,System.Nullable_DiGi.GIS.PostgreSQL.UI.Enums.Mode_)'></a>
+<a name='DiGi.GIS.PostgreSQL.UI.Windows.MainWindow.MainWindow(DiGi.GIS.PostgreSQL.Classes.GISPostgreSQLConverterManager,DiGi.User.PostgreSQL.Classes.UserPostgreSQLConverterManager,DiGi.GIS.WebAPI.Classes.GISWebAPIManager,System.Nullable_DiGi.GIS.PostgreSQL.UI.Enums.Mode_)'></a>
 
-## MainWindow\(GISPostgreSQLConverterManager, GISWebAPIManager, Nullable\<Mode\>\) Constructor
+## MainWindow\(GISPostgreSQLConverterManager, UserPostgreSQLConverterManager, GISWebAPIManager, Nullable\<Mode\>\) Constructor
 
 Initializes a new instance of the [MainWindow](DiGi.GIS.PostgreSQL.UI.Windows.md#DiGi.GIS.PostgreSQL.UI.Windows.MainWindow 'DiGi\.GIS\.PostgreSQL\.UI\.Windows\.MainWindow') class\.
 
 ```csharp
-public MainWindow(DiGi.GIS.PostgreSQL.Classes.GISPostgreSQLConverterManager? gISPostgreSQLConverterManager, DiGi.GIS.WebAPI.Classes.GISWebAPIManager? GISWebAPIManager, System.Nullable<DiGi.GIS.PostgreSQL.UI.Enums.Mode> mode=null);
+public MainWindow(DiGi.GIS.PostgreSQL.Classes.GISPostgreSQLConverterManager? gISPostgreSQLConverterManager, DiGi.User.PostgreSQL.Classes.UserPostgreSQLConverterManager? userPostgreSQLConverterManager, DiGi.GIS.WebAPI.Classes.GISWebAPIManager? GISWebAPIManager, System.Nullable<DiGi.GIS.PostgreSQL.UI.Enums.Mode> mode=null);
 ```
 #### Parameters
 
-<a name='DiGi.GIS.PostgreSQL.UI.Windows.MainWindow.MainWindow(DiGi.GIS.PostgreSQL.Classes.GISPostgreSQLConverterManager,DiGi.GIS.WebAPI.Classes.GISWebAPIManager,System.Nullable_DiGi.GIS.PostgreSQL.UI.Enums.Mode_).gISPostgreSQLConverterManager'></a>
+<a name='DiGi.GIS.PostgreSQL.UI.Windows.MainWindow.MainWindow(DiGi.GIS.PostgreSQL.Classes.GISPostgreSQLConverterManager,DiGi.User.PostgreSQL.Classes.UserPostgreSQLConverterManager,DiGi.GIS.WebAPI.Classes.GISWebAPIManager,System.Nullable_DiGi.GIS.PostgreSQL.UI.Enums.Mode_).gISPostgreSQLConverterManager'></a>
 
 `gISPostgreSQLConverterManager` [DiGi\.GIS\.PostgreSQL\.Classes\.GISPostgreSQLConverterManager](https://learn.microsoft.com/en-us/dotnet/api/digi.gis.postgresql.classes.gispostgresqlconvertermanager 'DiGi\.GIS\.PostgreSQL\.Classes\.GISPostgreSQLConverterManager')
 
 The manager responsible for GIS PostgreSQL conversion processes\.
 
-<a name='DiGi.GIS.PostgreSQL.UI.Windows.MainWindow.MainWindow(DiGi.GIS.PostgreSQL.Classes.GISPostgreSQLConverterManager,DiGi.GIS.WebAPI.Classes.GISWebAPIManager,System.Nullable_DiGi.GIS.PostgreSQL.UI.Enums.Mode_).GISWebAPIManager'></a>
+<a name='DiGi.GIS.PostgreSQL.UI.Windows.MainWindow.MainWindow(DiGi.GIS.PostgreSQL.Classes.GISPostgreSQLConverterManager,DiGi.User.PostgreSQL.Classes.UserPostgreSQLConverterManager,DiGi.GIS.WebAPI.Classes.GISWebAPIManager,System.Nullable_DiGi.GIS.PostgreSQL.UI.Enums.Mode_).userPostgreSQLConverterManager'></a>
+
+`userPostgreSQLConverterManager` [DiGi\.User\.PostgreSQL\.Classes\.UserPostgreSQLConverterManager](https://learn.microsoft.com/en-us/dotnet/api/digi.user.postgresql.classes.userpostgresqlconvertermanager 'DiGi\.User\.PostgreSQL\.Classes\.UserPostgreSQLConverterManager')
+
+The manager holding the converter for the user database, or null where no User\_PostgreSQL\_Main\.conf names one\.
+
+<a name='DiGi.GIS.PostgreSQL.UI.Windows.MainWindow.MainWindow(DiGi.GIS.PostgreSQL.Classes.GISPostgreSQLConverterManager,DiGi.User.PostgreSQL.Classes.UserPostgreSQLConverterManager,DiGi.GIS.WebAPI.Classes.GISWebAPIManager,System.Nullable_DiGi.GIS.PostgreSQL.UI.Enums.Mode_).GISWebAPIManager'></a>
 
 `GISWebAPIManager` [DiGi\.GIS\.WebAPI\.Classes\.GISWebAPIManager](https://learn.microsoft.com/en-us/dotnet/api/digi.gis.webapi.classes.giswebapimanager 'DiGi\.GIS\.WebAPI\.Classes\.GISWebAPIManager')
 
 The manager responsible for GIS PostgreSQL Web API interactions\.
 
-<a name='DiGi.GIS.PostgreSQL.UI.Windows.MainWindow.MainWindow(DiGi.GIS.PostgreSQL.Classes.GISPostgreSQLConverterManager,DiGi.GIS.WebAPI.Classes.GISWebAPIManager,System.Nullable_DiGi.GIS.PostgreSQL.UI.Enums.Mode_).mode'></a>
+<a name='DiGi.GIS.PostgreSQL.UI.Windows.MainWindow.MainWindow(DiGi.GIS.PostgreSQL.Classes.GISPostgreSQLConverterManager,DiGi.User.PostgreSQL.Classes.UserPostgreSQLConverterManager,DiGi.GIS.WebAPI.Classes.GISWebAPIManager,System.Nullable_DiGi.GIS.PostgreSQL.UI.Enums.Mode_).mode'></a>
 
 `mode` [System\.Nullable&lt;](https://learn.microsoft.com/en-us/dotnet/api/system.nullable-1 'System\.Nullable\`1')[Mode](DiGi.GIS.PostgreSQL.UI.Enums.md#DiGi.GIS.PostgreSQL.UI.Enums.Mode 'DiGi\.GIS\.PostgreSQL\.UI\.Enums\.Mode')[&gt;](https://learn.microsoft.com/en-us/dotnet/api/system.nullable-1 'System\.Nullable\`1')
 
@@ -314,6 +320,121 @@ public DiGi.GIS.PostgreSQL.Classes.PostgreSQLTerrainPointFillGapsOptions Postgre
 <a name='DiGi.GIS.PostgreSQL.UI.Windows.PostgreSQLTerrainPointFillGapsOptionsWindow.InitializeComponent()'></a>
 
 ## PostgreSQLTerrainPointFillGapsOptionsWindow\.InitializeComponent\(\) Method
+
+InitializeComponent
+
+```csharp
+public void InitializeComponent();
+```
+
+Implements [InitializeComponent\(\)](https://learn.microsoft.com/en-us/dotnet/api/system.windows.markup.icomponentconnector.initializecomponent 'System\.Windows\.Markup\.IComponentConnector\.InitializeComponent')
+
+<a name='DiGi.GIS.PostgreSQL.UI.Windows.PostgreSQLUserCreateOptionsWindow'></a>
+
+## PostgreSQLUserCreateOptionsWindow Class
+
+Interaction logic for PostgreSQLUserCreateOptionsWindow\.xaml
+
+Asks for the user to be created: the email it is keyed by, its optional name, the password it is
+            authenticated with and the permission level it is granted.
+
+The email and the password are each asked for twice. Neither can be corrected afterwards by anything
+            this application offers - the email is the natural key of the row, and the password is never stored in a form
+            anything can read back - so a typo in either produces an account nobody can use.
+
+Unlike the other options windows this one carries no options object. The password reaches it as text,
+            and an options instance would keep that text alive on the task for the life of the process; the values live
+            here instead, on a window the task creates, reads and closes within one run.
+
+```csharp
+public class PostgreSQLUserCreateOptionsWindow : System.Windows.Window, System.Windows.Markup.IComponentConnector
+```
+
+Inheritance [System\.Object](https://learn.microsoft.com/en-us/dotnet/api/system.object 'System\.Object') → [System\.Windows\.Threading\.DispatcherObject](https://learn.microsoft.com/en-us/dotnet/api/system.windows.threading.dispatcherobject 'System\.Windows\.Threading\.DispatcherObject') → [System\.Windows\.DependencyObject](https://learn.microsoft.com/en-us/dotnet/api/system.windows.dependencyobject 'System\.Windows\.DependencyObject') → [System\.Windows\.Media\.Visual](https://learn.microsoft.com/en-us/dotnet/api/system.windows.media.visual 'System\.Windows\.Media\.Visual') → [System\.Windows\.UIElement](https://learn.microsoft.com/en-us/dotnet/api/system.windows.uielement 'System\.Windows\.UIElement') → [System\.Windows\.FrameworkElement](https://learn.microsoft.com/en-us/dotnet/api/system.windows.frameworkelement 'System\.Windows\.FrameworkElement') → [System\.Windows\.Controls\.Control](https://learn.microsoft.com/en-us/dotnet/api/system.windows.controls.control 'System\.Windows\.Controls\.Control') → [System\.Windows\.Controls\.ContentControl](https://learn.microsoft.com/en-us/dotnet/api/system.windows.controls.contentcontrol 'System\.Windows\.Controls\.ContentControl') → [System\.Windows\.Window](https://learn.microsoft.com/en-us/dotnet/api/system.windows.window 'System\.Windows\.Window') → PostgreSQLUserCreateOptionsWindow
+
+Implements [System\.Windows\.Markup\.IComponentConnector](https://learn.microsoft.com/en-us/dotnet/api/system.windows.markup.icomponentconnector 'System\.Windows\.Markup\.IComponentConnector')
+### Constructors
+
+<a name='DiGi.GIS.PostgreSQL.UI.Windows.PostgreSQLUserCreateOptionsWindow.PostgreSQLUserCreateOptionsWindow()'></a>
+
+## PostgreSQLUserCreateOptionsWindow\(\) Constructor
+
+Initializes a new instance of the [PostgreSQLUserCreateOptionsWindow](DiGi.GIS.PostgreSQL.UI.Windows.md#DiGi.GIS.PostgreSQL.UI.Windows.PostgreSQLUserCreateOptionsWindow 'DiGi\.GIS\.PostgreSQL\.UI\.Windows\.PostgreSQLUserCreateOptionsWindow') class\.
+
+```csharp
+public PostgreSQLUserCreateOptionsWindow();
+```
+### Properties
+
+<a name='DiGi.GIS.PostgreSQL.UI.Windows.PostgreSQLUserCreateOptionsWindow.Email'></a>
+
+## PostgreSQLUserCreateOptionsWindow\.Email Property
+
+Gets the email of the user to create\. It carries the value of the control only once the dialog has been closed with OK; until then, and after a cancellation, it is null\.
+
+```csharp
+public string? Email { get; }
+```
+
+#### Property Value
+[System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
+
+<a name='DiGi.GIS.PostgreSQL.UI.Windows.PostgreSQLUserCreateOptionsWindow.FirstName'></a>
+
+## PostgreSQLUserCreateOptionsWindow\.FirstName Property
+
+Gets the optional first name of the user to create, or null when the field was left blank\.
+
+```csharp
+public string? FirstName { get; }
+```
+
+#### Property Value
+[System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
+
+<a name='DiGi.GIS.PostgreSQL.UI.Windows.PostgreSQLUserCreateOptionsWindow.LastName'></a>
+
+## PostgreSQLUserCreateOptionsWindow\.LastName Property
+
+Gets the optional last name of the user to create, or null when the field was left blank\.
+
+```csharp
+public string? LastName { get; }
+```
+
+#### Property Value
+[System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
+
+<a name='DiGi.GIS.PostgreSQL.UI.Windows.PostgreSQLUserCreateOptionsWindow.Password'></a>
+
+## PostgreSQLUserCreateOptionsWindow\.Password Property
+
+Gets the plain text password the credential is to be derived from\. It exists only between the dialog being closed with OK and the credential being derived, and is never written to the database or to a log\.
+
+```csharp
+public string? Password { get; }
+```
+
+#### Property Value
+[System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
+
+<a name='DiGi.GIS.PostgreSQL.UI.Windows.PostgreSQLUserCreateOptionsWindow.UserLevel'></a>
+
+## PostgreSQLUserCreateOptionsWindow\.UserLevel Property
+
+Gets the permission level to grant the user\.
+
+```csharp
+public DiGi.User.Enums.UserLevel UserLevel { get; }
+```
+
+#### Property Value
+[DiGi\.User\.Enums\.UserLevel](https://learn.microsoft.com/en-us/dotnet/api/digi.user.enums.userlevel 'DiGi\.User\.Enums\.UserLevel')
+### Methods
+
+<a name='DiGi.GIS.PostgreSQL.UI.Windows.PostgreSQLUserCreateOptionsWindow.InitializeComponent()'></a>
+
+## PostgreSQLUserCreateOptionsWindow\.InitializeComponent\(\) Method
 
 InitializeComponent
 

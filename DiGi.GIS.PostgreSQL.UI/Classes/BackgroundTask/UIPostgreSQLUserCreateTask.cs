@@ -1,0 +1,144 @@
+using DiGi.Core.Classes;
+using DiGi.GIS.PostgreSQL.UI.Interfaces;
+using DiGi.GIS.PostgreSQL.UI.Windows;
+using DiGi.User.Classes;
+using DiGi.User.Enums;
+using DiGi.User.PostgreSQL.Classes;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+
+namespace DiGi.GIS.PostgreSQL.UI.Classes
+{
+    /// <summary>
+    /// Creates one user in the user database, asking for it through <see cref="PostgreSQLUserCreateOptionsWindow"/> each time the task is started.
+    /// <para>The password is stored only as a PBKDF2 derived key with its salt and iteration count. The text the operator typed reaches the derivation and nothing else - not the row, not the log, and not a field on this task.</para>
+    /// <para>The user database is not the database the rest of this application works against: users live where <c>User_PostgreSQL_Main.conf</c> points, which is what the Web API reads when it authenticates a login. A user written anywhere else could not log in.</para>
+    /// <para>There is no base task to hand the run to. <see cref="UserPostgreSQLConverter"/> already carries every database step, and creating a user is three of them.</para>
+    /// </summary>
+    public class UIPostgreSQLUserCreateTask : BackgroundTask, IGISPostgreSQLUIObject
+    {
+        private readonly UserPostgreSQLConverter userPostgreSQLConverter;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="UIPostgreSQLUserCreateTask"/> class.
+        /// </summary>
+        /// <param name="userPostgreSQLConverter">The converter addressing the user database the new user is written to.</param>
+        public UIPostgreSQLUserCreateTask(UserPostgreSQLConverter userPostgreSQLConverter)
+        {
+            this.userPostgreSQLConverter = userPostgreSQLConverter ?? throw new ArgumentNullException(nameof(userPostgreSQLConverter));
+        }
+
+        /// <inheritdoc />
+        protected override async Task<bool> ExecuteAsync()
+        {
+            // The dialog is a window, and this runs on a thread pool thread, where a window cannot be created at
+            // all. Without an application there is no user interface thread to move it to.
+            if (System.Windows.Application.Current is not System.Windows.Application application)
+            {
+                Serilog.Modify.Log(Serilog.Enums.LogEventLevel.Error, "No WPF application is running - the new user cannot be asked for");
+                return false;
+            }
+
+            string? email = null;
+            string? firstName = null;
+            string? lastName = null;
+            string? password = null;
+            UserLevel? userLevel = null;
+
+            application.Dispatcher.Invoke(() =>
+            {
+                PostgreSQLUserCreateOptionsWindow postgreSQLUserCreateOptionsWindow = new();
+
+                if (postgreSQLUserCreateOptionsWindow.ShowDialog() is not bool dialogResult || !dialogResult)
+                {
+                    return;
+                }
+
+                email = postgreSQLUserCreateOptionsWindow.Email;
+                firstName = postgreSQLUserCreateOptionsWindow.FirstName;
+                lastName = postgreSQLUserCreateOptionsWindow.LastName;
+                password = postgreSQLUserCreateOptionsWindow.Password;
+                userLevel = postgreSQLUserCreateOptionsWindow.UserLevel;
+            });
+
+            // A cancelled dialog leaves these unassigned and ends the run here, having written nothing.
+            if (email is null || password is null || userLevel is null)
+            {
+                Serilog.Modify.Log("Creating a user was cancelled - nothing was written");
+                return false;
+            }
+
+            // Refused rather than upserted. InsertAsync writes ON CONFLICT (email) DO UPDATE, so without this
+            // check a taken email would silently rewrite that user's name and level instead of failing.
+            if (await userPostgreSQLConverter.GetUserByEmailAsync(email) is not null)
+            {
+                Serilog.Modify.Log(Serilog.Enums.LogEventLevel.Error, "A user with the email {Email} already exists - no user was created", email);
+                return false;
+            }
+
+            UserCredential? userCredential = DiGi.User.PostgreSQL.Create.UserCredential(email, password);
+            if (userCredential is null)
+            {
+                Serilog.Modify.Log(Serilog.Enums.LogEventLevel.Error, "A password credential could not be derived for {Email} - no user was created", email);
+                return false;
+            }
+
+            // InsertAsync creates the users table when it is not there yet and adds the credential columns to one
+            // that predates them, so the first run against a database is also what migrates it.
+            List<string> ids = await userPostgreSQLConverter.InsertAsync([new DiGi.User.Classes.User(email) { FirstName = firstName, LastName = lastName, Level = (int)userLevel.Value }]);
+            if (ids.Count == 0)
+            {
+                Serilog.Modify.Log(Serilog.Enums.LogEventLevel.Error, "The user {Email} could not be written", email);
+                return false;
+            }
+
+            // Undoes the insert above when the credential cannot be written. Without it the run leaves a row that
+            // cannot log in and that the duplicate check above would refuse to write over, so the email would be
+            // spent until somebody deleted the row by hand.
+            async Task RemoveAsync()
+            {
+                try
+                {
+                    // Only a row that carries no credential at all. InsertAsync upserts and deliberately leaves an
+                    // existing user's credential columns alone, so a row that has one belonged to somebody before
+                    // this run started and must not be removed by it.
+                    if (await userPostgreSQLConverter.GetUserCredentialAsync(email) is null)
+                    {
+                        await userPostgreSQLConverter.DeleteUserByEmailAsync(email);
+                    }
+                }
+                catch (Exception exception)
+                {
+                    Serilog.Modify.Log(exception, "The user {Email} was written without a password credential and could not be removed - it has to be deleted by hand before that email can be used again", email);
+                }
+            }
+
+            // Second, because SetUserCredentialAsync is an UPDATE against a row that has to exist already. It does
+            // not catch NpgsqlException, so a connection lost here arrives as a throw rather than as false.
+            bool credentialWritten;
+
+            try
+            {
+                credentialWritten = await userPostgreSQLConverter.SetUserCredentialAsync(userCredential);
+            }
+            catch
+            {
+                await RemoveAsync();
+                throw;
+            }
+
+            if (!credentialWritten)
+            {
+                await RemoveAsync();
+
+                Serilog.Modify.Log(Serilog.Enums.LogEventLevel.Error, "The password credential of {Email} could not be written - no user was created", email);
+                return false;
+            }
+
+            Serilog.Modify.Log("User {Email} created with level {UserLevel}", email, userLevel.Value);
+
+            return true;
+        }
+    }
+}

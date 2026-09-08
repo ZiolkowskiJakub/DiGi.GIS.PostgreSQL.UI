@@ -5,6 +5,7 @@ using DiGi.GIS.PostgreSQL.UI.Classes;
 using DiGi.GIS.PostgreSQL.UI.Enums;
 using DiGi.GIS.WebAPI.Classes;
 using DiGi.UI.WPF.Interfaces;
+using DiGi.User.PostgreSQL.Classes;
 using System.Collections.Generic;
 
 namespace DiGi.GIS.PostgreSQL.UI
@@ -15,11 +16,12 @@ namespace DiGi.GIS.PostgreSQL.UI
         /// Creates and returns a sorted list of visual background tasks based on the specified operation mode and available managers.
         /// </summary>
         /// <param name="gISPostgreSQLConverterManager">The manager responsible for PostgreSQL conversion operations.</param>
+        /// <param name="userPostgreSQLConverterManager">The manager holding the converter for the user database, or null where no User_PostgreSQL_Main.conf names one. Users live in their own database rather than in the one the rest of this application works against.</param>
         /// <param name="GISWebAPIManager">The manager responsible for interacting with the PostgreSQL Web API.</param>
         /// <param name="mode">The operation mode (Server, Client, or both) that determines which tasks are instantiated.</param>
         /// <param name="yearBuiltPredictionConsoleAppPath">An explicit path to the headless Year Built prediction runner, or null to let <see cref="Query.YearBuiltPredictionConsoleAppPath"/> probe for it. A test supplies one to decide whether that task is offered without deploying the runner, the same seam its resolver already carries.</param>
         /// <returns>A list of <see cref="IVisualBackgroundTask"/> objects sorted by name, or null if not applicable.</returns>
-        public static List<IVisualBackgroundTask>? VisualBackgroundTasks(GISPostgreSQLConverterManager? gISPostgreSQLConverterManager, GISWebAPIManager? GISWebAPIManager, Mode mode, string? yearBuiltPredictionConsoleAppPath = null)
+        public static List<IVisualBackgroundTask>? VisualBackgroundTasks(GISPostgreSQLConverterManager? gISPostgreSQLConverterManager, UserPostgreSQLConverterManager? userPostgreSQLConverterManager, GISWebAPIManager? GISWebAPIManager, Mode mode, string? yearBuiltPredictionConsoleAppPath = null)
         {
             List<IVisualBackgroundTask> result = [];
 
@@ -118,6 +120,15 @@ namespace DiGi.GIS.PostgreSQL.UI
                     result.Add(Visual(postgreSQLBuildingModelCleanupTask,
                     postgreSQLBuildingModelCleanupTask.DryRun ? "Report BuildingModels without a building (dry run, deletes nothing)" : "Remove BuildingModels without a building (DELETES rows)",
                     $"Reports BuildingModel rows whose building no longer exists under the county part holding them. Scope: {(postgreSQLBuildingModelCleanupTask.VoivodeshipCodes is null ? "every voivodeship" : $"voivodeship {string.Join(' ', postgreSQLBuildingModelCleanupTask.VoivodeshipCodes)}")}. {(postgreSQLBuildingModelCleanupTask.DryRun ? "Dry run - nothing is written until DryRun is turned off" : "DryRun is OFF - this writes and has no undo")}"));
+                }
+
+                // Offered only where the conf naming the user database is present. Without it the only
+                // outcome a run can have is "no connection", which is not worth a row - the same reason the
+                // Year Built task is withheld on a host its runner was never deployed to.
+                UserPostgreSQLConverter? userPostgreSQLConverter = userPostgreSQLConverterManager?.GetPostgreSQLConverter<UserPostgreSQLConverter>();
+                if (userPostgreSQLConverter is not null && userPostgreSQLConverter.ConnectionData is not null)
+                {
+                    result.Add(Visual(new UIPostgreSQLUserCreateTask(userPostgreSQLConverter), "Create user", "Creates a user in the user database and stores its password as a PBKDF2 derived key with its salt and iteration count. The email, the optional name, the password and the user level are asked for when the task is started"));
                 }
             }
 

@@ -1522,6 +1522,59 @@ A cancellation token that can be used to cancel the operation\.
 [System\.Threading\.Tasks\.Task&lt;](https://learn.microsoft.com/en-us/dotnet/api/system.threading.tasks.task-1 'System\.Threading\.Tasks\.Task\`1')[System\.Boolean](https://learn.microsoft.com/en-us/dotnet/api/system.boolean 'System\.Boolean')[&gt;](https://learn.microsoft.com/en-us/dotnet/api/system.threading.tasks.task-1 'System\.Threading\.Tasks\.Task\`1')  
 A task representing the asynchronous operation\. Returns true if the population was successful; otherwise, false\.
 
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIPostgreSQLUserCreateTask'></a>
+
+## UIPostgreSQLUserCreateTask Class
+
+Creates one user in the user database, asking for it through [PostgreSQLUserCreateOptionsWindow](DiGi.GIS.PostgreSQL.UI.Windows.md#DiGi.GIS.PostgreSQL.UI.Windows.PostgreSQLUserCreateOptionsWindow 'DiGi\.GIS\.PostgreSQL\.UI\.Windows\.PostgreSQLUserCreateOptionsWindow') each time the task is started\.
+
+The password is stored only as a PBKDF2 derived key with its salt and iteration count. The text the operator typed reaches the derivation and nothing else - not the row, not the log, and not a field on this task.
+
+The user database is not the database the rest of this application works against: users live where `User_PostgreSQL_Main.conf` points, which is what the Web API reads when it authenticates a login. A user written anywhere else could not log in.
+
+There is no base task to hand the run to. [DiGi\.User\.PostgreSQL\.Classes\.UserPostgreSQLConverter](https://learn.microsoft.com/en-us/dotnet/api/digi.user.postgresql.classes.userpostgresqlconverter 'DiGi\.User\.PostgreSQL\.Classes\.UserPostgreSQLConverter') already carries every database step, and creating a user is three of them.
+
+```csharp
+public class UIPostgreSQLUserCreateTask : DiGi.Core.Classes.BackgroundTask, DiGi.GIS.PostgreSQL.UI.Interfaces.IGISPostgreSQLUIObject
+```
+
+Inheritance [System\.Object](https://learn.microsoft.com/en-us/dotnet/api/system.object 'System\.Object') → [DiGi\.Core\.Classes\.BackgroundTask](https://learn.microsoft.com/en-us/dotnet/api/digi.core.classes.backgroundtask 'DiGi\.Core\.Classes\.BackgroundTask') → UIPostgreSQLUserCreateTask
+
+Implements [IGISPostgreSQLUIObject](DiGi.GIS.PostgreSQL.UI.Interfaces.md#DiGi.GIS.PostgreSQL.UI.Interfaces.IGISPostgreSQLUIObject 'DiGi\.GIS\.PostgreSQL\.UI\.Interfaces\.IGISPostgreSQLUIObject')
+### Constructors
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIPostgreSQLUserCreateTask.UIPostgreSQLUserCreateTask(DiGi.User.PostgreSQL.Classes.UserPostgreSQLConverter)'></a>
+
+## UIPostgreSQLUserCreateTask\(UserPostgreSQLConverter\) Constructor
+
+Initializes a new instance of the [UIPostgreSQLUserCreateTask](DiGi.GIS.PostgreSQL.UI.Classes.md#DiGi.GIS.PostgreSQL.UI.Classes.UIPostgreSQLUserCreateTask 'DiGi\.GIS\.PostgreSQL\.UI\.Classes\.UIPostgreSQLUserCreateTask') class\.
+
+```csharp
+public UIPostgreSQLUserCreateTask(DiGi.User.PostgreSQL.Classes.UserPostgreSQLConverter userPostgreSQLConverter);
+```
+#### Parameters
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIPostgreSQLUserCreateTask.UIPostgreSQLUserCreateTask(DiGi.User.PostgreSQL.Classes.UserPostgreSQLConverter).userPostgreSQLConverter'></a>
+
+`userPostgreSQLConverter` [DiGi\.User\.PostgreSQL\.Classes\.UserPostgreSQLConverter](https://learn.microsoft.com/en-us/dotnet/api/digi.user.postgresql.classes.userpostgresqlconverter 'DiGi\.User\.PostgreSQL\.Classes\.UserPostgreSQLConverter')
+
+The converter addressing the user database the new user is written to\.
+### Methods
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIPostgreSQLUserCreateTask.ExecuteAsync()'></a>
+
+## UIPostgreSQLUserCreateTask\.ExecuteAsync\(\) Method
+
+When overridden in a derived class, defines the work to be executed by the background task\.
+
+```csharp
+protected override System.Threading.Tasks.Task<bool> ExecuteAsync();
+```
+
+#### Returns
+[System\.Threading\.Tasks\.Task&lt;](https://learn.microsoft.com/en-us/dotnet/api/system.threading.tasks.task-1 'System\.Threading\.Tasks\.Task\`1')[System\.Boolean](https://learn.microsoft.com/en-us/dotnet/api/system.boolean 'System\.Boolean')[&gt;](https://learn.microsoft.com/en-us/dotnet/api/system.threading.tasks.task-1 'System\.Threading\.Tasks\.Task\`1')  
+True if the task succeeded; otherwise, false\.
+
 <a name='DiGi.GIS.PostgreSQL.UI.Classes.UIUpdateFromFilePostTask'></a>
 
 ## UIUpdateFromFilePostTask Class

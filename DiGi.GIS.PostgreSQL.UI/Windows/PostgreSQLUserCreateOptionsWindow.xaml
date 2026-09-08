@@ -1,0 +1,54 @@
+<Window x:Class="DiGi.GIS.PostgreSQL.UI.Windows.PostgreSQLUserCreateOptionsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:DiGi.GIS.PostgreSQL.UI.Windows"
+        xmlns:controls="clr-namespace:DiGi.UI.WPF.Controls;assembly=DiGi.UI.WPF"
+        mc:Ignorable="d"
+        Title="Create user" Height="560" Width="520" MinHeight="510" MinWidth="420"
+        WindowStartupLocation="CenterScreen"
+        WindowStyle="SingleBorderWindow"
+        Icon="pack://application:,,,/DiGi.GIS.PostgreSQL.UI;component/Resources/DiGi.GIS.ico">
+    <Grid Margin="5,5,5,5">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="60" />
+            <RowDefinition Height="60" />
+            <RowDefinition Height="60" />
+            <RowDefinition Height="60" />
+            <RowDefinition Height="28" />
+            <RowDefinition Height="33" />
+            <RowDefinition Height="28" />
+            <RowDefinition Height="33" />
+            <RowDefinition Height="28" />
+            <RowDefinition Height="33" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="33" />
+        </Grid.RowDefinitions>
+
+        <controls:TextBoxControl x:Name="TextBoxControl_Email" Grid.Row="0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Text="Email - the natural key of a user, and what login is addressed by" Value="" />
+
+        <controls:TextBoxControl x:Name="TextBoxControl_EmailRepeat" Grid.Row="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Text="Email again - has to match the one above" Value="" />
+
+        <controls:TextBoxControl x:Name="TextBoxControl_FirstName" Grid.Row="2" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Text="First name - optional" Value="" />
+
+        <controls:TextBoxControl x:Name="TextBoxControl_LastName" Grid.Row="3" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Text="Last name - optional" Value="" />
+
+        <Label x:Name="Label_Password" Grid.Row="4" Content="Password - stored only as a PBKDF2 derived key, never as text" Margin="5,0,5,0" HorizontalAlignment="Stretch" VerticalAlignment="Center" />
+
+        <PasswordBox x:Name="PasswordBox_Password" Grid.Row="5" Height="23" Margin="10,5,10,5" HorizontalAlignment="Stretch" VerticalAlignment="Center" />
+
+        <Label x:Name="Label_PasswordRepeat" Grid.Row="6" Content="Password again - has to match the one above" Margin="5,0,5,0" HorizontalAlignment="Stretch" VerticalAlignment="Center" />
+
+        <PasswordBox x:Name="PasswordBox_PasswordRepeat" Grid.Row="7" Height="23" Margin="10,5,10,5" HorizontalAlignment="Stretch" VerticalAlignment="Center" />
+
+        <Label x:Name="Label_UserLevel" Grid.Row="8" Content="User level" Margin="5,0,5,0" HorizontalAlignment="Stretch" VerticalAlignment="Center" />
+
+        <ComboBox x:Name="ComboBox_UserLevel" Grid.Row="9" Height="23" Margin="10,5,10,5" HorizontalAlignment="Stretch" VerticalAlignment="Center" />
+
+        <StackPanel Grid.Row="11" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="5,5,5,5">
+            <Button x:Name="Button_OK" Content="OK" Width="70" Height="23" Margin="5,0,5,0" IsDefault="True" Click="Button_OK_Click" />
+            <Button x:Name="Button_Cancel" Content="Cancel" Width="70" Height="23" Margin="5,0,5,0" IsCancel="True" Click="Button_Cancel_Click" />
+        </StackPanel>
+    </Grid>
+</Window>

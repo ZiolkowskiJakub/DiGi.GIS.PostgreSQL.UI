@@ -2,6 +2,7 @@ using DiGi.GIS.PostgreSQL.Classes;
 using DiGi.GIS.PostgreSQL.UI.Enums;
 using DiGi.GIS.WebAPI.Classes;
 using DiGi.UI.WPF.Interfaces;
+using DiGi.User.PostgreSQL.Classes;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Windows;
@@ -18,9 +19,10 @@ namespace DiGi.GIS.PostgreSQL.UI.Windows
         /// Initializes a new instance of the <see cref="MainWindow"/> class.
         /// </summary>
         /// <param name="gISPostgreSQLConverterManager">The manager responsible for GIS PostgreSQL conversion processes.</param>
+        /// <param name="userPostgreSQLConverterManager">The manager holding the converter for the user database, or null where no User_PostgreSQL_Main.conf names one.</param>
         /// <param name="GISWebAPIManager">The manager responsible for GIS PostgreSQL Web API interactions.</param>
         /// <param name="mode">The operational mode of the application. If null, it is determined based on converter availability.</param>
-        public MainWindow(GISPostgreSQLConverterManager? gISPostgreSQLConverterManager, GISWebAPIManager? GISWebAPIManager, Mode? mode = null)
+        public MainWindow(GISPostgreSQLConverterManager? gISPostgreSQLConverterManager, UserPostgreSQLConverterManager? userPostgreSQLConverterManager, GISWebAPIManager? GISWebAPIManager, Mode? mode = null)
         {
             this.gISPostgreSQLConverterManager = gISPostgreSQLConverterManager;
             this.GISWebAPIManager = GISWebAPIManager;
@@ -38,7 +40,7 @@ namespace DiGi.GIS.PostgreSQL.UI.Windows
             // Initialize collections before InitializeComponent to avoid binding errors
             List<IVisualBackgroundTask>? visualBackgroundTasks;
 
-            visualBackgroundTasks = Create.VisualBackgroundTasks(gISPostgreSQLConverterManager, GISWebAPIManager, Mode.Client);
+            visualBackgroundTasks = Create.VisualBackgroundTasks(gISPostgreSQLConverterManager, userPostgreSQLConverterManager, GISWebAPIManager, Mode.Client);
             if (visualBackgroundTasks is not null)
             {
                 VisualBackgroundTasks_Client = [.. visualBackgroundTasks];
@@ -47,7 +49,7 @@ namespace DiGi.GIS.PostgreSQL.UI.Windows
                 //visualBackgroundTask?.Start();
             }
 
-            visualBackgroundTasks = Create.VisualBackgroundTasks(gISPostgreSQLConverterManager, GISWebAPIManager, Mode.Server);
+            visualBackgroundTasks = Create.VisualBackgroundTasks(gISPostgreSQLConverterManager, userPostgreSQLConverterManager, GISWebAPIManager, Mode.Server);
             if (visualBackgroundTasks is not null)
             {
                 VisualBackgroundTasks_Server = [.. visualBackgroundTasks];

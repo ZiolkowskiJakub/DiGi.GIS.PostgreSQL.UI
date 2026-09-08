@@ -1534,6 +1534,8 @@ The user database is not the database the rest of this application works against
 
 There is no base task to hand the run to. [DiGi\.User\.PostgreSQL\.Classes\.UserPostgreSQLConverter](https://learn.microsoft.com/en-us/dotnet/api/digi.user.postgresql.classes.userpostgresqlconverter 'DiGi\.User\.PostgreSQL\.Classes\.UserPostgreSQLConverter') already carries every database step, and creating a user is three of them.
 
+Every refusal - a taken email, a cancelled dialog, a database that cannot be reached - is thrown as a [DiGi\.Core\.Classes\.BackgroundTaskFailureException](https://learn.microsoft.com/en-us/dotnet/api/digi.core.classes.backgroundtaskfailureexception 'DiGi\.Core\.Classes\.BackgroundTaskFailureException') rather than returned, so the task row carries the reason on hover instead of a bare Failed with the reason buried in the log file.
+
 ```csharp
 public class UIPostgreSQLUserCreateTask : DiGi.Core.Classes.BackgroundTask, DiGi.GIS.PostgreSQL.UI.Interfaces.IGISPostgreSQLUIObject
 ```

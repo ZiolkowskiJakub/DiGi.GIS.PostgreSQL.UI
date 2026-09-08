@@ -15,6 +15,7 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
     /// <para>The password is stored only as a PBKDF2 derived key with its salt and iteration count. The text the operator typed reaches the derivation and nothing else - not the row, not the log, and not a field on this task.</para>
     /// <para>The user database is not the database the rest of this application works against: users live where <c>User_PostgreSQL_Main.conf</c> points, which is what the Web API reads when it authenticates a login. A user written anywhere else could not log in.</para>
     /// <para>There is no base task to hand the run to. <see cref="UserPostgreSQLConverter"/> already carries every database step, and creating a user is three of them.</para>
+    /// <para>Every refusal - a taken email, a cancelled dialog, a database that cannot be reached - is thrown as a <see cref="BackgroundTaskFailureException"/> rather than returned, so the task row carries the reason on hover instead of a bare Failed with the reason buried in the log file.</para>
     /// </summary>
     public class UIPostgreSQLUserCreateTask : BackgroundTask, IGISPostgreSQLUIObject
     {
@@ -37,7 +38,7 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
             if (System.Windows.Application.Current is not System.Windows.Application application)
             {
                 Serilog.Modify.Log(Serilog.Enums.LogEventLevel.Error, "No WPF application is running - the new user cannot be asked for");
-                return false;
+                throw new BackgroundTaskFailureException("No WPF application is running - the new user cannot be asked for");
             }
 
             string? email = null;
@@ -62,11 +63,13 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
                 userLevel = postgreSQLUserCreateOptionsWindow.UserLevel;
             });
 
-            // A cancelled dialog leaves these unassigned and ends the run here, having written nothing.
+            // A cancelled dialog leaves these unassigned and ends the run here, having written nothing. Thrown
+            // rather than returned so the task row carries the reason - a bare false would leave the row saying
+            // only "Failed" with the reason buried in the log file.
             if (email is null || password is null || userLevel is null)
             {
                 Serilog.Modify.Log("Creating a user was cancelled - nothing was written");
-                return false;
+                throw new BackgroundTaskFailureException("Creating a user was cancelled - nothing was written");
             }
 
             // The whole storage chain, before the duplicate check below reads any of it: CreateTableAsync creates
@@ -79,7 +82,7 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
             if (!await userPostgreSQLConverter.CreateTableAsync())
             {
                 Serilog.Modify.Log(Serilog.Enums.LogEventLevel.Error, "The user database could not be created or reached - no user was created");
-                return false;
+                throw new BackgroundTaskFailureException("The user database could not be created or reached - no user was created");
             }
 
             // Refused rather than upserted. InsertAsync writes ON CONFLICT (email) DO UPDATE, so without this
@@ -87,14 +90,14 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
             if (await userPostgreSQLConverter.GetUserByEmailAsync(email) is not null)
             {
                 Serilog.Modify.Log(Serilog.Enums.LogEventLevel.Error, "A user with the email {Email} already exists - no user was created", email);
-                return false;
+                throw new BackgroundTaskFailureException($"A user with the email {email} already exists - no user was created");
             }
 
             UserCredential? userCredential = DiGi.User.PostgreSQL.Create.UserCredential(email, password);
             if (userCredential is null)
             {
                 Serilog.Modify.Log(Serilog.Enums.LogEventLevel.Error, "A password credential could not be derived for {Email} - no user was created", email);
-                return false;
+                throw new BackgroundTaskFailureException($"A password credential could not be derived for {email} - no user was created");
             }
 
             // InsertAsync creates the users table when it is not there yet and adds the credential columns to one
@@ -103,7 +106,7 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
             if (ids.Count == 0)
             {
                 Serilog.Modify.Log(Serilog.Enums.LogEventLevel.Error, "The user {Email} could not be written", email);
-                return false;
+                throw new BackgroundTaskFailureException($"The user {email} could not be written");
             }
 
             // Undoes the insert above when the credential cannot be written. Without it the run leaves a row that
@@ -146,7 +149,7 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
                 await RemoveAsync();
 
                 Serilog.Modify.Log(Serilog.Enums.LogEventLevel.Error, "The password credential of {Email} could not be written - no user was created", email);
-                return false;
+                throw new BackgroundTaskFailureException($"The password credential of {email} could not be written - no user was created");
             }
 
             Serilog.Modify.Log("User {Email} created with level {UserLevel}", email, userLevel.Value);

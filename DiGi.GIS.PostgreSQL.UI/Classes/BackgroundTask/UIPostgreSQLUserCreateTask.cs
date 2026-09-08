@@ -69,6 +69,19 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
                 return false;
             }
 
+            // The whole storage chain, before the duplicate check below reads any of it: CreateTableAsync creates
+            // the database when it is absent, then the table, then the credential columns on a table that predates
+            // them. All three are idempotent.
+            //
+            // It has to come first because the duplicate check is a read, and a read finds neither of the first two
+            // for itself - an absent database fails the connection with 3D000, and a database without the table
+            // fails the statement with 42P01. Neither is something a read should repair.
+            if (!await userPostgreSQLConverter.CreateTableAsync())
+            {
+                Serilog.Modify.Log(Serilog.Enums.LogEventLevel.Error, "The user database could not be created or reached - no user was created");
+                return false;
+            }
+
             // Refused rather than upserted. InsertAsync writes ON CONFLICT (email) DO UPDATE, so without this
             // check a taken email would silently rewrite that user's name and level instead of failing.
             if (await userPostgreSQLConverter.GetUserByEmailAsync(email) is not null)

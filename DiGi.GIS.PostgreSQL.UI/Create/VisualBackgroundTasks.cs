@@ -104,6 +104,24 @@ namespace DiGi.GIS.PostgreSQL.UI
 
                     result.Add(Visual(new PostgreSQLUpdateOccupancyTask(gISPostgreSQLConverterManager), "Update occupancy from database", "Update occupancy for Building2Ds and AdministrativeAreal2Ds based on data in database"));
 
+                    // A permanent repair path, in contrast to the temporary county part repair of issue
+                    // ZiolkowskiJakub/DiGi.GIS.PostgreSQL#68, which was deleted once the mismatches it chased
+                    // were gone: the unique_id-keyed tables stay keyed on (county_id, reference), so a row
+                    // filed under the wrong part reads back missing until it is moved. Reports by default.
+                    // The scope and the two labels are derived from the options rather than written beside
+                    // them, so a row that moves rows between partitions cannot end up labelled as a report.
+                    PostgreSQLBuilding2DReferencedObjectsCountyPartRefreshTask postgreSQLBuilding2DReferencedObjectsCountyPartRefreshTask = new(gISPostgreSQLConverterManager)
+                    {
+                        PostgreSQLBuilding2DReferencedObjectsCountyPartRefreshOptions = new PostgreSQLBuilding2DReferencedObjectsCountyPartRefreshOptions()
+                        {
+                            DryRun = true
+                        }
+                    };
+
+                    result.Add(Visual(postgreSQLBuilding2DReferencedObjectsCountyPartRefreshTask,
+                    postgreSQLBuilding2DReferencedObjectsCountyPartRefreshTask.PostgreSQLBuilding2DReferencedObjectsCountyPartRefreshOptions.DryRun ? "Report Building2D referenced objects filed under a wrong county part (dry run, writes nothing)" : "Move Building2D referenced objects onto the county part their building sits on (MOVES rows between partitions)",
+                    $"Carries the rows of the unique_id-keyed tables - building_model, year_built_data and occupancy_data_building_2d - onto the county part their building sits on. Scope: {(postgreSQLBuilding2DReferencedObjectsCountyPartRefreshTask.PostgreSQLBuilding2DReferencedObjectsCountyPartRefreshOptions.Codes is null ? "every multi-part county code" : $"codes {string.Join(' ', postgreSQLBuilding2DReferencedObjectsCountyPartRefreshTask.PostgreSQLBuilding2DReferencedObjectsCountyPartRefreshOptions.Codes)}")}. {(postgreSQLBuilding2DReferencedObjectsCountyPartRefreshTask.PostgreSQLBuilding2DReferencedObjectsCountyPartRefreshOptions.DryRun ? "Dry run - nothing is written until DryRun is turned off" : "DryRun is OFF - this moves rows between partitions")}"));
+
                     // Orphan cleanup only. The superseded half went with the unique_id migration of issue
                     // ZiolkowskiJakub/DiGi.GIS.PostgreSQL#5: rows are keyed on the model they hold, so nothing is
                     // keyed on its reference any more and nothing supersedes anything.

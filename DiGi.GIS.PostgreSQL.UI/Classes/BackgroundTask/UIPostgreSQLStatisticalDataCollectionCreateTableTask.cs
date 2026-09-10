@@ -31,10 +31,7 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
         public UIPostgreSQLStatisticalDataCollectionCreateTableTask(GISPostgreSQLConverterManager gISPostgreSQLConverterManager)
             : base(gISPostgreSQLConverterManager)
         {
-            if (gISPostgreSQLConverterManager is null)
-            {
-                throw new ArgumentNullException(nameof(gISPostgreSQLConverterManager));
-            }
+            ArgumentNullException.ThrowIfNull(gISPostgreSQLConverterManager);
 
             statisticalDataCollectionPostgreSQLConverter = gISPostgreSQLConverterManager.GetPostgreSQLConverter<StatisticalDataCollectionPostgreSQLConverter>() ?? throw new InvalidOperationException($"{nameof(StatisticalDataCollectionPostgreSQLConverter)} not registered in converter manager.");
         }

@@ -145,23 +145,21 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
                     {
                         using CancellationTokenSource cancellationTokenSource = new(postOptions.Delay);
 
-                        using (HttpContent? httpContent = await WebAPI.Create.HttpContent(Core.Convert.ToSystem_String(building2DReferencesByPagingParameter) ?? string.Empty, cancellationTokenSource.Token).ConfigureAwait(false))
+                        using HttpContent? httpContent = await WebAPI.Create.HttpContent(Core.Convert.ToSystem_String(building2DReferencesByPagingParameter) ?? string.Empty, cancellationTokenSource.Token).ConfigureAwait(false);
+                        if (httpContent is null)
                         {
-                            if (httpContent is null)
-                            {
-                                Serilog.Modify.Log(Serilog.Enums.LogEventLevel.Error, "Paging parameter content could not be created");
-                                return false;
-                            }
-
-                            PostResponse<List<Building2DReference>?> postResponse_Building2DReferences = await DiGi.WebAPI.Modify.PostAsync<List<Building2DReference>>(httpClient_Building2DReferences, requestUri_Building2DReferences, httpContent, postOptions);
-                            if (postResponse_Building2DReferences is null || !postResponse_Building2DReferences.Succeeded)
-                            {
-                                Serilog.Modify.Log(Serilog.Enums.LogEventLevel.Error, "Building2DReferences page could not be retrieved for county {CountyId}", countyId);
-                                return false;
-                            }
-
-                            building2DReferences = postResponse_Building2DReferences.Result;
+                            Serilog.Modify.Log(Serilog.Enums.LogEventLevel.Error, "Paging parameter content could not be created");
+                            return false;
                         }
+
+                        PostResponse<List<Building2DReference>?> postResponse_Building2DReferences = await DiGi.WebAPI.Modify.PostAsync<List<Building2DReference>>(httpClient_Building2DReferences, requestUri_Building2DReferences, httpContent, postOptions);
+                        if (postResponse_Building2DReferences is null || !postResponse_Building2DReferences.Succeeded)
+                        {
+                            Serilog.Modify.Log(Serilog.Enums.LogEventLevel.Error, "Building2DReferences page could not be retrieved for county {CountyId}", countyId);
+                            return false;
+                        }
+
+                        building2DReferences = postResponse_Building2DReferences.Result;
                     }
                     // A cancellation raised by the caller's token is left to propagate; anything else is a genuine request failure.
                     catch (Exception exception) when (!cancellationToken.IsCancellationRequested)

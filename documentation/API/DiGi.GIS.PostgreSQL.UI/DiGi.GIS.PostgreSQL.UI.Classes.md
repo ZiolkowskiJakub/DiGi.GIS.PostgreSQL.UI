@@ -414,19 +414,6 @@ public UIBuildingModelsFromDatabasePostTask(DiGi.GIS.WebAPI.Classes.GISWebAPIMan
 The [DiGi\.GIS\.WebAPI\.Classes\.GISWebAPIManager](https://learn.microsoft.com/en-us/dotnet/api/digi.gis.webapi.classes.giswebapimanager 'DiGi\.GIS\.WebAPI\.Classes\.GISWebAPIManager') instance used to communicate with the server\.
 ### Properties
 
-<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIBuildingModelsFromDatabasePostTask.CountyIds'></a>
-
-## UIBuildingModelsFromDatabasePostTask\.CountyIds Property
-
-Gets or sets the identifiers of the counties to be processed\. When null every county held on the server is processed\.
-
-```csharp
-public System.Collections.Generic.IEnumerable<int>? CountyIds { get; set; }
-```
-
-#### Property Value
-[System\.Collections\.Generic\.IEnumerable&lt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.ienumerable-1 'System\.Collections\.Generic\.IEnumerable\`1')[System\.Int32](https://learn.microsoft.com/en-us/dotnet/api/system.int32 'System\.Int32')[&gt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.ienumerable-1 'System\.Collections\.Generic\.IEnumerable\`1')
-
 <a name='DiGi.GIS.PostgreSQL.UI.Classes.UIBuildingModelsFromDatabasePostTask.MaxConcurrentRequests'></a>
 
 ## UIBuildingModelsFromDatabasePostTask\.MaxConcurrentRequests Property
@@ -489,7 +476,7 @@ public bool Resume { get; set; }
 
 ## UIBuildingModelsFromDatabasePostTask\.VoivodeshipCodes Property
 
-Gets or sets the two\-digit voivodeship codes to be processed\. A county is in scope when its code starts with one of them\. When null every voivodeship is processed\. Combined with [CountyIds](DiGi.GIS.PostgreSQL.UI.Classes.md#DiGi.GIS.PostgreSQL.UI.Classes.UIBuildingModelsFromDatabasePostTask.CountyIds 'DiGi\.GIS\.PostgreSQL\.UI\.Classes\.UIBuildingModelsFromDatabasePostTask\.CountyIds') both filters have to admit the county\.
+Gets or sets the two\-digit voivodeship codes to be processed\. A county is in scope when its code starts with one of them\. When null every voivodeship is processed\. Combined with [DiGi\.GIS\.WebAPI\.Classes\.BuildingModelsPostTask\.CountyIds](https://learn.microsoft.com/en-us/dotnet/api/digi.gis.webapi.classes.buildingmodelsposttask.countyids 'DiGi\.GIS\.WebAPI\.Classes\.BuildingModelsPostTask\.CountyIds') both filters have to admit the county\.
 
 Regenerating one voivodeship at a time is what keeps the storage tablespace within reach: a county's models are written beside the ones they supersede until [PostgreSQLBuildingModelCleanupTask](DiGi.GIS.PostgreSQL.UI.Classes.md#DiGi.GIS.PostgreSQL.UI.Classes.PostgreSQLBuildingModelCleanupTask 'DiGi\.GIS\.PostgreSQL\.UI\.Classes\.PostgreSQLBuildingModelCleanupTask') removes them, so a national pass in one go would need room for a second copy of the whole table.
 

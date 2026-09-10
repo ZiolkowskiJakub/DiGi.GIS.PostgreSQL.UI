@@ -36,10 +36,7 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
         {
         }
 
-        /// <summary>
-        /// Gets or sets the identifiers of the counties to be processed. When null every county held on the server is processed.
-        /// </summary>
-        public IEnumerable<int>? CountyIds { get; set; } = null;
+
 
         /// <summary>
         /// Gets or sets how many CityGML and terrain requests are allowed to be in flight at once.
@@ -65,7 +62,7 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
         public bool Resume { get; set; } = true;
 
         /// <summary>
-        /// Gets or sets the two-digit voivodeship codes to be processed. A county is in scope when its code starts with one of them. When null every voivodeship is processed. Combined with <see cref="CountyIds"/> both filters have to admit the county.
+        /// Gets or sets the two-digit voivodeship codes to be processed. A county is in scope when its code starts with one of them. When null every voivodeship is processed. Combined with <see cref="BuildingModelsPostTask.CountyIds"/> both filters have to admit the county.
         /// <para>Regenerating one voivodeship at a time is what keeps the storage tablespace within reach: a county's models are written beside the ones they supersede until <see cref="PostgreSQLBuildingModelCleanupTask"/> removes them, so a national pass in one go would need room for a second copy of the whole table.</para>
         /// </summary>
         public IEnumerable<string>? VoivodeshipCodes { get; set; } = null;
@@ -448,7 +445,7 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
 
                         if (buildingModels.Count != 0)
                         {
-                            if (!await ExecuteAsync(buildingModels, countyId, longProgressWrapper, cancellationToken))
+                            if (!await ExecuteAsync(buildingModels, [countyId], longProgressWrapper, cancellationToken))
                             {
                                 Serilog.Modify.Log(Serilog.Enums.LogEventLevel.Error, "BuildingModels could not be uploaded for county {CountyId}", countyId);
                                 return false;

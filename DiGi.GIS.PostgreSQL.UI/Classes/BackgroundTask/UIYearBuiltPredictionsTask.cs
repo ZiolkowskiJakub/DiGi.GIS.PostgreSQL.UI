@@ -268,7 +268,7 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
             const string prefix = "user files";
             if (modelPath!.StartsWith(prefix + "/", StringComparison.OrdinalIgnoreCase) || modelPath.StartsWith(prefix + "\\", StringComparison.OrdinalIgnoreCase))
             {
-                return Existing(System.IO.Path.Combine(directory!, modelPath.Substring(prefix.Length + 1)));
+                return Existing(System.IO.Path.Combine(directory!, modelPath[(prefix.Length + 1)..]));
             }
 
             return null;

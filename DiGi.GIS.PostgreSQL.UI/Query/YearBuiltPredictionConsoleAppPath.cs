@@ -17,7 +17,7 @@ namespace DiGi.GIS.PostgreSQL.UI
         /// <returns>The full path of an executable that exists, or null when none of the candidates does.</returns>
         public static string? YearBuiltPredictionConsoleAppPath(string? path = null, string? baseDirectory = null)
         {
-            string? Existing(string? candidate)
+            static string? Existing(string? candidate)
             {
                 if (string.IsNullOrWhiteSpace(candidate))
                 {

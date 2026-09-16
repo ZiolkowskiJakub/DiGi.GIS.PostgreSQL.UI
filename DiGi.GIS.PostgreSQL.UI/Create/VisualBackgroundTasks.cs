@@ -65,7 +65,7 @@ namespace DiGi.GIS.PostgreSQL.UI
                     Building2DPostgreSQLConverter? building2DPostgreSQLConverter = gISPostgreSQLConverterManager.GetPostgreSQLConverter<Building2DPostgreSQLConverter>();
                     if (building2DPostgreSQLConverter is not null)
                     {
-                        result.Add(Visual(new PostgreSQLBuilding2DRefreshTask(building2DPostgreSQLConverter), "Refresh Building2Ds", "Refreshes Building2D table in database"));
+                        result.Add(Visual(new UIPostgreSQLBuilding2DRefreshTask(building2DPostgreSQLConverter, gISPostgreSQLConverterManager.GetPostgreSQLConverter<AdministrativeAreal2DPostgreSQLConverter>()), "Refresh Building2Ds", "Re-derives each building's subdivision_id from its outline - the smallest subdivision containing it. Batch size, override existing, nested-layer-only and the counties are asked for when the task is started; unscoped and overriding it walks every building in the country"));
                         result.Add(Visual(new PostgreSQLBuilding2DCreateTableTask(building2DPostgreSQLConverter), "Create Building2D table", "Creates or updates (table indexes etc.) Building2D table in database"));
                     }
 
@@ -102,7 +102,7 @@ namespace DiGi.GIS.PostgreSQL.UI
                     },
                     "Refresh OrtoDatas", "Queues the orthophoto downloads each county is short of, for the download task to work through. Stores no orthophoto data itself"));
 
-                    result.Add(Visual(new PostgreSQLUpdateOccupancyTask(gISPostgreSQLConverterManager), "Update occupancy from database", "Update occupancy for Building2Ds and AdministrativeAreal2Ds based on data in database"));
+                    result.Add(Visual(new UIPostgreSQLUpdateOccupancyTask(gISPostgreSQLConverterManager), "Update occupancy from database", "Updates occupancy for AdministrativeAreal2Ds (the roll-up, nationwide) and Building2Ds (each subdivision's figure distributed over its buildings). The sides, the clear and the counties for the building side are asked for when the task is started"));
 
                     // A permanent repair path, in contrast to the temporary county part repair of issue
                     // ZiolkowskiJakub/DiGi.GIS.PostgreSQL#68, which was deleted once the mismatches it chased

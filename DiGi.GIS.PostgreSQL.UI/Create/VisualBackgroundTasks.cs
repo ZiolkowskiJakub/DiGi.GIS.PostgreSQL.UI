@@ -62,6 +62,11 @@ namespace DiGi.GIS.PostgreSQL.UI
 
                     result.Add(Visual(new UIPostgreSQLBuildingDataUpdateTask(gISPostgreSQLConverterManager), "Update building data", "Updates building data from Building2D and the other stored sources. The counties, the kinds of column to write and the statement timeout are asked for when the task is started - unscoped it walks every subdivision in the country"));
 
+                    // Reads the stored building models and writes the building data table directly from the storage
+                    // database, so it sits on the server side beside the task it completes: that one fills the
+                    // columns the models do not carry, and this one the columns they do.
+                    result.Add(Visual(new UIPostgreSQLBuildingDataExternalComponentsUpdateTask(gISPostgreSQLConverterManager), "Update external components area", "Populates the External Components Area columns of building_data (external wall / roof / floor areas by direction and roof tilt) from BuildingModels stored in building_model_component"));
+
                     Building2DPostgreSQLConverter? building2DPostgreSQLConverter = gISPostgreSQLConverterManager.GetPostgreSQLConverter<Building2DPostgreSQLConverter>();
                     if (building2DPostgreSQLConverter is not null)
                     {

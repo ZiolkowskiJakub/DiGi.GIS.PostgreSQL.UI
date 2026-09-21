@@ -200,25 +200,18 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
 
                     try
                     {
-                        using CancellationTokenSource cancellationTokenSource = new(postOptions.Delay);
-
-                        using (HttpContent? httpContent = await WebAPI.Create.HttpContent(Core.Convert.ToSystem_String(building2DReferencesByPagingParameter) ?? string.Empty, cancellationTokenSource.Token).ConfigureAwait(false))
+                        // A factory rather than a single-use HttpContent - the body is rebuilt per attempt, so a dropped pooled
+                        // connection is retried instead of failing the county (8 counties were lost to one reset on 2026-09-19).
+                        // The content cannot be created only when the paging parameter fails to serialize; the exception is the
+                        // caller's failure signal, logged by the catch below.
+                        PostResponse<List<Building2DReference>?> postResponse_Building2DReferences = await DiGi.WebAPI.Modify.PostAsync<List<Building2DReference>>(httpClient_Building2DReferences, requestUri_Building2DReferences, async () => await WebAPI.Create.HttpContent(Core.Convert.ToSystem_String(building2DReferencesByPagingParameter) ?? string.Empty, cancellationToken).ConfigureAwait(false) ?? throw new InvalidOperationException("Paging parameter content could not be created"), postOptions);
+                        if (postResponse_Building2DReferences is null || !postResponse_Building2DReferences.Succeeded)
                         {
-                            if (httpContent is null)
-                            {
-                                Serilog.Modify.Log(Serilog.Enums.LogEventLevel.Error, "Paging parameter content could not be created");
-                                return false;
-                            }
-
-                            PostResponse<List<Building2DReference>?> postResponse_Building2DReferences = await DiGi.WebAPI.Modify.PostAsync<List<Building2DReference>>(httpClient_Building2DReferences, requestUri_Building2DReferences, httpContent, postOptions);
-                            if (postResponse_Building2DReferences is null || !postResponse_Building2DReferences.Succeeded)
-                            {
-                                Serilog.Modify.Log(Serilog.Enums.LogEventLevel.Error, "Building2DReferences page could not be retrieved for county {CountyId}", countyId);
-                                return false;
-                            }
-
-                            building2DReferences = postResponse_Building2DReferences.Result;
+                            Serilog.Modify.Log(Serilog.Enums.LogEventLevel.Error, "Building2DReferences page could not be retrieved for county {CountyId}", countyId);
+                            return false;
                         }
+
+                        building2DReferences = postResponse_Building2DReferences.Result;
                     }
                     // A cancellation raised by the caller's token is left to propagate; anything else is a genuine request failure.
                     catch (Exception exception) when (!cancellationToken.IsCancellationRequested)
@@ -236,17 +229,8 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
 
                     try
                     {
-                        using CancellationTokenSource cancellationTokenSource = new(postOptions.Delay);
-
-                        using HttpContent? httpContent = await WebAPI.Create.HttpContent(building2DReferences, cancellationTokenSource.Token).ConfigureAwait(false);
-
-                        if (httpContent is null)
-                        {
-                            Serilog.Modify.Log(Serilog.Enums.LogEventLevel.Error, "Building2DReferences content could not be created");
-                            return false;
-                        }
-
-                        PostResponse<List<GIS.Classes.Building2D>?> postResponse_Building2D = await DiGi.WebAPI.Modify.PostAsync<List<GIS.Classes.Building2D>>(httpClient_Building2D, requestUri_Building2D, httpContent, postOptions);
+                        // Factory for the same reason as the paging request above.
+                        PostResponse<List<GIS.Classes.Building2D>?> postResponse_Building2D = await DiGi.WebAPI.Modify.PostAsync<List<GIS.Classes.Building2D>>(httpClient_Building2D, requestUri_Building2D, async () => await WebAPI.Create.HttpContent(building2DReferences, cancellationToken).ConfigureAwait(false) ?? throw new InvalidOperationException("Building2DReferences content could not be created"), postOptions);
                         if (postResponse_Building2D is null || !postResponse_Building2D.Succeeded)
                         {
                             Serilog.Modify.Log(Serilog.Enums.LogEventLevel.Error, "Building2Ds could not be retrieved for county {CountyId}", countyId);

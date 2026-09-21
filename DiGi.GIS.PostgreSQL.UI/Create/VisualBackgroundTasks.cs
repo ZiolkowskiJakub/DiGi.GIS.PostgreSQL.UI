@@ -186,11 +186,14 @@ namespace DiGi.GIS.PostgreSQL.UI
                     // parts are skipped as already done when the truncate has just emptied them. Delete the file
                     // rather than turning Resume off, which would restart from the first county after any
                     // interruption. Turn MaxConcurrentRequests down if the server or GUGiK starts refusing.
+                    // Scoped from a dialog rather than from defaults written here: the county parts to walk,
+                    // the checkpoint behaviour and the report directory are asked for each time the task
+                    // starts. The pacing is not - MaxConcurrentRequests and PageSize are set here and only here.
                     result.Add(Visual(new UIBuildingModelsFromDatabasePostTask(GISWebAPIManager)
                     {
                         MaxConcurrentRequests = 8
                     },
-                    "Create BuildingModels from database", "Creates BuildingModels for Building2Ds from database based on CityGML Buildings stored in database"));
+                    "Create BuildingModels from database", "Creates BuildingModels for Building2Ds from database based on CityGML Buildings stored in database - the counties, resume and the report directory are asked for when the task starts"));
 
                     // The acceptance run for the national pass: every voivodeship, 200 references per county.
                     // Missing is a real gate again once the table has been truncated - no legacy row can answer for

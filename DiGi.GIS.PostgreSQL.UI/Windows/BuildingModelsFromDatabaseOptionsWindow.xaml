@@ -1,0 +1,47 @@
+<Window x:Class="DiGi.GIS.PostgreSQL.UI.Windows.BuildingModelsFromDatabaseOptionsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:DiGi.GIS.PostgreSQL.UI.Windows"
+        xmlns:controls="clr-namespace:DiGi.UI.WPF.Controls;assembly=DiGi.UI.WPF"
+        mc:Ignorable="d"
+        Title="Create BuildingModels from database" Height="480" Width="560" MinHeight="360" MinWidth="440"
+        WindowStartupLocation="CenterScreen"
+        WindowStyle="SingleBorderWindow"
+        Icon="pack://application:,,,/DiGi.GIS.PostgreSQL.UI;component/Resources/DiGi.GIS.ico">
+    <Grid Margin="5,5,5,5">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="28" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="30" />
+            <RowDefinition Height="30" />
+            <RowDefinition Height="33" />
+        </Grid.RowDefinitions>
+
+        <Label x:Name="Label_Counties" Grid.Row="0" Content="Counties - none selected means every county; one entry per piece" ToolTip="A multi-part county is one entry per polygon piece; select them all to cover the county." Margin="5,0,5,0" HorizontalAlignment="Stretch" VerticalAlignment="Center" />
+
+        <controls:ListBoxControl x:Name="ListBoxControl_Counties" Grid.Row="1" SelectionMode="Extended" Margin="10,0,10,0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
+
+        <CheckBox x:Name="CheckBox_Resume" Grid.Row="2" Content="Resume - skip counties the checkpoint of an earlier run completed; off restarts the scope from the first county" ToolTip="A national pass is a matter of days, so it has to survive being interrupted. Turning this off truncates the checkpoint, which is what a deliberate re-run of an already-completed scope needs." Margin="10,0,10,0" HorizontalAlignment="Left" VerticalAlignment="Center" />
+
+        <Grid Grid.Row="3" Margin="10,0,10,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <Label x:Name="Label_ReportDirectory" Grid.Column="0" Content="Report directory" ToolTip="Where the checkpoint and the failed-county list are written. Blank uses the directory the application was launched from." VerticalAlignment="Center" />
+
+            <TextBox x:Name="TextBox_ReportDirectory" Grid.Column="1" ToolTip="Where the checkpoint and the failed-county list are written. Blank uses the directory the application was launched from." VerticalAlignment="Center" />
+
+            <Button x:Name="Button_ReportDirectory" Grid.Column="2" Content="Browse..." Width="70" Height="23" Margin="5,0,0,0" VerticalAlignment="Center" Click="Button_ReportDirectory_Click" />
+        </Grid>
+
+        <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="5,5,5,5">
+            <Button x:Name="Button_OK" Content="OK" Width="70" Height="23" Margin="5,0,5,0" IsDefault="True" Click="Button_OK_Click" />
+            <Button x:Name="Button_Cancel" Content="Cancel" Width="70" Height="23" Margin="5,0,5,0" IsCancel="True" Click="Button_Cancel_Click" />
+        </StackPanel>
+    </Grid>
+</Window>

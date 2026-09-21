@@ -5,6 +5,7 @@ using DiGi.GIS.Classes;
 using DiGi.GIS.PostgreSQL.Classes;
 using DiGi.GIS.PostgreSQL.Enums;
 using DiGi.GIS.PostgreSQL.UI.Interfaces;
+using DiGi.GIS.PostgreSQL.UI.Windows;
 using DiGi.GIS.WebAPI.Classes;
 using DiGi.WebAPI.Classes;
 using System;
@@ -24,6 +25,7 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
     /// <para><b>"County" here means one polygon part.</b> The county listing returns 406 references for 380 codes, because a county whose territory is disconnected is stored as one row per part. The task reads and uploads by <c>Id</c>, so each part is filled from its own <c>building_2d</c> rows; uploading by <c>Code</c> instead would let the server file every part's models under a single one, which is what left three counties reading back empty. The county code is still written onto each model as descriptive metadata.</para>
     /// <para>Because <c>building_2d</c> holds the same building under every part it was imported under, a building shared by two parts is modelled once per part. That is inherent to keying by part and is not a duplicate to suppress here - it mirrors the underlying table.</para>
     /// <para><b>A national pass takes days, so a county is the unit of both failure and progress.</b> A county whose pages cannot be read or uploaded is named, recorded in <c>BuildingModels_Regeneration_Failed.txt</c> and skipped, rather than ending the run and discarding every county after it. A county that completes in full is appended to <c>BuildingModels_Regeneration_Checkpoint.txt</c>, which <see cref="Resume"/> reads on the next run - so an interrupted pass continues where it stopped, and a county interrupted part way is simply redone.</para>
+    /// <para>The scope - the county parts, the checkpoint behaviour and the report directory - is asked for each time the task starts, through <see cref="BuildingModelsFromDatabaseOptionsWindow"/>; a cancelled dialog ends the run with nothing written. The pacing and the voivodeship filter stay as set where the task is registered.</para>
     /// </summary>
     public class UIBuildingModelsFromDatabasePostTask : BuildingModelsPostTask, IGISPostgreSQLUIObject
     {
@@ -92,6 +94,50 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
                 Serilog.Modify.Log(Serilog.Enums.LogEventLevel.Error, "County references could not be retrieved");
                 return false;
             }
+
+            // The dialog is a window, and this runs on a thread pool thread, where a window cannot be created
+            // at all. Without an application there is no user interface thread to move it to.
+            if (System.Windows.Application.Current is not System.Windows.Application application)
+            {
+                Serilog.Modify.Log(Serilog.Enums.LogEventLevel.Error, "No WPF application is running - the BuildingModels options cannot be asked for");
+                return false;
+            }
+
+            // Read on this thread, shown on the user interface thread. The options carry the task's current
+            // scope, so the dialog opens pre-filled with what the last run used. The pacing is not asked for -
+            // MaxConcurrentRequests and PageSize stay as set where the task is registered.
+            BuildingModelsFromDatabaseOptions buildingModelsFromDatabaseOptions = new()
+            {
+                Resume = Resume,
+                ReportDirectory = ReportDirectory,
+                CountyIds = CountyIds is null ? null : [.. CountyIds]
+            };
+
+            BuildingModelsFromDatabaseOptions? buildingModelsFromDatabaseOptions_Dialog = null;
+
+            application.Dispatcher.Invoke(() =>
+            {
+                BuildingModelsFromDatabaseOptionsWindow buildingModelsFromDatabaseOptionsWindow = new(buildingModelsFromDatabaseOptions, administrativeAreal2DReferences);
+
+                if (buildingModelsFromDatabaseOptionsWindow.ShowDialog() is not bool dialogResult || !dialogResult)
+                {
+                    return;
+                }
+
+                buildingModelsFromDatabaseOptions_Dialog = buildingModelsFromDatabaseOptionsWindow.BuildingModelsFromDatabaseOptions;
+            });
+
+            // A cancelled dialog leaves the settings of an earlier run as they were - the window works on a
+            // copy - and ends the run here rather than starting a national pass nobody asked for.
+            if (buildingModelsFromDatabaseOptions_Dialog is null)
+            {
+                Serilog.Modify.Log("BuildingModels options were cancelled - nothing was written");
+                return false;
+            }
+
+            Resume = buildingModelsFromDatabaseOptions_Dialog.Resume;
+            ReportDirectory = buildingModelsFromDatabaseOptions_Dialog.ReportDirectory;
+            CountyIds = buildingModelsFromDatabaseOptions_Dialog.CountyIds;
 
             HashSet<int>? countyIds = null;
             if (CountyIds is not null)

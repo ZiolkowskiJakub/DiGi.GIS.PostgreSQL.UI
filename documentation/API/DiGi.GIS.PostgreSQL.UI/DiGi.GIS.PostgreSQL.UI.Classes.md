@@ -3,6 +3,111 @@
 ## DiGi\.GIS\.PostgreSQL\.UI\.Classes Namespace
 ### Classes
 
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.BuildingModelsFromDatabaseOptions'></a>
+
+## BuildingModelsFromDatabaseOptions Class
+
+Provides configuration options for generating BuildingModels from CityGML Buildings stored in a database\.
+
+Held by the user interface task rather than by a class library task, so it lives in this project: the run it configures is started from the user interface, through [BuildingModelsFromDatabaseOptionsWindow](DiGi.GIS.PostgreSQL.UI.Windows.md#DiGi.GIS.PostgreSQL.UI.Windows.BuildingModelsFromDatabaseOptionsWindow 'DiGi\.GIS\.PostgreSQL\.UI\.Windows\.BuildingModelsFromDatabaseOptionsWindow').
+
+Carries the scope of a run only. The request pacing and the page size are tuning nobody changes between runs, so they stay properties of the task and are set where it is registered.
+
+```csharp
+public class BuildingModelsFromDatabaseOptions : DiGi.Core.Classes.SerializableOptions
+```
+
+Inheritance [System\.Object](https://learn.microsoft.com/en-us/dotnet/api/system.object 'System\.Object') → [DiGi\.Core\.Classes\.Object](https://learn.microsoft.com/en-us/dotnet/api/digi.core.classes.object 'DiGi\.Core\.Classes\.Object') → [DiGi\.Core\.Classes\.SerializableObject](https://learn.microsoft.com/en-us/dotnet/api/digi.core.classes.serializableobject 'DiGi\.Core\.Classes\.SerializableObject') → [DiGi\.Core\.Classes\.SerializableOptions](https://learn.microsoft.com/en-us/dotnet/api/digi.core.classes.serializableoptions 'DiGi\.Core\.Classes\.SerializableOptions') → BuildingModelsFromDatabaseOptions
+### Constructors
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.BuildingModelsFromDatabaseOptions.BuildingModelsFromDatabaseOptions()'></a>
+
+## BuildingModelsFromDatabaseOptions\(\) Constructor
+
+Initializes a new instance of the [BuildingModelsFromDatabaseOptions](DiGi.GIS.PostgreSQL.UI.Classes.md#DiGi.GIS.PostgreSQL.UI.Classes.BuildingModelsFromDatabaseOptions 'DiGi\.GIS\.PostgreSQL\.UI\.Classes\.BuildingModelsFromDatabaseOptions') class\.
+
+```csharp
+public BuildingModelsFromDatabaseOptions();
+```
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.BuildingModelsFromDatabaseOptions.BuildingModelsFromDatabaseOptions(DiGi.GIS.PostgreSQL.UI.Classes.BuildingModelsFromDatabaseOptions)'></a>
+
+## BuildingModelsFromDatabaseOptions\(BuildingModelsFromDatabaseOptions\) Constructor
+
+Initializes a new instance of the [BuildingModelsFromDatabaseOptions](DiGi.GIS.PostgreSQL.UI.Classes.md#DiGi.GIS.PostgreSQL.UI.Classes.BuildingModelsFromDatabaseOptions 'DiGi\.GIS\.PostgreSQL\.UI\.Classes\.BuildingModelsFromDatabaseOptions') class by copying the values from an existing [BuildingModelsFromDatabaseOptions](DiGi.GIS.PostgreSQL.UI.Classes.md#DiGi.GIS.PostgreSQL.UI.Classes.BuildingModelsFromDatabaseOptions 'DiGi\.GIS\.PostgreSQL\.UI\.Classes\.BuildingModelsFromDatabaseOptions') instance\.
+
+```csharp
+public BuildingModelsFromDatabaseOptions(DiGi.GIS.PostgreSQL.UI.Classes.BuildingModelsFromDatabaseOptions? buildingModelsFromDatabaseOptions);
+```
+#### Parameters
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.BuildingModelsFromDatabaseOptions.BuildingModelsFromDatabaseOptions(DiGi.GIS.PostgreSQL.UI.Classes.BuildingModelsFromDatabaseOptions).buildingModelsFromDatabaseOptions'></a>
+
+`buildingModelsFromDatabaseOptions` [BuildingModelsFromDatabaseOptions](DiGi.GIS.PostgreSQL.UI.Classes.md#DiGi.GIS.PostgreSQL.UI.Classes.BuildingModelsFromDatabaseOptions 'DiGi\.GIS\.PostgreSQL\.UI\.Classes\.BuildingModelsFromDatabaseOptions')
+
+The source [BuildingModelsFromDatabaseOptions](DiGi.GIS.PostgreSQL.UI.Classes.md#DiGi.GIS.PostgreSQL.UI.Classes.BuildingModelsFromDatabaseOptions 'DiGi\.GIS\.PostgreSQL\.UI\.Classes\.BuildingModelsFromDatabaseOptions') instance to copy settings from\.
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.BuildingModelsFromDatabaseOptions.BuildingModelsFromDatabaseOptions(System.Text.Json.Nodes.JsonObject)'></a>
+
+## BuildingModelsFromDatabaseOptions\(JsonObject\) Constructor
+
+Initializes a new instance of the [BuildingModelsFromDatabaseOptions](DiGi.GIS.PostgreSQL.UI.Classes.md#DiGi.GIS.PostgreSQL.UI.Classes.BuildingModelsFromDatabaseOptions 'DiGi\.GIS\.PostgreSQL\.UI\.Classes\.BuildingModelsFromDatabaseOptions') class using the provided JSON object\.
+
+```csharp
+public BuildingModelsFromDatabaseOptions(System.Text.Json.Nodes.JsonObject jsonObject);
+```
+#### Parameters
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.BuildingModelsFromDatabaseOptions.BuildingModelsFromDatabaseOptions(System.Text.Json.Nodes.JsonObject).jsonObject'></a>
+
+`jsonObject` [System\.Text\.Json\.Nodes\.JsonObject](https://learn.microsoft.com/en-us/dotnet/api/system.text.json.nodes.jsonobject 'System\.Text\.Json\.Nodes\.JsonObject')
+
+The [System\.Text\.Json\.Nodes\.JsonObject](https://learn.microsoft.com/en-us/dotnet/api/system.text.json.nodes.jsonobject 'System\.Text\.Json\.Nodes\.JsonObject') containing the configuration data used to populate the options\.
+### Properties
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.BuildingModelsFromDatabaseOptions.CountyIds'></a>
+
+## BuildingModelsFromDatabaseOptions\.CountyIds Property
+
+Gets or sets the county polygon part identifiers to be processed\. [null](https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/null 'https://docs\.microsoft\.com/en\-us/dotnet/csharp/language\-reference/keywords/null') means every county\.
+
+A county code is not a key - a multi-part county has one identifier per polygon part - so name every part that is wanted.
+
+```csharp
+public System.Collections.Generic.HashSet<int>? CountyIds { get; set; }
+```
+
+#### Property Value
+[System\.Collections\.Generic\.HashSet&lt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.hashset-1 'System\.Collections\.Generic\.HashSet\`1')[System\.Int32](https://learn.microsoft.com/en-us/dotnet/api/system.int32 'System\.Int32')[&gt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.hashset-1 'System\.Collections\.Generic\.HashSet\`1')
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.BuildingModelsFromDatabaseOptions.ReportDirectory'></a>
+
+## BuildingModelsFromDatabaseOptions\.ReportDirectory Property
+
+Gets or sets the directory the checkpoint and the list of failed counties are written into\. When null the directory the application was launched from is used\.
+
+```csharp
+public string? ReportDirectory { get; set; }
+```
+
+#### Property Value
+[System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.BuildingModelsFromDatabaseOptions.Resume'></a>
+
+## BuildingModelsFromDatabaseOptions\.Resume Property
+
+Gets or sets a value indicating whether counties named in the checkpoint of an earlier run are skipped\.
+
+A national pass is a matter of days, so it has to survive being interrupted. Turning this off starts from the first county in scope and truncates the checkpoint, which is what a deliberate re-run of an already-completed scope needs.
+
+```csharp
+public bool Resume { get; set; }
+```
+
+#### Property Value
+[System\.Boolean](https://learn.microsoft.com/en-us/dotnet/api/system.boolean 'System\.Boolean')
+
 <a name='DiGi.GIS.PostgreSQL.UI.Classes.GISPostgreSQLConverterManagerConfigurationFile'></a>
 
 ## GISPostgreSQLConverterManagerConfigurationFile Class
@@ -386,6 +491,8 @@ Each [DiGi\.GIS\.Classes\.Building2D](https://learn.microsoft.com/en-us/dotnet/a
 Because `building_2d` holds the same building under every part it was imported under, a building shared by two parts is modelled once per part. That is inherent to keying by part and is not a duplicate to suppress here - it mirrors the underlying table.
 
 <b>A national pass takes days, so a county is the unit of both failure and progress.</b> A county whose pages cannot be read or uploaded is named, recorded in `BuildingModels_Regeneration_Failed.txt` and skipped, rather than ending the run and discarding every county after it. A county that completes in full is appended to `BuildingModels_Regeneration_Checkpoint.txt`, which [Resume](DiGi.GIS.PostgreSQL.UI.Classes.md#DiGi.GIS.PostgreSQL.UI.Classes.UIBuildingModelsFromDatabasePostTask.Resume 'DiGi\.GIS\.PostgreSQL\.UI\.Classes\.UIBuildingModelsFromDatabasePostTask\.Resume') reads on the next run - so an interrupted pass continues where it stopped, and a county interrupted part way is simply redone.
+
+The scope - the county parts, the checkpoint behaviour and the report directory - is asked for each time the task starts, through [BuildingModelsFromDatabaseOptionsWindow](DiGi.GIS.PostgreSQL.UI.Windows.md#DiGi.GIS.PostgreSQL.UI.Windows.BuildingModelsFromDatabaseOptionsWindow 'DiGi\.GIS\.PostgreSQL\.UI\.Windows\.BuildingModelsFromDatabaseOptionsWindow'); a cancelled dialog ends the run with nothing written. The pacing and the voivodeship filter stay as set where the task is registered.
 
 ```csharp
 public class UIBuildingModelsFromDatabasePostTask : DiGi.GIS.WebAPI.Classes.BuildingModelsPostTask, DiGi.GIS.PostgreSQL.UI.Interfaces.IGISPostgreSQLUIObject

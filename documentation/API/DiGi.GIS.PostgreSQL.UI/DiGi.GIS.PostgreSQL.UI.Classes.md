@@ -476,6 +476,231 @@ The token to monitor for cancellation requests\.
 [System\.Threading\.Tasks\.Task&lt;](https://learn.microsoft.com/en-us/dotnet/api/system.threading.tasks.task-1 'System\.Threading\.Tasks\.Task\`1')[System\.Boolean](https://learn.microsoft.com/en-us/dotnet/api/system.boolean 'System\.Boolean')[&gt;](https://learn.microsoft.com/en-us/dotnet/api/system.threading.tasks.task-1 'System\.Threading\.Tasks\.Task\`1')  
 A task that represents the asynchronous operation\. The task result is true if the operation succeeded; otherwise, false\.
 
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIBuildingModelsCourtyardAuditTask'></a>
+
+## UIBuildingModelsCourtyardAuditTask Class
+
+A read\-only task that locates the stored building models whose courtyard the storey split filled with a solid face\.
+
+For every county in scope it walks every 2D building reference and classifies it against the defect fixed by DiGi.Geometry#7: the source CityGML [DiGi\.CityGML\.Classes\.Building](https://learn.microsoft.com/en-us/dotnet/api/digi.citygml.classes.building 'DiGi\.CityGML\.Classes\.Building') carries a `GroundSurface` with an interior ring (a courtyard) while the stored [DiGi\.GIS\.PostgreSQL\.Classes\.BuildingModel](https://learn.microsoft.com/en-us/dotnet/api/digi.gis.postgresql.classes.buildingmodel 'DiGi\.GIS\.PostgreSQL\.Classes\.BuildingModel') reports no internal edge on its `Footprints`. That is the model that renders a floor over the courtyard and drives the terrain cut DiGi.GIS.WebAPI.UI#45 reported.
+
+Nothing is uploaded and nothing is repaired - the task exists to name the affected set and tally it per county, which is the scope the regeneration (DiGi.GIS.PostgreSQL.UI#13) must run against. A county's tally is recorded only once every reference of it has been audited, so a county interrupted part way is not checkpointed and is redone in full on the next run rather than left half-counted.
+
+Two files are written into [ReportDirectory](DiGi.GIS.PostgreSQL.UI.Classes.md#DiGi.GIS.PostgreSQL.UI.Classes.UIBuildingModelsCourtyardAuditTask.ReportDirectory 'DiGi\.GIS\.PostgreSQL\.UI\.Classes\.UIBuildingModelsCourtyardAuditTask\.ReportDirectory'): one row per reference in `BuildingModels_CourtyardAudit.csv`, and per-county plus national totals in `BuildingModels_CourtyardAudit_Summary.txt`, the latter carrying an `AffectedCountyIds:` line that is the ready-to-paste [CountyIds](DiGi.GIS.PostgreSQL.UI.Classes.md#DiGi.GIS.PostgreSQL.UI.Classes.UIBuildingModelsCourtyardAuditTask.CountyIds 'DiGi\.GIS\.PostgreSQL\.UI\.Classes\.UIBuildingModelsCourtyardAuditTask\.CountyIds') scope for the regeneration.
+
+```csharp
+public class UIBuildingModelsCourtyardAuditTask : DiGi.Core.Classes.ReportableBackgroundTask<long>, DiGi.GIS.PostgreSQL.UI.Interfaces.IGISPostgreSQLUIObject
+```
+
+Inheritance [System\.Object](https://learn.microsoft.com/en-us/dotnet/api/system.object 'System\.Object') → [DiGi\.Core\.Classes\.BackgroundTask](https://learn.microsoft.com/en-us/dotnet/api/digi.core.classes.backgroundtask 'DiGi\.Core\.Classes\.BackgroundTask') → [DiGi\.Core\.Classes\.CancelableBackgroundTask](https://learn.microsoft.com/en-us/dotnet/api/digi.core.classes.cancelablebackgroundtask 'DiGi\.Core\.Classes\.CancelableBackgroundTask') → [DiGi\.Core\.Classes\.ReportableBackgroundTask&lt;](https://learn.microsoft.com/en-us/dotnet/api/digi.core.classes.reportablebackgroundtask-1 'DiGi\.Core\.Classes\.ReportableBackgroundTask\`1')[System\.Int64](https://learn.microsoft.com/en-us/dotnet/api/system.int64 'System\.Int64')[&gt;](https://learn.microsoft.com/en-us/dotnet/api/digi.core.classes.reportablebackgroundtask-1 'DiGi\.Core\.Classes\.ReportableBackgroundTask\`1') → UIBuildingModelsCourtyardAuditTask
+
+Implements [IGISPostgreSQLUIObject](DiGi.GIS.PostgreSQL.UI.Interfaces.md#DiGi.GIS.PostgreSQL.UI.Interfaces.IGISPostgreSQLUIObject 'DiGi\.GIS\.PostgreSQL\.UI\.Interfaces\.IGISPostgreSQLUIObject')
+### Constructors
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIBuildingModelsCourtyardAuditTask.UIBuildingModelsCourtyardAuditTask(DiGi.GIS.WebAPI.Classes.GISWebAPIManager)'></a>
+
+## UIBuildingModelsCourtyardAuditTask\(GISWebAPIManager\) Constructor
+
+Initializes a new instance of the [UIBuildingModelsCourtyardAuditTask](DiGi.GIS.PostgreSQL.UI.Classes.md#DiGi.GIS.PostgreSQL.UI.Classes.UIBuildingModelsCourtyardAuditTask 'DiGi\.GIS\.PostgreSQL\.UI\.Classes\.UIBuildingModelsCourtyardAuditTask') class\.
+
+```csharp
+public UIBuildingModelsCourtyardAuditTask(DiGi.GIS.WebAPI.Classes.GISWebAPIManager GISWebAPIManager);
+```
+#### Parameters
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIBuildingModelsCourtyardAuditTask.UIBuildingModelsCourtyardAuditTask(DiGi.GIS.WebAPI.Classes.GISWebAPIManager).GISWebAPIManager'></a>
+
+`GISWebAPIManager` [DiGi\.GIS\.WebAPI\.Classes\.GISWebAPIManager](https://learn.microsoft.com/en-us/dotnet/api/digi.gis.webapi.classes.giswebapimanager 'DiGi\.GIS\.WebAPI\.Classes\.GISWebAPIManager')
+
+The [DiGi\.GIS\.PostgreSQL\.UI\.Classes\.UIBuildingModelsCourtyardAuditTask\.GISWebAPIManager](https://learn.microsoft.com/en-us/dotnet/api/digi.gis.postgresql.ui.classes.uibuildingmodelscourtyardaudittask.giswebapimanager 'DiGi\.GIS\.PostgreSQL\.UI\.Classes\.UIBuildingModelsCourtyardAuditTask\.GISWebAPIManager') instance used to communicate with the server\.
+### Properties
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIBuildingModelsCourtyardAuditTask.BatchSize'></a>
+
+## UIBuildingModelsCourtyardAuditTask\.BatchSize Property
+
+Gets or sets the number of source\-bearing references asked for in a single stored\-model request\. Those references travel in the query string, so a batch far above this risks the URL length limit of the server\.
+
+```csharp
+public int BatchSize { get; set; }
+```
+
+#### Property Value
+[System\.Int32](https://learn.microsoft.com/en-us/dotnet/api/system.int32 'System\.Int32')
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIBuildingModelsCourtyardAuditTask.CountyIds'></a>
+
+## UIBuildingModelsCourtyardAuditTask\.CountyIds Property
+
+Gets or sets the identifiers of the counties to be audited\. When null every county held on the server is audited\.
+
+```csharp
+public System.Collections.Generic.IEnumerable<int>? CountyIds { get; set; }
+```
+
+#### Property Value
+[System\.Collections\.Generic\.IEnumerable&lt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.ienumerable-1 'System\.Collections\.Generic\.IEnumerable\`1')[System\.Int32](https://learn.microsoft.com/en-us/dotnet/api/system.int32 'System\.Int32')[&gt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.ienumerable-1 'System\.Collections\.Generic\.IEnumerable\`1')
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIBuildingModelsCourtyardAuditTask.MaxConcurrentRequests'></a>
+
+## UIBuildingModelsCourtyardAuditTask\.MaxConcurrentRequests Property
+
+Gets or sets how many source\-building requests are allowed to be in flight at once\. The source pull is one request per building, so an unbounded national pass would take weeks when they are issued one after another; the requests are independent, so they go out in groups of this size\.
+
+```csharp
+public int MaxConcurrentRequests { get; set; }
+```
+
+#### Property Value
+[System\.Int32](https://learn.microsoft.com/en-us/dotnet/api/system.int32 'System\.Int32')
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIBuildingModelsCourtyardAuditTask.MaxReferencesPerCounty'></a>
+
+## UIBuildingModelsCourtyardAuditTask\.MaxReferencesPerCounty Property
+
+Gets or sets the maximum number of references audited per county\. A value of zero or less audits every reference of the county \- the estate\-wide behaviour\. Capping a run keeps a sanity\-check bounded without changing that default\.
+
+```csharp
+public int MaxReferencesPerCounty { get; set; }
+```
+
+#### Property Value
+[System\.Int32](https://learn.microsoft.com/en-us/dotnet/api/system.int32 'System\.Int32')
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIBuildingModelsCourtyardAuditTask.ReportDirectory'></a>
+
+## UIBuildingModelsCourtyardAuditTask\.ReportDirectory Property
+
+Gets or sets the directory the two report files are written into\. When null the user is asked for one\.
+
+```csharp
+public string? ReportDirectory { get; set; }
+```
+
+#### Property Value
+[System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIBuildingModelsCourtyardAuditTask.Resume'></a>
+
+## UIBuildingModelsCourtyardAuditTask\.Resume Property
+
+Gets or sets a value indicating whether counties named in the checkpoint of an earlier run are skipped\. Defaults to [true](https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/bool 'https://docs\.microsoft\.com/en\-us/dotnet/csharp/language\-reference/builtin\-types/bool')\. A county is checkpointed only once every reference of it has been audited, so turning this off re\-audits every county in scope from the first\.
+
+```csharp
+public bool Resume { get; set; }
+```
+
+#### Property Value
+[System\.Boolean](https://learn.microsoft.com/en-us/dotnet/api/system.boolean 'System\.Boolean')
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIBuildingModelsCourtyardAuditTask.Tolerance'></a>
+
+## UIBuildingModelsCourtyardAuditTask\.Tolerance Property
+
+Gets or sets the distance tolerance the `Footprints` of a stored model are required to hold their internal edges at\.
+
+```csharp
+public double Tolerance { get; set; }
+```
+
+#### Property Value
+[System\.Double](https://learn.microsoft.com/en-us/dotnet/api/system.double 'System\.Double')
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIBuildingModelsCourtyardAuditTask.VoivodeshipCodes'></a>
+
+## UIBuildingModelsCourtyardAuditTask\.VoivodeshipCodes Property
+
+Gets or sets the two\-digit voivodeship codes to be audited\. A county is in scope when its code starts with one of them\. When null every voivodeship is audited\. Combined with [CountyIds](DiGi.GIS.PostgreSQL.UI.Classes.md#DiGi.GIS.PostgreSQL.UI.Classes.UIBuildingModelsCourtyardAuditTask.CountyIds 'DiGi\.GIS\.PostgreSQL\.UI\.Classes\.UIBuildingModelsCourtyardAuditTask\.CountyIds') both filters have to admit the county\.
+
+```csharp
+public System.Collections.Generic.IEnumerable<string>? VoivodeshipCodes { get; set; }
+```
+
+#### Property Value
+[System\.Collections\.Generic\.IEnumerable&lt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.ienumerable-1 'System\.Collections\.Generic\.IEnumerable\`1')[System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')[&gt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.ienumerable-1 'System\.Collections\.Generic\.IEnumerable\`1')
+### Methods
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIBuildingModelsCourtyardAuditTask.IsAffected(DiGi.CityGML.Classes.Building,DiGi.Analytical.Building.Classes.BuildingModel,double)'></a>
+
+## UIBuildingModelsCourtyardAuditTask\.IsAffected\(Building, BuildingModel, double\) Method
+
+Combines the two halves: the model is affected when the source carries a courtyard, a stored model exists, and that stored model's outline has none\. A source courtyard with no stored model is a missing model, not an affected one \- the regional view falls back to the 2D footprint, which keeps the courtyard\.
+
+```csharp
+public static bool IsAffected(DiGi.CityGML.Classes.Building? source, DiGi.Analytical.Building.Classes.BuildingModel? stored, double tolerance);
+```
+#### Parameters
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIBuildingModelsCourtyardAuditTask.IsAffected(DiGi.CityGML.Classes.Building,DiGi.Analytical.Building.Classes.BuildingModel,double).source'></a>
+
+`source` [DiGi\.CityGML\.Classes\.Building](https://learn.microsoft.com/en-us/dotnet/api/digi.citygml.classes.building 'DiGi\.CityGML\.Classes\.Building')
+
+The stored CityGML building, or null when the server holds none\.
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIBuildingModelsCourtyardAuditTask.IsAffected(DiGi.CityGML.Classes.Building,DiGi.Analytical.Building.Classes.BuildingModel,double).stored'></a>
+
+`stored` [DiGi\.Analytical\.Building\.Classes\.BuildingModel](https://learn.microsoft.com/en-us/dotnet/api/digi.analytical.building.classes.buildingmodel 'DiGi\.Analytical\.Building\.Classes\.BuildingModel')
+
+The stored building model, or null when the server holds none\.
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIBuildingModelsCourtyardAuditTask.IsAffected(DiGi.CityGML.Classes.Building,DiGi.Analytical.Building.Classes.BuildingModel,double).tolerance'></a>
+
+`tolerance` [System\.Double](https://learn.microsoft.com/en-us/dotnet/api/system.double 'System\.Double')
+
+The distance tolerance the footprints are required to hold their internal edges at\.
+
+#### Returns
+[System\.Boolean](https://learn.microsoft.com/en-us/dotnet/api/system.boolean 'System\.Boolean')  
+[true](https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/bool 'https://docs\.microsoft\.com/en\-us/dotnet/csharp/language\-reference/builtin\-types/bool') when the source has a courtyard the stored model lost\.
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIBuildingModelsCourtyardAuditTask.SourceHasRing(DiGi.CityGML.Classes.Building)'></a>
+
+## UIBuildingModelsCourtyardAuditTask\.SourceHasRing\(Building\) Method
+
+Decides whether the source CityGML building carries a courtyard \- one of its [DiGi\.CityGML\.Classes\.GroundSurface](https://learn.microsoft.com/en-us/dotnet/api/digi.citygml.classes.groundsurface 'DiGi\.CityGML\.Classes\.GroundSurface') surfaces holds an interior ring\. This is the source half of the affected test; a wall or roof surface never counts, so only ground surfaces are examined\.
+
+```csharp
+public static bool SourceHasRing(DiGi.CityGML.Classes.Building? source);
+```
+#### Parameters
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIBuildingModelsCourtyardAuditTask.SourceHasRing(DiGi.CityGML.Classes.Building).source'></a>
+
+`source` [DiGi\.CityGML\.Classes\.Building](https://learn.microsoft.com/en-us/dotnet/api/digi.citygml.classes.building 'DiGi\.CityGML\.Classes\.Building')
+
+The stored CityGML building, or null when the server holds none\.
+
+#### Returns
+[System\.Boolean](https://learn.microsoft.com/en-us/dotnet/api/system.boolean 'System\.Boolean')  
+[true](https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/bool 'https://docs\.microsoft\.com/en\-us/dotnet/csharp/language\-reference/builtin\-types/bool') when a ground surface of the building has at least one interior ring\.
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIBuildingModelsCourtyardAuditTask.StoredHasHole(DiGi.Analytical.Building.Classes.BuildingModel,double)'></a>
+
+## UIBuildingModelsCourtyardAuditTask\.StoredHasHole\(BuildingModel, double\) Method
+
+Decides whether the stored model's outline carries a courtyard \- one of its `Footprints` faces holds an internal edge\. This is the stored half of the affected test: a model the storey split filled solid has none\.
+
+```csharp
+public static bool StoredHasHole(DiGi.Analytical.Building.Classes.BuildingModel? stored, double tolerance);
+```
+#### Parameters
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIBuildingModelsCourtyardAuditTask.StoredHasHole(DiGi.Analytical.Building.Classes.BuildingModel,double).stored'></a>
+
+`stored` [DiGi\.Analytical\.Building\.Classes\.BuildingModel](https://learn.microsoft.com/en-us/dotnet/api/digi.analytical.building.classes.buildingmodel 'DiGi\.Analytical\.Building\.Classes\.BuildingModel')
+
+The stored building model, or null when the server holds none\.
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIBuildingModelsCourtyardAuditTask.StoredHasHole(DiGi.Analytical.Building.Classes.BuildingModel,double).tolerance'></a>
+
+`tolerance` [System\.Double](https://learn.microsoft.com/en-us/dotnet/api/system.double 'System\.Double')
+
+The distance tolerance the footprints are required to hold their internal edges at\.
+
+#### Returns
+[System\.Boolean](https://learn.microsoft.com/en-us/dotnet/api/system.boolean 'System\.Boolean')  
+[true](https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/bool 'https://docs\.microsoft\.com/en\-us/dotnet/csharp/language\-reference/builtin\-types/bool') when at least one footprint face carries an internal edge\.
+
 <a name='DiGi.GIS.PostgreSQL.UI.Classes.UIBuildingModelsFromDatabasePostTask'></a>
 
 ## UIBuildingModelsFromDatabasePostTask Class

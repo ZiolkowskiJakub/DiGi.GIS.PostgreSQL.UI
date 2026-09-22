@@ -212,6 +212,14 @@ namespace DiGi.GIS.PostgreSQL.UI
                     },
                     "Verify BuildingModels from database", "Reads BuildingModels stored in database and reports completeness and space enclosure. Read only - nothing is uploaded"));
 
+                    // The estate-wide half of DiGi.GIS.PostgreSQL.UI#13: before regenerating, find which stored
+                    // models the storey split filled solid (source courtyard present, stored Footprints carry no
+                    // internal edge). It writes the per-county tally and the affected county ids that scope the
+                    // regeneration. Read only - nothing is uploaded, and it checkpoints county by county so an
+                    // interrupted national pass resumes rather than restarting from the first county.
+                    result.Add(Visual(new UIBuildingModelsCourtyardAuditTask(GISWebAPIManager),
+                    "Audit BuildingModels for filled courtyards", "Read only: per county, models whose source CityGML GroundSurface has an interior ring but whose stored Footprints have no internal edge - the set the regeneration must run against"));
+
 
                     // Scoped from a dialog rather than from defaults written here, and run in another process: the
                     // pipeline needs the machine learning closure, which this application deliberately does not

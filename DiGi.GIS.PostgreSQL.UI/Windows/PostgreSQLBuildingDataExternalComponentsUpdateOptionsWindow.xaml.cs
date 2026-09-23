@@ -29,6 +29,8 @@ namespace DiGi.GIS.PostgreSQL.UI.Windows
             // The caption stays in the XAML - the designer does not run this constructor, and a caption set here
             // leaves an empty label over an empty box in the preview. Only the values come from the options.
             TextBoxControl_CommandTimeout.Value = this.postgreSQLBuildingDataExternalComponentsUpdateOptions.CommandTimeout.ToString();
+            TextBoxControl_BatchSize.Value = this.postgreSQLBuildingDataExternalComponentsUpdateOptions.BatchSize.ToString();
+            CheckBox_SkipCompleted.IsChecked = this.postgreSQLBuildingDataExternalComponentsUpdateOptions.SkipCompleted;
 
             // Subscribed before the list is filled - the text of an item is decided as it is added.
             ListBoxControl_Counties.ItemAdding += ListBoxControl_Counties_ItemAdding;
@@ -72,6 +74,12 @@ namespace DiGi.GIS.PostgreSQL.UI.Windows
                 return;
             }
 
+            if (!TextBoxControl_BatchSize.TryGetValue(out int batchSize) || batchSize < 1)
+            {
+                MessageBox.Show("Batch size has to be a whole number, 1 or greater.", Title ?? string.Empty, MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
             HashSet<int> countyIds = [];
             foreach (AdministrativeAreal2DReference administrativeAreal2DReference in administrativeAreal2DReferences)
             {
@@ -80,6 +88,8 @@ namespace DiGi.GIS.PostgreSQL.UI.Windows
 
             postgreSQLBuildingDataExternalComponentsUpdateOptions.CountyIds = countyIds;
             postgreSQLBuildingDataExternalComponentsUpdateOptions.CommandTimeout = commandTimeout;
+            postgreSQLBuildingDataExternalComponentsUpdateOptions.BatchSize = batchSize;
+            postgreSQLBuildingDataExternalComponentsUpdateOptions.SkipCompleted = CheckBox_SkipCompleted.IsChecked == true;
 
             DialogResult = true;
             Close();

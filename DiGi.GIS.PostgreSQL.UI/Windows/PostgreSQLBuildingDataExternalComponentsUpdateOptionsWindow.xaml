@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:DiGi.GIS.PostgreSQL.UI.Windows"
         xmlns:controls="clr-namespace:DiGi.UI.WPF.Controls;assembly=DiGi.UI.WPF"
         mc:Ignorable="d"
-        Title="Update external components area" Height="482" Width="560" MinHeight="360" MinWidth="440"
+        Title="Update external components area" Height="572" Width="560" MinHeight="360" MinWidth="440"
         WindowStartupLocation="CenterScreen"
         WindowStyle="SingleBorderWindow"
         Icon="pack://application:,,,/DiGi.GIS.PostgreSQL.UI;component/Resources/DiGi.GIS.ico">
@@ -15,6 +15,8 @@
             <RowDefinition Height="28" />
             <RowDefinition Height="*" />
             <RowDefinition Height="60" />
+            <RowDefinition Height="60" />
+            <RowDefinition Height="30" />
             <RowDefinition Height="33" />
         </Grid.RowDefinitions>
 
@@ -24,7 +26,11 @@
 
         <controls:TextBoxControl x:Name="TextBoxControl_CommandTimeout" Grid.Row="2" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Text="Command timeout in seconds - 0 disables it" Value="" />
 
-        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="5,5,5,5">
+        <controls:TextBoxControl x:Name="TextBoxControl_BatchSize" Grid.Row="3" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Text="Batch size - buildings read and written together" Value="" />
+
+        <CheckBox x:Name="CheckBox_SkipCompleted" Grid.Row="4" Content="Skip buildings already done - resumes an interrupted run" Margin="10,0,10,0" VerticalAlignment="Center" />
+
+        <StackPanel Grid.Row="5" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="5,5,5,5">
             <Button x:Name="Button_OK" Content="OK" Width="70" Height="23" Margin="5,0,5,0" IsDefault="True" Click="Button_OK_Click" />
             <Button x:Name="Button_Cancel" Content="Cancel" Width="70" Height="23" Margin="5,0,5,0" IsCancel="True" Click="Button_Cancel_Click" />
         </StackPanel>

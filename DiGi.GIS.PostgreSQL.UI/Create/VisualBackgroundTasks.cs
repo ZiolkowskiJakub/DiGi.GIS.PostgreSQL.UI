@@ -143,6 +143,24 @@ namespace DiGi.GIS.PostgreSQL.UI
                     result.Add(Visual(postgreSQLBuildingModelCleanupTask,
                     postgreSQLBuildingModelCleanupTask.DryRun ? "Report BuildingModels without a building (dry run, deletes nothing)" : "Remove BuildingModels without a building (DELETES rows)",
                     $"Reports BuildingModel rows whose building no longer exists under the county part holding them. Scope: {(postgreSQLBuildingModelCleanupTask.VoivodeshipCodes is null ? "every voivodeship" : $"voivodeship {string.Join(' ', postgreSQLBuildingModelCleanupTask.VoivodeshipCodes)}")}. {(postgreSQLBuildingModelCleanupTask.DryRun ? "Dry run - nothing is written until DryRun is turned off" : "DryRun is OFF - this writes and has no undo")}"));
+
+                    // Stamps the WGS 84 coordinates and the UTC offset the stored models carry no trace of:
+                    // the rows the national regeneration wrote before DiGi.GIS.WebAPI.UI#56 started stamping
+                    // the creation paths. Idempotent - a second run reports 0 updated - and checkpointed part
+                    // by part, so a run interrupted mid-country resumes rather than restarting. It writes one
+                    // JSON key of the row, never the whole model, and never inserts, so it can run beside a
+                    // regeneration. Reports by default, and the name and the description are derived from
+                    // DryRun rather than written beside it, so a row that stamps rows cannot end up labelled
+                    // as a report. The national production run - disk headroom first, then voivodeship by
+                    // voivodeship - is tracked in the follow-up issue.
+                    UIPostgreSQLBuildingModelBuildingInformationUpdateTask uiPostgreSQLBuildingModelBuildingInformationUpdateTask = new(gISPostgreSQLConverterManager)
+                    {
+                        DryRun = true
+                    };
+
+                    result.Add(Visual(uiPostgreSQLBuildingModelBuildingInformationUpdateTask,
+                    uiPostgreSQLBuildingModelBuildingInformationUpdateTask.DryRun ? "Report BuildingModels missing BuildingInformation (dry run, writes nothing)" : "Stamp BuildingInformation on stored BuildingModels (WRITES rows)",
+                    $"Stamps the WGS 84 coordinates and the Polish standard-time UTC onto the BuildingInformation of the stored BuildingModels. Scope: {(uiPostgreSQLBuildingModelBuildingInformationUpdateTask.VoivodeshipCodes is null ? "every voivodeship" : $"voivodeship {string.Join(' ', uiPostgreSQLBuildingModelBuildingInformationUpdateTask.VoivodeshipCodes)}")}. {(uiPostgreSQLBuildingModelBuildingInformationUpdateTask.DryRun ? "Dry run - nothing is written until DryRun is turned off" : "DryRun is OFF - this writes")}. The counties, the detail level, the page size, the timeout and the resume behaviour are asked for when the task starts"));
                 }
 
                 // Offered only where the conf naming the user database is present. Without it the only

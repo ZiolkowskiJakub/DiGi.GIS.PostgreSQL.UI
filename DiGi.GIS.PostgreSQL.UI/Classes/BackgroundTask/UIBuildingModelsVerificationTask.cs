@@ -1,4 +1,5 @@
 using DiGi.Core.Classes;
+using DiGi.GIS.Analytical;
 using DiGi.GIS.Analytical.Enums;
 using DiGi.GIS.Classes;
 using DiGi.GIS.PostgreSQL.Classes;
@@ -24,6 +25,7 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
     /// <para>For every county in scope a sample of <see cref="SampleSize"/> 2D building references is drawn with <see cref="RandomSeed"/>, so a run is reproducible and two runs can be compared. The models behind those references are pulled in batches and each one is passed through <c>Analytical.Create.BuildingModelValidationResult</c>. A reference the server holds no model for is recorded as missing, which is the completeness half of the answer.</para>
         /// <para>The seed is combined with the county row identifier rather than shared across counties, so a county draws the same sample whether it is verified on its own, with its voivodeship, or nationally. A single generator advanced across counties made every county's draw depend on how many references each preceding county held, which the 2026-08-14 county part repair changed - and with it the sample of every county after the repaired three.</para>
     /// <para>Two files are written into <see cref="ReportDirectory"/>: one row per reference in <c>BuildingModels_Verification.csv</c>, and per county plus national totals in <c>BuildingModels_Verification_Summary.txt</c>. The row file is flushed county by county, so a run interrupted late still leaves everything it had already measured.</para>
+    /// <para>The CSV carries an <c>UnlocatedBuildingInformation</c> column, true for a model whose <c>BuildingInformation</c> carries no located coordinates and defined UTC offset - the state the <see cref="UIPostgreSQLBuildingModelBuildingInformationUpdateTask"/> exists to remove, so the column is 0 after the backfill and on freshly regenerated models. It is a separate column rather than a <see cref="BuildingModelValidationCode"/>, deliberately: a code would make every unstamped model invalid and break comparison with the 2026-08-11 enclosure baseline.</para>
     /// </summary>
     public class UIBuildingModelsVerificationTask : ReportableBackgroundTask<long>, IGISPostgreSQLUIObject
     {
@@ -159,7 +161,7 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
                 $"Sample size per county: {(SampleSize < 1 ? "all" : SampleSize.ToString())}",
                 $"Random seed: {RandomSeed} (combined with the county row id, so a county's draw is the same at any scope)",
                 string.Empty,
-                "Code;CountyId;Requested;Missing;Valid;Invalid;NotEnclosed;SeaLevel;SpacePointOutsideShell",
+                "Code;CountyId;Requested;Missing;Valid;Invalid;NotEnclosed;SeaLevel;SpacePointOutsideShell;UnlocatedBuildingInformation",
             ];
 
             Dictionary<BuildingModelValidationCode, int> counts_ByValidationCode = [];
@@ -172,9 +174,10 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
             long count_Missing = 0;
             long count_Valid = 0;
             long count_Invalid = 0;
+            long count_Unlocated = 0;
 
             using StreamWriter streamWriter = new(System.IO.Path.Combine(directory, "BuildingModels_Verification.csv"), false, Encoding.UTF8);
-            await streamWriter.WriteLineAsync("Code;CountyId;Reference;Status;SpaceCount;ComponentCount;ShellCount;EnclosedShellCount;MinEnclosingTolerance;MinZ;MaxZ;ValidationCodes");
+            await streamWriter.WriteLineAsync("Code;CountyId;Reference;Status;SpaceCount;ComponentCount;ShellCount;EnclosedShellCount;MinEnclosingTolerance;MinZ;MaxZ;UnlocatedBuildingInformation;ValidationCodes");
 
             foreach (AdministrativeAreal2DReference administrativeAreal2DReference in administrativeAreal2DReferences)
             {
@@ -207,7 +210,7 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
                 if (references is null || references.Count == 0)
                 {
                     Serilog.Modify.Log(Serilog.Enums.LogEventLevel.Warning, "No Building2D references for county {Code} (id {CountyId})", code, countyId);
-                    summaryLines.Add($"{code};{countyId};0;0;0;0;0;0;0");
+                    summaryLines.Add($"{code};{countyId};0;0;0;0;0;0;0;0");
                     continue;
                 }
 
@@ -227,6 +230,7 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
                 int count_NotEnclosed_County = 0;
                 int count_SeaLevel_County = 0;
                 int count_SpacePointOutsideShell_County = 0;
+                int count_Unlocated_County = 0;
 
                 for (int i = 0; i < references_Sample.Count; i += batchSize)
                 {
@@ -259,6 +263,7 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
                     }
 
                     Dictionary<string, BuildingModelValidationResult> buildingModelValidationResults_ByReference = [];
+                    Dictionary<string, bool> unlocated_ByReference = [];
 
                     foreach (DiGi.Analytical.Building.Classes.BuildingModel buildingModel in buildingModels ?? [])
                     {
@@ -273,6 +278,10 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
                         }
 
                         buildingModelValidationResults_ByReference[buildingModelValidationResult.Reference!] = buildingModelValidationResult;
+
+                        // The location is a property of the stored model, not of its enclosure, so it is
+                        // read here beside the validation and kept out of BuildingModelValidationCode.
+                        unlocated_ByReference[buildingModelValidationResult.Reference!] = !buildingModel.IsLocated();
                     }
 
                     foreach (string reference in references_Batch)
@@ -282,7 +291,7 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
                         if (!buildingModelValidationResults_ByReference.TryGetValue(reference, out BuildingModelValidationResult? buildingModelValidationResult))
                         {
                             count_Missing_County++;
-                            await streamWriter.WriteLineAsync($"{code};{countyId};{reference};Missing;;;;;;;;");
+                            await streamWriter.WriteLineAsync($"{code};{countyId};{reference};Missing;;;;;;;;;");
                             continue;
                         }
 
@@ -325,7 +334,13 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
                         counts_ByMinEnclosingTolerance.TryGetValue(minEnclosingTolerance, out int count_Tolerance);
                         counts_ByMinEnclosingTolerance[minEnclosingTolerance] = count_Tolerance + 1;
 
-                        await streamWriter.WriteLineAsync($"{code};{countyId};{reference};{(buildingModelValidationResult.IsValid ? "Valid" : "Invalid")};{buildingModelValidationResult.SpaceCount};{buildingModelValidationResult.ComponentCount};{buildingModelValidationResult.ShellCount};{buildingModelValidationResult.EnclosedShellCount};{Text(minEnclosingTolerance)};{Text(buildingModelValidationResult.MinZ)};{Text(buildingModelValidationResult.MaxZ)};{string.Join(' ', buildingModelValidationCodes ?? [])}");
+                        bool unlocated = unlocated_ByReference[reference];
+                        if (unlocated)
+                        {
+                            count_Unlocated_County++;
+                        }
+
+                        await streamWriter.WriteLineAsync($"{code};{countyId};{reference};{(buildingModelValidationResult.IsValid ? "Valid" : "Invalid")};{buildingModelValidationResult.SpaceCount};{buildingModelValidationResult.ComponentCount};{buildingModelValidationResult.ShellCount};{buildingModelValidationResult.EnclosedShellCount};{Text(minEnclosingTolerance)};{Text(buildingModelValidationResult.MinZ)};{Text(buildingModelValidationResult.MaxZ)};{(unlocated ? "true" : "false")};{string.Join(' ', buildingModelValidationCodes ?? [])}");
                     }
 
                     longProgressWrapper?.Increment(references_Batch.Count);
@@ -337,10 +352,11 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
                 count_Missing += count_Missing_County;
                 count_Valid += count_Valid_County;
                 count_Invalid += count_Invalid_County;
+                count_Unlocated += count_Unlocated_County;
 
                 Serilog.Modify.Log("County {Code} (id {CountyId}) verified. Valid: {Valid}/{Requested}, missing: {Missing}, not enclosed: {NotEnclosed}", code, countyId, count_Valid_County, count_Requested_County, count_Missing_County, count_NotEnclosed_County);
 
-                summaryLines.Add($"{code};{countyId};{count_Requested_County};{count_Missing_County};{count_Valid_County};{count_Invalid_County};{count_NotEnclosed_County};{count_SeaLevel_County};{count_SpacePointOutsideShell_County}");
+                summaryLines.Add($"{code};{countyId};{count_Requested_County};{count_Missing_County};{count_Valid_County};{count_Invalid_County};{count_NotEnclosed_County};{count_SeaLevel_County};{count_SpacePointOutsideShell_County};{count_Unlocated_County}");
             }
 
             summaryLines.Add(string.Empty);
@@ -349,6 +365,7 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
             summaryLines.Add($"Missing models: {count_Missing}");
             summaryLines.Add($"Valid models: {count_Valid}");
             summaryLines.Add($"Invalid models: {count_Invalid}");
+            summaryLines.Add($"Unlocated BuildingInformation: {count_Unlocated}");
             summaryLines.Add($"Enclosed shells: {count_Shell_Enclosed}/{count_Shell}{(count_Shell == 0 ? string.Empty : $" ({(100.0 * count_Shell_Enclosed / count_Shell).ToString("0.000", System.Globalization.CultureInfo.InvariantCulture)} %)")}");
 
             summaryLines.Add(string.Empty);

@@ -219,6 +219,163 @@ protected override DiGi.GIS.PostgreSQL.UI.Windows.MainWindow GetWindow();
 [MainWindow](DiGi.GIS.PostgreSQL.UI.Windows.md#DiGi.GIS.PostgreSQL.UI.Windows.MainWindow 'DiGi\.GIS\.PostgreSQL\.UI\.Windows\.MainWindow')  
 An instance of the [MainWindow](DiGi.GIS.PostgreSQL.UI.Windows.md#DiGi.GIS.PostgreSQL.UI.Windows.MainWindow 'DiGi\.GIS\.PostgreSQL\.UI\.Windows\.MainWindow') class\.
 
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.PostgreSQLBuildingModelBuildingInformationUpdateOptions'></a>
+
+## PostgreSQLBuildingModelBuildingInformationUpdateOptions Class
+
+Provides configuration options for stamping the WGS 84 coordinates and the UTC offset onto the `BuildingInformation` of the stored [DiGi\.Analytical\.Building\.Classes\.BuildingModel](https://learn.microsoft.com/en-us/dotnet/api/digi.analytical.building.classes.buildingmodel 'DiGi\.Analytical\.Building\.Classes\.BuildingModel') records\.
+
+Held by the user interface task rather than by a class library task, so it lives in this project: the run it configures is started from the user interface, through [PostgreSQLBuildingModelBuildingInformationUpdateOptionsWindow](DiGi.GIS.PostgreSQL.UI.Windows.md#DiGi.GIS.PostgreSQL.UI.Windows.PostgreSQLBuildingModelBuildingInformationUpdateOptionsWindow 'DiGi\.GIS\.PostgreSQL\.UI\.Windows\.PostgreSQLBuildingModelBuildingInformationUpdateOptionsWindow').
+
+Carries the scope of a run: the county polygon parts, the detail level, the page size, the statement timeout, the checkpoint behaviour and the report directory. A null county set means every county and a null level means every level whose table exists.
+
+```csharp
+public class PostgreSQLBuildingModelBuildingInformationUpdateOptions : DiGi.Core.Classes.SerializableOptions
+```
+
+Inheritance [System\.Object](https://learn.microsoft.com/en-us/dotnet/api/system.object 'System\.Object') → [DiGi\.Core\.Classes\.Object](https://learn.microsoft.com/en-us/dotnet/api/digi.core.classes.object 'DiGi\.Core\.Classes\.Object') → [DiGi\.Core\.Classes\.SerializableObject](https://learn.microsoft.com/en-us/dotnet/api/digi.core.classes.serializableobject 'DiGi\.Core\.Classes\.SerializableObject') → [DiGi\.Core\.Classes\.SerializableOptions](https://learn.microsoft.com/en-us/dotnet/api/digi.core.classes.serializableoptions 'DiGi\.Core\.Classes\.SerializableOptions') → PostgreSQLBuildingModelBuildingInformationUpdateOptions
+### Constructors
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.PostgreSQLBuildingModelBuildingInformationUpdateOptions.PostgreSQLBuildingModelBuildingInformationUpdateOptions()'></a>
+
+## PostgreSQLBuildingModelBuildingInformationUpdateOptions\(\) Constructor
+
+Initializes a new instance of the [PostgreSQLBuildingModelBuildingInformationUpdateOptions](DiGi.GIS.PostgreSQL.UI.Classes.md#DiGi.GIS.PostgreSQL.UI.Classes.PostgreSQLBuildingModelBuildingInformationUpdateOptions 'DiGi\.GIS\.PostgreSQL\.UI\.Classes\.PostgreSQLBuildingModelBuildingInformationUpdateOptions') class\.
+
+```csharp
+public PostgreSQLBuildingModelBuildingInformationUpdateOptions();
+```
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.PostgreSQLBuildingModelBuildingInformationUpdateOptions.PostgreSQLBuildingModelBuildingInformationUpdateOptions(DiGi.GIS.PostgreSQL.UI.Classes.PostgreSQLBuildingModelBuildingInformationUpdateOptions)'></a>
+
+## PostgreSQLBuildingModelBuildingInformationUpdateOptions\(PostgreSQLBuildingModelBuildingInformationUpdateOptions\) Constructor
+
+Initializes a new instance of the [PostgreSQLBuildingModelBuildingInformationUpdateOptions](DiGi.GIS.PostgreSQL.UI.Classes.md#DiGi.GIS.PostgreSQL.UI.Classes.PostgreSQLBuildingModelBuildingInformationUpdateOptions 'DiGi\.GIS\.PostgreSQL\.UI\.Classes\.PostgreSQLBuildingModelBuildingInformationUpdateOptions') class by copying the values from an existing [PostgreSQLBuildingModelBuildingInformationUpdateOptions](DiGi.GIS.PostgreSQL.UI.Classes.md#DiGi.GIS.PostgreSQL.UI.Classes.PostgreSQLBuildingModelBuildingInformationUpdateOptions 'DiGi\.GIS\.PostgreSQL\.UI\.Classes\.PostgreSQLBuildingModelBuildingInformationUpdateOptions') instance\.
+
+```csharp
+public PostgreSQLBuildingModelBuildingInformationUpdateOptions(DiGi.GIS.PostgreSQL.UI.Classes.PostgreSQLBuildingModelBuildingInformationUpdateOptions? options);
+```
+#### Parameters
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.PostgreSQLBuildingModelBuildingInformationUpdateOptions.PostgreSQLBuildingModelBuildingInformationUpdateOptions(DiGi.GIS.PostgreSQL.UI.Classes.PostgreSQLBuildingModelBuildingInformationUpdateOptions).options'></a>
+
+`options` [PostgreSQLBuildingModelBuildingInformationUpdateOptions](DiGi.GIS.PostgreSQL.UI.Classes.md#DiGi.GIS.PostgreSQL.UI.Classes.PostgreSQLBuildingModelBuildingInformationUpdateOptions 'DiGi\.GIS\.PostgreSQL\.UI\.Classes\.PostgreSQLBuildingModelBuildingInformationUpdateOptions')
+
+The source [PostgreSQLBuildingModelBuildingInformationUpdateOptions](DiGi.GIS.PostgreSQL.UI.Classes.md#DiGi.GIS.PostgreSQL.UI.Classes.PostgreSQLBuildingModelBuildingInformationUpdateOptions 'DiGi\.GIS\.PostgreSQL\.UI\.Classes\.PostgreSQLBuildingModelBuildingInformationUpdateOptions') instance to copy settings from\.
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.PostgreSQLBuildingModelBuildingInformationUpdateOptions.PostgreSQLBuildingModelBuildingInformationUpdateOptions(System.Text.Json.Nodes.JsonObject)'></a>
+
+## PostgreSQLBuildingModelBuildingInformationUpdateOptions\(JsonObject\) Constructor
+
+Initializes a new instance of the [PostgreSQLBuildingModelBuildingInformationUpdateOptions](DiGi.GIS.PostgreSQL.UI.Classes.md#DiGi.GIS.PostgreSQL.UI.Classes.PostgreSQLBuildingModelBuildingInformationUpdateOptions 'DiGi\.GIS\.PostgreSQL\.UI\.Classes\.PostgreSQLBuildingModelBuildingInformationUpdateOptions') class using the provided JSON object\.
+
+```csharp
+public PostgreSQLBuildingModelBuildingInformationUpdateOptions(System.Text.Json.Nodes.JsonObject jsonObject);
+```
+#### Parameters
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.PostgreSQLBuildingModelBuildingInformationUpdateOptions.PostgreSQLBuildingModelBuildingInformationUpdateOptions(System.Text.Json.Nodes.JsonObject).jsonObject'></a>
+
+`jsonObject` [System\.Text\.Json\.Nodes\.JsonObject](https://learn.microsoft.com/en-us/dotnet/api/system.text.json.nodes.jsonobject 'System\.Text\.Json\.Nodes\.JsonObject')
+
+The [System\.Text\.Json\.Nodes\.JsonObject](https://learn.microsoft.com/en-us/dotnet/api/system.text.json.nodes.jsonobject 'System\.Text\.Json\.Nodes\.JsonObject') containing the configuration data used to populate the options\.
+### Properties
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.PostgreSQLBuildingModelBuildingInformationUpdateOptions.BatchSize'></a>
+
+## PostgreSQLBuildingModelBuildingInformationUpdateOptions\.BatchSize Property
+
+Gets or sets the number of rows read and classified per page\.
+
+```csharp
+public int BatchSize { get; set; }
+```
+
+#### Property Value
+[System\.Int32](https://learn.microsoft.com/en-us/dotnet/api/system.int32 'System\.Int32')
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.PostgreSQLBuildingModelBuildingInformationUpdateOptions.BuildingModelDetailLevel'></a>
+
+## PostgreSQLBuildingModelBuildingInformationUpdateOptions\.BuildingModelDetailLevel Property
+
+Gets or sets the detail level of the building model table to walk\. [null](https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/null 'https://docs\.microsoft\.com/en\-us/dotnet/csharp/language\-reference/keywords/null') walks every level whose table exists\.
+
+```csharp
+public System.Nullable<DiGi.Analytical.Building.Enums.BuildingModelDetailLevel> BuildingModelDetailLevel { get; set; }
+```
+
+#### Property Value
+[System\.Nullable&lt;](https://learn.microsoft.com/en-us/dotnet/api/system.nullable-1 'System\.Nullable\`1')[DiGi\.Analytical\.Building\.Enums\.BuildingModelDetailLevel](https://learn.microsoft.com/en-us/dotnet/api/digi.analytical.building.enums.buildingmodeldetaillevel 'DiGi\.Analytical\.Building\.Enums\.BuildingModelDetailLevel')[&gt;](https://learn.microsoft.com/en-us/dotnet/api/system.nullable-1 'System\.Nullable\`1')
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.PostgreSQLBuildingModelBuildingInformationUpdateOptions.CommandTimeout'></a>
+
+## PostgreSQLBuildingModelBuildingInformationUpdateOptions\.CommandTimeout Property
+
+Gets or sets the timeout in seconds applied to the statements\. A value of 0 disables the timeout\.
+
+```csharp
+public int CommandTimeout { get; set; }
+```
+
+#### Property Value
+[System\.Int32](https://learn.microsoft.com/en-us/dotnet/api/system.int32 'System\.Int32')
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.PostgreSQLBuildingModelBuildingInformationUpdateOptions.CountyIds'></a>
+
+## PostgreSQLBuildingModelBuildingInformationUpdateOptions\.CountyIds Property
+
+Gets or sets the county polygon part identifiers to be processed\. [null](https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/null 'https://docs\.microsoft\.com/en\-us/dotnet/csharp/language\-reference/keywords/null') means every county\.
+
+A county code is not a key - a multi-part county has one identifier per polygon part - so name every part that is wanted.
+
+```csharp
+public System.Collections.Generic.HashSet<int>? CountyIds { get; set; }
+```
+
+#### Property Value
+[System\.Collections\.Generic\.HashSet&lt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.hashset-1 'System\.Collections\.Generic\.HashSet\`1')[System\.Int32](https://learn.microsoft.com/en-us/dotnet/api/system.int32 'System\.Int32')[&gt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.hashset-1 'System\.Collections\.Generic\.HashSet\`1')
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.PostgreSQLBuildingModelBuildingInformationUpdateOptions.DryRun'></a>
+
+## PostgreSQLBuildingModelBuildingInformationUpdateOptions\.DryRun Property
+
+Gets or sets a value indicating whether the run only reports what it would stamp\. Defaults to [true](https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/bool 'https://docs\.microsoft\.com/en\-us/dotnet/csharp/language\-reference/builtin\-types/bool'); nothing is written until it is turned off\.
+
+```csharp
+public bool DryRun { get; set; }
+```
+
+#### Property Value
+[System\.Boolean](https://learn.microsoft.com/en-us/dotnet/api/system.boolean 'System\.Boolean')
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.PostgreSQLBuildingModelBuildingInformationUpdateOptions.ReportDirectory'></a>
+
+## PostgreSQLBuildingModelBuildingInformationUpdateOptions\.ReportDirectory Property
+
+Gets or sets the directory the checkpoint and the reports are written into\. When null the directory the application was launched from is used\.
+
+```csharp
+public string? ReportDirectory { get; set; }
+```
+
+#### Property Value
+[System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.PostgreSQLBuildingModelBuildingInformationUpdateOptions.Resume'></a>
+
+## PostgreSQLBuildingModelBuildingInformationUpdateOptions\.Resume Property
+
+Gets or sets a value indicating whether the parts named in the checkpoint of an earlier run are skipped\. Defaults to [true](https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/bool 'https://docs\.microsoft\.com/en\-us/dotnet/csharp/language\-reference/builtin\-types/bool')\.
+
+The national pass has to survive being interrupted mid-country, so it resumes rather than restarting from the first part. Turning this off starts from the first part in scope and truncates the checkpoint, which is what a deliberate re-run of an already-completed scope needs.
+
+```csharp
+public bool Resume { get; set; }
+```
+
+#### Property Value
+[System\.Boolean](https://learn.microsoft.com/en-us/dotnet/api/system.boolean 'System\.Boolean')
+
 <a name='DiGi.GIS.PostgreSQL.UI.Classes.PostgreSQLBuildingModelCleanupTask'></a>
 
 ## PostgreSQLBuildingModelCleanupTask Class
@@ -880,6 +1037,8 @@ For every county in scope a sample of [SampleSize](DiGi.GIS.PostgreSQL.UI.Classe
 The seed is combined with the county row identifier rather than shared across counties, so a county draws the same sample whether it is verified on its own, with its voivodeship, or nationally. A single generator advanced across counties made every county's draw depend on how many references each preceding county held, which the 2026-08-14 county part repair changed - and with it the sample of every county after the repaired three.
 
 Two files are written into [ReportDirectory](DiGi.GIS.PostgreSQL.UI.Classes.md#DiGi.GIS.PostgreSQL.UI.Classes.UIBuildingModelsVerificationTask.ReportDirectory 'DiGi\.GIS\.PostgreSQL\.UI\.Classes\.UIBuildingModelsVerificationTask\.ReportDirectory'): one row per reference in `BuildingModels_Verification.csv`, and per county plus national totals in `BuildingModels_Verification_Summary.txt`. The row file is flushed county by county, so a run interrupted late still leaves everything it had already measured.
+
+The CSV carries an `UnlocatedBuildingInformation` column, true for a model whose `BuildingInformation` carries no located coordinates and defined UTC offset - the state the [UIPostgreSQLBuildingModelBuildingInformationUpdateTask](DiGi.GIS.PostgreSQL.UI.Classes.md#DiGi.GIS.PostgreSQL.UI.Classes.UIPostgreSQLBuildingModelBuildingInformationUpdateTask 'DiGi\.GIS\.PostgreSQL\.UI\.Classes\.UIPostgreSQLBuildingModelBuildingInformationUpdateTask') exists to remove, so the column is 0 after the backfill and on freshly regenerated models. It is a separate column rather than a [DiGi\.GIS\.Analytical\.Enums\.BuildingModelValidationCode](https://learn.microsoft.com/en-us/dotnet/api/digi.gis.analytical.enums.buildingmodelvalidationcode 'DiGi\.GIS\.Analytical\.Enums\.BuildingModelValidationCode'), deliberately: a code would make every unstamped model invalid and break comparison with the 2026-08-11 enclosure baseline.
 
 ```csharp
 public class UIBuildingModelsVerificationTask : DiGi.Core.Classes.ReportableBackgroundTask<long>, DiGi.GIS.PostgreSQL.UI.Interfaces.IGISPostgreSQLUIObject
@@ -1553,7 +1712,7 @@ A cancellation token that can be used to cancel the operation\.
 
 #### Returns
 [System\.Threading\.Tasks\.Task&lt;](https://learn.microsoft.com/en-us/dotnet/api/system.threading.tasks.task-1 'System\.Threading\.Tasks\.Task\`1')[System\.Boolean](https://learn.microsoft.com/en-us/dotnet/api/system.boolean 'System\.Boolean')[&gt;](https://learn.microsoft.com/en-us/dotnet/api/system.threading.tasks.task-1 'System\.Threading\.Tasks\.Task\`1')  
-A task representing the asynchronous operation\. Returns true when every county in scope was processed without error; otherwise, false \- including when a county’s stored models cannot be classified\.
+A task representing the asynchronous operation\. Returns true when every county in scope was processed without error and no model was refused by the classification; otherwise, false\. Degenerate models do not make it false\.
 
 <a name='DiGi.GIS.PostgreSQL.UI.Classes.UIPostgreSQLBuildingDataUpdateTask'></a>
 
@@ -1616,6 +1775,248 @@ A cancellation token that can be used to cancel the operation\.
 #### Returns
 [System\.Threading\.Tasks\.Task&lt;](https://learn.microsoft.com/en-us/dotnet/api/system.threading.tasks.task-1 'System\.Threading\.Tasks\.Task\`1')[System\.Boolean](https://learn.microsoft.com/en-us/dotnet/api/system.boolean 'System\.Boolean')[&gt;](https://learn.microsoft.com/en-us/dotnet/api/system.threading.tasks.task-1 'System\.Threading\.Tasks\.Task\`1')  
 A task representing the asynchronous operation\. Returns true when the run could be attempted, every subdivision in scope was updated without error, every selected update type was written and every subdivision the radial ratios were asked for could be measured; otherwise, false \- including when a selected update type was counted against [DiGi\.GIS\.PostgreSQL\.Classes\.PostgreSQLBuildingDataUpdateTask\.UnfulfilledUpdateTypeCount](https://learn.microsoft.com/en-us/dotnet/api/digi.gis.postgresql.classes.postgresqlbuildingdataupdatetask.unfulfilledupdatetypecount 'DiGi\.GIS\.PostgreSQL\.Classes\.PostgreSQLBuildingDataUpdateTask\.UnfulfilledUpdateTypeCount') or a subdivision against [DiGi\.GIS\.PostgreSQL\.Classes\.PostgreSQLBuildingDataUpdateTask\.RadialRatiosUnmeasuredSubdivisionCount](https://learn.microsoft.com/en-us/dotnet/api/digi.gis.postgresql.classes.postgresqlbuildingdataupdatetask.radialratiosunmeasuredsubdivisioncount 'DiGi\.GIS\.PostgreSQL\.Classes\.PostgreSQLBuildingDataUpdateTask\.RadialRatiosUnmeasuredSubdivisionCount')\. A county's unassigned buildings whose radial ratios could not be measured are counted against [DiGi\.GIS\.PostgreSQL\.Classes\.PostgreSQLBuildingDataUpdateTask\.RadialRatiosUnmeasuredUnassignedCountyCount](https://learn.microsoft.com/en-us/dotnet/api/digi.gis.postgresql.classes.postgresqlbuildingdataupdatetask.radialratiosunmeasuredunassignedcountycount 'DiGi\.GIS\.PostgreSQL\.Classes\.PostgreSQLBuildingDataUpdateTask\.RadialRatiosUnmeasuredUnassignedCountyCount') and do not affect the result; neither do [DiGi\.GIS\.PostgreSQL\.Classes\.PostgreSQLBuildingDataUpdateTask\.YearBuiltWrittenCount](https://learn.microsoft.com/en-us/dotnet/api/digi.gis.postgresql.classes.postgresqlbuildingdataupdatetask.yearbuiltwrittencount 'DiGi\.GIS\.PostgreSQL\.Classes\.PostgreSQLBuildingDataUpdateTask\.YearBuiltWrittenCount') and [DiGi\.GIS\.PostgreSQL\.Classes\.PostgreSQLBuildingDataUpdateTask\.YearBuiltMissingBuildingCount](https://learn.microsoft.com/en-us/dotnet/api/digi.gis.postgresql.classes.postgresqlbuildingdataupdatetask.yearbuiltmissingbuildingcount 'DiGi\.GIS\.PostgreSQL\.Classes\.PostgreSQLBuildingDataUpdateTask\.YearBuiltMissingBuildingCount'), since a county without stored year built entries is not a fault of the run\.
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIPostgreSQLBuildingModelBuildingInformationUpdateTask'></a>
+
+## UIPostgreSQLBuildingModelBuildingInformationUpdateTask Class
+
+Stamps the WGS 84 coordinates and the Polish standard\-time UTC onto the `BuildingInformation` of the [DiGi\.Analytical\.Building\.Classes\.BuildingModel](https://learn.microsoft.com/en-us/dotnet/api/digi.analytical.building.classes.buildingmodel 'DiGi\.Analytical\.Building\.Classes\.BuildingModel') rows stored in the building model tables\.
+
+The rows the national regeneration wrote before the creation paths started stamping carry no coordinates at all, so every stored model computes its sun path at (0, 0). The task walks each county part of each level table by identifier, classifies every row, and writes back the one JSON key it changes - `BuildingInformation` - leaving the rest of the stored object exactly as it is.
+
+<b>Reports by default and writes nothing.</b>[DryRun](DiGi.GIS.PostgreSQL.UI.Classes.md#DiGi.GIS.PostgreSQL.UI.Classes.UIPostgreSQLBuildingModelBuildingInformationUpdateTask.DryRun 'DiGi\.GIS\.PostgreSQL\.UI\.Classes\.UIPostgreSQLBuildingModelBuildingInformationUpdateTask\.DryRun') has to be turned off deliberately, and the summary it reports first - how many rows would be stamped and which are rejected - is what the real run should be reviewed against.
+
+<b>The run is idempotent and checkpointed.</b> A row whose stored values already equal the computed ones is reported `AlreadyCorrect` and not written, so a second run reports 0 updated. Finished parts are appended to `BuildingModels_BuildingInformation_Checkpoint.txt` and skipped on a resumed run; a dry run neither reads nor writes it, so a dry run followed by a real run with [Resume](DiGi.GIS.PostgreSQL.UI.Classes.md#DiGi.GIS.PostgreSQL.UI.Classes.UIPostgreSQLBuildingModelBuildingInformationUpdateTask.Resume 'DiGi\.GIS\.PostgreSQL\.UI\.Classes\.UIPostgreSQLBuildingModelBuildingInformationUpdateTask\.Resume') still touches every part.
+
+The scope - the county parts, the detail level, the page size, the statement timeout, the checkpoint behaviour and the report directory - is asked for each time the task starts, through [PostgreSQLBuildingModelBuildingInformationUpdateOptionsWindow](DiGi.GIS.PostgreSQL.UI.Windows.md#DiGi.GIS.PostgreSQL.UI.Windows.PostgreSQLBuildingModelBuildingInformationUpdateOptionsWindow 'DiGi\.GIS\.PostgreSQL\.UI\.Windows\.PostgreSQLBuildingModelBuildingInformationUpdateOptionsWindow'); a cancelled dialog ends the run with nothing written.
+
+```csharp
+public class UIPostgreSQLBuildingModelBuildingInformationUpdateTask : DiGi.Core.Classes.ReportableBackgroundTask<long>, DiGi.GIS.PostgreSQL.UI.Interfaces.IGISPostgreSQLUIObject
+```
+
+Inheritance [System\.Object](https://learn.microsoft.com/en-us/dotnet/api/system.object 'System\.Object') → [DiGi\.Core\.Classes\.BackgroundTask](https://learn.microsoft.com/en-us/dotnet/api/digi.core.classes.backgroundtask 'DiGi\.Core\.Classes\.BackgroundTask') → [DiGi\.Core\.Classes\.CancelableBackgroundTask](https://learn.microsoft.com/en-us/dotnet/api/digi.core.classes.cancelablebackgroundtask 'DiGi\.Core\.Classes\.CancelableBackgroundTask') → [DiGi\.Core\.Classes\.ReportableBackgroundTask&lt;](https://learn.microsoft.com/en-us/dotnet/api/digi.core.classes.reportablebackgroundtask-1 'DiGi\.Core\.Classes\.ReportableBackgroundTask\`1')[System\.Int64](https://learn.microsoft.com/en-us/dotnet/api/system.int64 'System\.Int64')[&gt;](https://learn.microsoft.com/en-us/dotnet/api/digi.core.classes.reportablebackgroundtask-1 'DiGi\.Core\.Classes\.ReportableBackgroundTask\`1') → UIPostgreSQLBuildingModelBuildingInformationUpdateTask
+
+Implements [IGISPostgreSQLUIObject](DiGi.GIS.PostgreSQL.UI.Interfaces.md#DiGi.GIS.PostgreSQL.UI.Interfaces.IGISPostgreSQLUIObject 'DiGi\.GIS\.PostgreSQL\.UI\.Interfaces\.IGISPostgreSQLUIObject')
+### Constructors
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIPostgreSQLBuildingModelBuildingInformationUpdateTask.UIPostgreSQLBuildingModelBuildingInformationUpdateTask(DiGi.GIS.PostgreSQL.Classes.GISPostgreSQLConverterManager)'></a>
+
+## UIPostgreSQLBuildingModelBuildingInformationUpdateTask\(GISPostgreSQLConverterManager\) Constructor
+
+Initializes a new instance of the [UIPostgreSQLBuildingModelBuildingInformationUpdateTask](DiGi.GIS.PostgreSQL.UI.Classes.md#DiGi.GIS.PostgreSQL.UI.Classes.UIPostgreSQLBuildingModelBuildingInformationUpdateTask 'DiGi\.GIS\.PostgreSQL\.UI\.Classes\.UIPostgreSQLBuildingModelBuildingInformationUpdateTask') class\.
+
+```csharp
+public UIPostgreSQLBuildingModelBuildingInformationUpdateTask(DiGi.GIS.PostgreSQL.Classes.GISPostgreSQLConverterManager gISPostgreSQLConverterManager);
+```
+#### Parameters
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIPostgreSQLBuildingModelBuildingInformationUpdateTask.UIPostgreSQLBuildingModelBuildingInformationUpdateTask(DiGi.GIS.PostgreSQL.Classes.GISPostgreSQLConverterManager).gISPostgreSQLConverterManager'></a>
+
+`gISPostgreSQLConverterManager` [DiGi\.GIS\.PostgreSQL\.Classes\.GISPostgreSQLConverterManager](https://learn.microsoft.com/en-us/dotnet/api/digi.gis.postgresql.classes.gispostgresqlconvertermanager 'DiGi\.GIS\.PostgreSQL\.Classes\.GISPostgreSQLConverterManager')
+
+The manager holding the PostgreSQL converters\.
+### Properties
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIPostgreSQLBuildingModelBuildingInformationUpdateTask.BatchSize'></a>
+
+## UIPostgreSQLBuildingModelBuildingInformationUpdateTask\.BatchSize Property
+
+Gets or sets the number of rows read and classified per page\.
+
+```csharp
+public int BatchSize { get; set; }
+```
+
+#### Property Value
+[System\.Int32](https://learn.microsoft.com/en-us/dotnet/api/system.int32 'System\.Int32')
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIPostgreSQLBuildingModelBuildingInformationUpdateTask.BuildingModelDetailLevel'></a>
+
+## UIPostgreSQLBuildingModelBuildingInformationUpdateTask\.BuildingModelDetailLevel Property
+
+Gets or sets the detail level of the building model table to walk\. When null every level whose table exists is walked\.
+
+```csharp
+public System.Nullable<DiGi.Analytical.Building.Enums.BuildingModelDetailLevel> BuildingModelDetailLevel { get; set; }
+```
+
+#### Property Value
+[System\.Nullable&lt;](https://learn.microsoft.com/en-us/dotnet/api/system.nullable-1 'System\.Nullable\`1')[DiGi\.Analytical\.Building\.Enums\.BuildingModelDetailLevel](https://learn.microsoft.com/en-us/dotnet/api/digi.analytical.building.enums.buildingmodeldetaillevel 'DiGi\.Analytical\.Building\.Enums\.BuildingModelDetailLevel')[&gt;](https://learn.microsoft.com/en-us/dotnet/api/system.nullable-1 'System\.Nullable\`1')
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIPostgreSQLBuildingModelBuildingInformationUpdateTask.CommandTimeout'></a>
+
+## UIPostgreSQLBuildingModelBuildingInformationUpdateTask\.CommandTimeout Property
+
+Gets or sets the timeout in seconds applied to the statements\. A value of 0 disables the timeout\.
+
+```csharp
+public int CommandTimeout { get; set; }
+```
+
+#### Property Value
+[System\.Int32](https://learn.microsoft.com/en-us/dotnet/api/system.int32 'System\.Int32')
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIPostgreSQLBuildingModelBuildingInformationUpdateTask.CountyIds'></a>
+
+## UIPostgreSQLBuildingModelBuildingInformationUpdateTask\.CountyIds Property
+
+Gets or sets the identifiers of the county rows to stamp\. When null every county row is in scope\.
+
+These are polygon parts, not counties - a multi-part county holds one row per part and each is walked on its own.
+
+```csharp
+public System.Collections.Generic.IEnumerable<int>? CountyIds { get; set; }
+```
+
+#### Property Value
+[System\.Collections\.Generic\.IEnumerable&lt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.ienumerable-1 'System\.Collections\.Generic\.IEnumerable\`1')[System\.Int32](https://learn.microsoft.com/en-us/dotnet/api/system.int32 'System\.Int32')[&gt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.ienumerable-1 'System\.Collections\.Generic\.IEnumerable\`1')
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIPostgreSQLBuildingModelBuildingInformationUpdateTask.DryRun'></a>
+
+## UIPostgreSQLBuildingModelBuildingInformationUpdateTask\.DryRun Property
+
+Gets or sets a value indicating whether the task only reports what it would stamp\. Defaults to [true](https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/bool 'https://docs\.microsoft\.com/en\-us/dotnet/csharp/language\-reference/builtin\-types/bool'); nothing is written until it is turned off\.
+
+```csharp
+public bool DryRun { get; set; }
+```
+
+#### Property Value
+[System\.Boolean](https://learn.microsoft.com/en-us/dotnet/api/system.boolean 'System\.Boolean')
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIPostgreSQLBuildingModelBuildingInformationUpdateTask.ReportDirectory'></a>
+
+## UIPostgreSQLBuildingModelBuildingInformationUpdateTask\.ReportDirectory Property
+
+Gets or sets the directory the checkpoint and the reports are written into\. When null the directory the application was launched from is used\.
+
+Deliberately not a folder dialog: this runs on a thread pool thread, where a WPF common dialog needs an STA apartment and throws instead of opening.
+
+```csharp
+public string? ReportDirectory { get; set; }
+```
+
+#### Property Value
+[System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIPostgreSQLBuildingModelBuildingInformationUpdateTask.Resume'></a>
+
+## UIPostgreSQLBuildingModelBuildingInformationUpdateTask\.Resume Property
+
+Gets or sets a value indicating whether the parts named in the checkpoint of an earlier run are skipped\. Defaults to [true](https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/bool 'https://docs\.microsoft\.com/en\-us/dotnet/csharp/language\-reference/builtin\-types/bool')\.
+
+The national pass has to survive being interrupted mid-country, so it resumes rather than restarting from the first part. Turning this off starts from the first part in scope and truncates the checkpoint, which is what a deliberate re-run of an already-completed scope needs.
+
+```csharp
+public bool Resume { get; set; }
+```
+
+#### Property Value
+[System\.Boolean](https://learn.microsoft.com/en-us/dotnet/api/system.boolean 'System\.Boolean')
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIPostgreSQLBuildingModelBuildingInformationUpdateTask.SkipOptionsDialog'></a>
+
+## UIPostgreSQLBuildingModelBuildingInformationUpdateTask\.SkipOptionsDialog Property
+
+Gets or sets a value indicating whether the options window is skipped and the properties of this task are used as they are\. Defaults to [false](https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/bool 'https://docs\.microsoft\.com/en\-us/dotnet/csharp/language\-reference/builtin\-types/bool')\.
+
+A run started from the tray always asks for its scope through [PostgreSQLBuildingModelBuildingInformationUpdateOptionsWindow](DiGi.GIS.PostgreSQL.UI.Windows.md#DiGi.GIS.PostgreSQL.UI.Windows.PostgreSQLBuildingModelBuildingInformationUpdateOptionsWindow 'DiGi\.GIS\.PostgreSQL\.UI\.Windows\.PostgreSQLBuildingModelBuildingInformationUpdateOptionsWindow'). A caller that sets the options itself - a test, or a host that runs the task without the user interface - turns this on so [DiGi\.GIS\.PostgreSQL\.UI\.Classes\.UIPostgreSQLBuildingModelBuildingInformationUpdateTask\.ExecuteAsync\(System\.IProgress\{System\.Int64\},System\.Threading\.CancellationToken\)](https://learn.microsoft.com/en-us/dotnet/api/digi.gis.postgresql.ui.classes.uipostgresqlbuildingmodelbuildinginformationupdatetask.executeasync#digi-gis-postgresql-ui-classes-uipostgresqlbuildingmodelbuildinginformationupdatetask-executeasync(system-iprogress{system-int64}-system-threading-cancellationtoken) 'DiGi\.GIS\.PostgreSQL\.UI\.Classes\.UIPostgreSQLBuildingModelBuildingInformationUpdateTask\.ExecuteAsync\(System\.IProgress\{System\.Int64\},System\.Threading\.CancellationToken\)') never asks for them.
+
+```csharp
+public bool SkipOptionsDialog { get; set; }
+```
+
+#### Property Value
+[System\.Boolean](https://learn.microsoft.com/en-us/dotnet/api/system.boolean 'System\.Boolean')
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIPostgreSQLBuildingModelBuildingInformationUpdateTask.VoivodeshipCodes'></a>
+
+## UIPostgreSQLBuildingModelBuildingInformationUpdateTask\.VoivodeshipCodes Property
+
+Gets or sets the two\-digit voivodeship codes to be stamped\. A county row is in scope when its code starts with one of them\. When null every voivodeship is in scope\. Combined with [CountyIds](DiGi.GIS.PostgreSQL.UI.Classes.md#DiGi.GIS.PostgreSQL.UI.Classes.UIPostgreSQLBuildingModelBuildingInformationUpdateTask.CountyIds 'DiGi\.GIS\.PostgreSQL\.UI\.Classes\.UIPostgreSQLBuildingModelBuildingInformationUpdateTask\.CountyIds') both filters have to admit the row\.
+
+```csharp
+public System.Collections.Generic.IEnumerable<string>? VoivodeshipCodes { get; set; }
+```
+
+#### Property Value
+[System\.Collections\.Generic\.IEnumerable&lt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.ienumerable-1 'System\.Collections\.Generic\.IEnumerable\`1')[System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')[&gt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.ienumerable-1 'System\.Collections\.Generic\.IEnumerable\`1')
+### Methods
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIPostgreSQLBuildingModelBuildingInformationUpdateTask.Classify(DiGi.GIS.PostgreSQL.Classes.BuildingModel)'></a>
+
+## UIPostgreSQLBuildingModelBuildingInformationUpdateTask\.Classify\(BuildingModel\) Method
+
+Classifies one stored row: what the run would do with it and, for the outcomes that are reported, why\.
+
+The stored values are taken before `UpdateBuildingInformation` is called, because the method always overwrites: the comparison against them is what makes a row already at its target values `AlreadyCorrect` rather than `ToUpdate`, and a second run report 0 updated.
+
+```csharp
+private static DiGi.GIS.PostgreSQL.UI.Classes.UIPostgreSQLBuildingModelBuildingInformationUpdateTask.RowResult Classify(DiGi.GIS.PostgreSQL.Classes.BuildingModel buildingModel);
+```
+#### Parameters
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIPostgreSQLBuildingModelBuildingInformationUpdateTask.Classify(DiGi.GIS.PostgreSQL.Classes.BuildingModel).buildingModel'></a>
+
+`buildingModel` [DiGi\.GIS\.PostgreSQL\.Classes\.BuildingModel](https://learn.microsoft.com/en-us/dotnet/api/digi.gis.postgresql.classes.buildingmodel 'DiGi\.GIS\.PostgreSQL\.Classes\.BuildingModel')
+
+The stored row to classify\.
+
+#### Returns
+[RowResult](DiGi.GIS.PostgreSQL.UI.Classes.md#DiGi.GIS.PostgreSQL.UI.Classes.UIPostgreSQLBuildingModelBuildingInformationUpdateTask.RowResult 'DiGi\.GIS\.PostgreSQL\.UI\.Classes\.UIPostgreSQLBuildingModelBuildingInformationUpdateTask\.RowResult')  
+The classification: `Failed` with a deserialization or exception reason, `Rejected` when the model cannot be located, `AlreadyCorrect` when the stored values already equal the computed ones, or `ToUpdate` carrying the value to write\.
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIPostgreSQLBuildingModelBuildingInformationUpdateTask.RowResult'></a>
+
+## UIPostgreSQLBuildingModelBuildingInformationUpdateTask\.RowResult Class
+
+The classification of one stored row: its status, the reason for the outcomes that are reported, and, for `ToUpdate` rows, the value to write\.
+
+```csharp
+private class UIPostgreSQLBuildingModelBuildingInformationUpdateTask.RowResult
+```
+
+Inheritance [System\.Object](https://learn.microsoft.com/en-us/dotnet/api/system.object 'System\.Object') → RowResult
+### Fields
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIPostgreSQLBuildingModelBuildingInformationUpdateTask.RowResult.Reason'></a>
+
+## UIPostgreSQLBuildingModelBuildingInformationUpdateTask\.RowResult\.Reason Field
+
+The reason for a `Failed` or `Rejected` row; null otherwise\.
+
+```csharp
+public string? Reason;
+```
+
+#### Field Value
+[System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIPostgreSQLBuildingModelBuildingInformationUpdateTask.RowResult.Status'></a>
+
+## UIPostgreSQLBuildingModelBuildingInformationUpdateTask\.RowResult\.Status Field
+
+One of `Failed`, `Rejected`, `AlreadyCorrect` or `ToUpdate`\.
+
+```csharp
+public string Status;
+```
+
+#### Field Value
+[System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIPostgreSQLBuildingModelBuildingInformationUpdateTask.RowResult.Value'></a>
+
+## UIPostgreSQLBuildingModelBuildingInformationUpdateTask\.RowResult\.Value Field
+
+The value to write for a `ToUpdate` row; null otherwise\.
+
+```csharp
+public JsonNode? Value;
+```
+
+#### Field Value
+[System\.Text\.Json\.Nodes\.JsonNode](https://learn.microsoft.com/en-us/dotnet/api/system.text.json.nodes.jsonnode 'System\.Text\.Json\.Nodes\.JsonNode')
 
 <a name='DiGi.GIS.PostgreSQL.UI.Classes.UIPostgreSQLStatisticalDataCollectionCreateTableTask'></a>
 

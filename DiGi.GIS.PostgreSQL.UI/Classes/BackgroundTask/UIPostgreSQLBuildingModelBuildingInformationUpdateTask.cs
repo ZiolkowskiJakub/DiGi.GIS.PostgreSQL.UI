@@ -520,6 +520,14 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
 
             await File.WriteAllLinesAsync(System.IO.Path.Combine(directory, FileName_Summary), summaryLines, cancellationToken);
 
+            if (streamWriter_Checkpoint is not null)
+            {
+                // The run is over and every line is flushed, so the file can be closed now: left open, it
+                // holds the checkpoint locked on the operating system until the stream is garbage collected,
+                // which on Windows is when an operator opening the file after the run finds it in use.
+                await streamWriter_Checkpoint.DisposeAsync();
+            }
+
             Serilog.Modify.Log("{Type} ended. DryRun: {DryRun}. Scanned {Scanned}, updated {Updated}, already correct {AlreadyCorrect}, rejected {Rejected}, failed {Failed}, failed parts {FailedParts}. Report written to {Directory}", nameof(UIPostgreSQLBuildingModelBuildingInformationUpdateTask), DryRun, count_Scanned, count_Updated, count_AlreadyCorrect, count_Rejected, count_Failed, parts_Failed.Count, directory);
 
             return parts_Failed.Count == 0;

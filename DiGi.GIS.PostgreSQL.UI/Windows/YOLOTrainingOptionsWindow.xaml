@@ -85,7 +85,7 @@
 
                 <controls:TextBoxControl x:Name="TextBoxControl_ProjectDirectory" Grid.Row="7" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Text="Project directory - absolute, and never inside a YOLO\models folder" Value="" />
 
-                <controls:TextBoxControl x:Name="TextBoxControl_PythonPath" Grid.Row="8" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Text="Python interpreter - a path, or a name on PATH; empty tries python then python3" Value="" />
+                <controls:TextBoxControl x:Name="TextBoxControl_PythonPath" Grid.Row="8" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Text="Python interpreter - a path, or a name on PATH; empty uses the first one on PATH that can run the detector" Value="" />
 
                 <controls:TextBoxControl x:Name="TextBoxControl_WorkingDirectory" Grid.Row="9" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Text="Working directory - where the scripts are written; empty uses the dataset directory" Value="" />
 

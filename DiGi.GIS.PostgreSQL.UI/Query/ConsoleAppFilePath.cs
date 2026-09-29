@@ -7,7 +7,8 @@ namespace DiGi.GIS.PostgreSQL.UI
     {
         /// <summary>
         /// Finds an existing file named relative to a headless runner rather than to this application - the weights and data files the runner's defaults name, such as <c>user files/YOLO/models/model.pt</c>.
-        /// <para>Three candidates in order: the path as given, then the path under the runner's folder, then the path under the runner's folder with a leading <see cref="Constants.DirectoryName.UserFiles"/> segment removed. The build flattens that git-ignored folder into the output root, so a file named through it sits one segment shallower once deployed; the runner's own resolver strips the segment the same way, and this mirrors it rather than guessing.</para>
+        /// <para>Three candidates in order: the path as given when it is absolute, then the path under the runner's folder, then the path under the runner's folder with a leading <see cref="Constants.DirectoryName.UserFiles"/> segment removed. The build flattens that git-ignored folder into the output root, so a file named through it sits one segment shallower once deployed; the runner's own resolver strips the segment the same way, and this mirrors it rather than guessing.</para>
+        /// <para>A relative path is never tried against this application's own current directory: the runner starts in its own folder, so that is the only directory a relative name means anything in, and a file found beside this application would be a different file with the same name.</para>
         /// <para>Only an existing file is returned. A caller that needs a path to write into, or a path to name in a refusal, uses <see cref="ConsoleAppDeployedPath(string?, string?)"/>.</para>
         /// </summary>
         /// <param name="consoleAppPath">The full path of the runner's executable.</param>
@@ -37,9 +38,19 @@ namespace DiGi.GIS.PostgreSQL.UI
                 }
             }
 
-            if (Existing(path) is string path_Given)
+            bool rooted;
+            try
             {
-                return path_Given;
+                rooted = Path.IsPathRooted(path);
+            }
+            catch
+            {
+                rooted = false;
+            }
+
+            if (rooted)
+            {
+                return Existing(path);
             }
 
             if (string.IsNullOrWhiteSpace(consoleAppPath))

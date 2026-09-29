@@ -222,7 +222,9 @@ The exit code the runner ended with; [DiGi\.GIS\.YOLO\.UI\.Enums\.YearBuiltPredi
 
 Finds an existing file named relative to a headless runner rather than to this application \- the weights and data files the runner's defaults name, such as `user files/YOLO/models/model.pt`\.
 
-Three candidates in order: the path as given, then the path under the runner's folder, then the path under the runner's folder with a leading [UserFiles](DiGi.GIS.PostgreSQL.UI.Constants.md#DiGi.GIS.PostgreSQL.UI.Constants.DirectoryName.UserFiles 'DiGi\.GIS\.PostgreSQL\.UI\.Constants\.DirectoryName\.UserFiles') segment removed. The build flattens that git-ignored folder into the output root, so a file named through it sits one segment shallower once deployed; the runner's own resolver strips the segment the same way, and this mirrors it rather than guessing.
+Three candidates in order: the path as given when it is absolute, then the path under the runner's folder, then the path under the runner's folder with a leading [UserFiles](DiGi.GIS.PostgreSQL.UI.Constants.md#DiGi.GIS.PostgreSQL.UI.Constants.DirectoryName.UserFiles 'DiGi\.GIS\.PostgreSQL\.UI\.Constants\.DirectoryName\.UserFiles') segment removed. The build flattens that git-ignored folder into the output root, so a file named through it sits one segment shallower once deployed; the runner's own resolver strips the segment the same way, and this mirrors it rather than guessing.
+
+A relative path is never tried against this application's own current directory: the runner starts in its own folder, so that is the only directory a relative name means anything in, and a file found beside this application would be a different file with the same name.
 
 Only an existing file is returned. A caller that needs a path to write into, or a path to name in a refusal, uses [ConsoleAppDeployedPath\(string, string\)](DiGi.GIS.PostgreSQL.UI.md#DiGi.GIS.PostgreSQL.UI.Query.ConsoleAppDeployedPath(string,string) 'DiGi\.GIS\.PostgreSQL\.UI\.Query\.ConsoleAppDeployedPath\(string, string\)').
 

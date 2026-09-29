@@ -35,7 +35,9 @@ The defaults for patience, image size, batch and seed are 50, 640, 16 and 0.
   - a run name that is already taken, or is `model`
   - missing start weights
   - a missing legacy references file when the dataset step is on
-  - an interpreter without ultralytics
+  - a missing label check detector (`model.pt`) when the label check is on
+  - missing gate weights when the evaluation is on
+  - an interpreter without ultralytics. An empty interpreter box is settled here: the interpreter found on `PATH` that passed the check is written into the options, because the runner refuses training without one
 - **The trained weights are copied to `<ProjectDirectory>\<RunName>\<RunName>.pt`.** `model.pt` is never overwritten. Shipping them is a manual decision made from the evaluation table.
 - **The dataset step authorizes with the runner's own `GIS_WebAPI_Client.conf`**, not with this application's.
 - **Stopping the task kills the whole process tree.**

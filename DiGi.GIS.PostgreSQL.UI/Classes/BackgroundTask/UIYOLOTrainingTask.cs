@@ -25,7 +25,7 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
     /// <para><b>The run happens in another process</b>, <c>DiGi.GIS.YOLO.UI.ConsoleApp --train</c>, for the same reason as <see cref="UIYearBuiltPredictionsTask"/>: this application publishes self-contained and single-file and does not carry the runner's closure. The options are written beside the run folder as <c>&lt;RunName&gt;.YOLOTrainingRunOptions.json</c> - not inside it, because the runner refuses a run whose folder already exists - and that file is the record of what the run was asked to do.</para>
     /// <para><b>Every path is made absolute here</b>, against the runner for the files its defaults name (the weights, the legacy references, the reports folder) and against this process for the folders the operator typed, so the file the runner reads names what this application checked and named back.</para>
     /// <para><b>The run never overwrites model.pt.</b> The trained weights stay under the run folder and are copied to <c>&lt;ProjectDirectory&gt;\&lt;RunName&gt;\&lt;RunName&gt;.pt</c>; shipping or holding them is a manual decision from the evaluation table (ZiolkowskiJakub/DiGi.GIS.YOLO.UI#12).</para>
-    /// <para>The dataset step authorizes with <b>the runner's own key</b>, read from the <c>GIS_WebAPI_Client.conf</c> beside its executable - a run that ends in <see cref="YearBuiltPredictionExitCode.Authorization"/> is usually that file. <b>Stopping the task kills the process tree</b>, the interpreter included; the dataset manifest lets a re-run continue, but a stopped training run is not resumable and its run folder has to be renamed or removed before its name is used again.</para>
+    /// <para>The dataset step authorizes with <b>the runner's own key</b>, read from the <c>GIS_WebAPI_Client.conf</c> beside its executable - a run that ends in <see cref="YearBuiltPredictionExitCode.Authorization"/> is usually that file. <b>Stopping the task kills the process tree</b>, the interpreter included; the dataset manifest lets a Re-train run continue an interrupted build (a Start from yolo26x.pt run does not resume, so a fresh build that was stopped is continued as Re-train with the start weights set back to yolo26x.pt), but a stopped training run is not resumable and its run folder has to be renamed or removed before its name is used again.</para>
     /// </summary>
     public class UIYOLOTrainingTask : ReportableBackgroundTask<long>, IGISPostgreSQLUIObject
     {
@@ -130,6 +130,9 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
             {
                 return false;
             }
+
+            // The preflight may have settled the interpreter; kept, so the dialog opens with it next time.
+            YOLOTrainingRunOptions = yOLOTrainingRunOptions;
 
             string? path_Options = WriteOptions(yOLOTrainingRunOptions);
             if (string.IsNullOrWhiteSpace(path_Options))
@@ -243,13 +246,20 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
 
         private static bool Preflight(YOLOTrainingRunOptions yOLOTrainingRunOptions, CancellationToken cancellationToken)
         {
-            // The runner repeats every one of these checks; they are made here as well because this application is
-            // where the operator is standing, and a refusal said now is worth more than an exit code later.
+            // The runner repeats most of these checks; they are made here as well because this application is where
+            // the operator is standing, and a refusal said now is worth more than an exit code later. The label check
+            // detector and the gate weights are checked only here: the runner finds them missing after the dataset
+            // step, which can take hours.
+            //
+            // One value is settled rather than checked: an empty interpreter. The runner refuses training and
+            // validation without one, while the environment check below searches PATH for it - so the interpreter
+            // that passed the check is written into the options, and the run uses exactly what was checked.
             List<YOLOTrainingStep> yOLOTrainingSteps = yOLOTrainingRunOptions.Steps ?? [];
             bool dataset = yOLOTrainingSteps.Count == 0 || yOLOTrainingSteps.Contains(YOLOTrainingStep.Dataset);
             bool labelCheck = yOLOTrainingSteps.Count == 0 || yOLOTrainingSteps.Contains(YOLOTrainingStep.LabelCheck);
             bool train = yOLOTrainingSteps.Count == 0 || yOLOTrainingSteps.Contains(YOLOTrainingStep.Train);
             bool validate = yOLOTrainingSteps.Count == 0 || yOLOTrainingSteps.Contains(YOLOTrainingStep.Validate);
+            bool evaluate = yOLOTrainingSteps.Count == 0 || yOLOTrainingSteps.Contains(YOLOTrainingStep.Evaluate);
 
             bool Refuse(string name, string message, string? value = null)
             {
@@ -303,10 +313,33 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
                 return Refuse(nameof(YOLOTrainingDatasetOptions.LegacyReferencesFilePath), "the legacy references file {Path} was not found beside the runner", yOLOTrainingDatasetOptions.LegacyReferencesFilePath);
             }
 
-            if (train || validate || labelCheck)
+            if (labelCheck && (string.IsNullOrWhiteSpace(yOLOTrainingDatasetOptions.ModelPath) || !File.Exists(yOLOTrainingDatasetOptions.ModelPath)))
+            {
+                return Refuse(nameof(YOLOTrainingDatasetOptions.ModelPath), "the label check detector {Path} was not found beside the runner", yOLOTrainingDatasetOptions.ModelPath);
+            }
+
+            if (evaluate)
+            {
+                List<string> weightsPaths = yOLOTrainingDatasetOptions.WeightsPaths ?? [];
+                foreach (string weightsPath in weightsPaths)
+                {
+                    if (!File.Exists(weightsPath))
+                    {
+                        return Refuse(nameof(YOLOTrainingDatasetOptions.WeightsPaths), "the gate weights {Path} were not found", weightsPath);
+                    }
+                }
+
+                // Without training there is no new weights file to add, so an empty list would evaluate nothing.
+                if (!train && weightsPaths.Count == 0)
+                {
+                    return Refuse(nameof(YOLOTrainingDatasetOptions.WeightsPaths), "the evaluation without training needs at least one gate weights file");
+                }
+            }
+
+            if (train || validate || labelCheck || evaluate)
             {
                 // Checked with the start weights when there are any to check, so an ultralytics too old for the
-                // checkpoint is refused here too; the label check alone needs only the interpreter.
+                // checkpoint is refused here too; the label check and the evaluation alone need only the interpreter.
                 string? modelPath = train || validate ? startWeightsPath : null;
                 string? workingDirectory = yOLOTrainingRunOptions.WorkingDirectory ?? yOLOTrainingDatasetOptions.WorkingDirectory;
 
@@ -314,6 +347,14 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
                 if (!yOLOEnvironmentResult.Runnable)
                 {
                     return Refuse(nameof(YOLOTrainingRunOptions.PythonPath), "this machine cannot run the detector - {Messages}", string.Join("; ", yOLOEnvironmentResult.Messages ?? []));
+                }
+
+                if (string.IsNullOrWhiteSpace(yOLOTrainingRunOptions.PythonPath) && !string.IsNullOrWhiteSpace(yOLOEnvironmentResult.PythonPath))
+                {
+                    yOLOTrainingRunOptions.PythonPath = yOLOEnvironmentResult.PythonPath;
+                    yOLOTrainingDatasetOptions.PythonPath = yOLOEnvironmentResult.PythonPath;
+
+                    Serilog.Modify.Log("YOLO training uses the interpreter found on PATH - {PythonPath}", yOLOEnvironmentResult.PythonPath!);
                 }
             }
 

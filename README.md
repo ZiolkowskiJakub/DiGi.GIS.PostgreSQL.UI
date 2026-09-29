@@ -12,6 +12,37 @@ The repository contains the following core components and assemblies:
 
 ---
 
+## 🧠 Tray task: Train YOLO detector
+
+The client tab offers **Train YOLO detector**, which runs `UIYOLOTrainingTask`. It retrains the YOLO building detector in five steps: dataset build, label check, training, validation on the Test split, and the detector evaluation that gates the new weights. Each step can be switched off.
+
+The run itself happens in the headless runner `DiGi.GIS.YOLO.UI.ConsoleApp --train <options file>`. That is the same executable the **Predict year built** task uses, and the row is offered only where that runner is found.
+
+The inputs are asked for in `YOLOTrainingOptionsWindow` each time the task starts. A confirmation then names the scope back, and an environment preflight runs in the tray before anything is launched.
+
+| Scenario | Start weights (default) | Epochs | Dataset folder |
+|---|---|---|---|
+| Re-train | `model.pt` beside the runner (`user files/YOLO/models/model.pt`) | 150 | appended to (`Resume` on) |
+| Start from yolo26x.pt | `user files/YOLO/models/base/yolo26x.pt` beside the runner | 300 | built fresh; an existing dataset is refused |
+
+The defaults for patience, image size, batch and seed are 50, 640, 16 and 0.
+
+- **Place `yolo26x.pt` in the runner's `user files/YOLO/models/base/`.** It is git-ignored and deployed flattened as `YOLO/models/base/yolo26x.pt`. Its SHA-256 is recorded in the DiGi.YOLO README. Without it, a fresh run is refused before launch, and the refusal names the path.
+- **Every path is made absolute in the tray before the options are written.** The runner's relative defaults are resolved against the runner's own folder.
+- **The options are written beside the run folder** as `<ProjectDirectory>\<RunName>.YOLOTrainingRunOptions.json`, not inside it, because the runner refuses a run whose folder already exists. This file is the record of the run's inputs.
+- **Refused before launch:**
+  - a project directory inside a `YOLO\models` folder (`DiGi.YOLO.Query.IsInsideModelsDirectory`)
+  - a run name that is already taken, or is `model`
+  - missing start weights
+  - a missing legacy references file when the dataset step is on
+  - an interpreter without ultralytics
+- **The trained weights are copied to `<ProjectDirectory>\<RunName>\<RunName>.pt`.** `model.pt` is never overwritten. Shipping them is a manual decision made from the evaluation table.
+- **The dataset step authorizes with the runner's own `GIS_WebAPI_Client.conf`**, not with this application's.
+- **Stopping the task kills the whole process tree.**
+- **Keep the runner in `bin\extensions\DiGi.GIS.YOLO.UI.ConsoleApp` current.** The tray resolves that copy before the workspace build, and a runner older than the `--train` mode ends the run with a configuration exit code.
+
+---
+
 ## 📐 Core Architectural Pattern (DiGi.Core Pattern)
 
 This project strictly separates **Data Models** (anemic schemas) from **Business/Calculation Logic** (static extension methods). All new features must strictly follow this pattern.

@@ -21,5 +21,16 @@ namespace DiGi.GIS.PostgreSQL.UI.Constants
         /// </summary>
         /// <remarks>Assembled by <c>DiGi.Maintenance/Scripts/SyncDirectories.ps1</c> when <c>IncludeYearBuiltPredictionExtension</c> is set, into this application's own build output, so that the deployment carries it as part of this application rather than as a folder of its own. A machine that will never score a building is deployed without it and simply does not offer the task.</remarks>
         public const string YearBuiltPredictionExtension = "DiGi.GIS.YOLO.UI.ConsoleApp";
+
+        /// <summary>
+        /// Gets the name of the git-ignored folder the runner's defaults name their files through (for example <c>user files/YOLO/models/model.pt</c>).
+        /// </summary>
+        /// <remarks>The build flattens it into the output root, so once deployed a file named through it sits one segment shallower; <see cref="Query.ConsoleAppFilePath(string?, string?)"/> and <see cref="Query.ConsoleAppDeployedPath(string?, string?)"/> strip it the same way the runner does.</remarks>
+        public const string UserFiles = "user files";
+
+        /// <summary>
+        /// Gets the name of the folder, inside the YOLO models folder, that holds the pretrained base checkpoints such as <see cref="FileName.BaseModel"/>.
+        /// </summary>
+        public const string BaseModels = "base";
     }
 }

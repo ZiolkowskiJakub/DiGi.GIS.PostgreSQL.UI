@@ -1,0 +1,344 @@
+using DiGi.GIS.PostgreSQL.Classes;
+using DiGi.GIS.PostgreSQL.UI.Enums;
+using DiGi.GIS.YOLO.UI.Classes;
+using DiGi.GIS.YOLO.UI.Enums;
+using DiGi.UI.WPF.Classes;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Windows;
+using System.Windows.Controls;
+
+namespace DiGi.GIS.PostgreSQL.UI.Windows
+{
+    /// <summary>
+    /// Interaction logic for YOLOTrainingOptionsWindow.xaml
+    /// <para>Asks for the inputs of one YOLO detector training run: the scenario, the counties, the dataset folder, the start weights, the training hyperparameters, where the run is written, the interpreter, the steps and the weights the new detector is gated against.</para>
+    /// <para><b>The scenario sets defaults, not rules.</b> Switching it resets the start weights and the epoch ceiling to that scenario's defaults (<see cref="Create.YOLOTrainingRunOptions(YOLOTrainingScenario, string?, YOLOTrainingRunOptions?)"/>) and leaves every other control as it is; on OK it also decides whether the dataset folder is appended to (Re-train) or must be new (Start from yolo26x.pt).</para>
+    /// <para><b>What is not offered is the runner's to decide.</b> The dataset's confidence threshold, split, label check sizes, legacy cut-off and request sizes carry through the copy untouched at the values its README describes; they shape what the detector is trained on, and a control opened before every run invites changing them between runs that are then compared.</para>
+    /// <para>The window works on a copy, so a cancelled dialog leaves the settings of an earlier run exactly as they were, and every member the window has no control for carries through untouched.</para>
+    /// </summary>
+    public partial class YOLOTrainingOptionsWindow : Window
+    {
+        private readonly string? consoleAppPath;
+        private YOLOTrainingRunOptions yOLOTrainingRunOptions;
+        private YOLOTrainingScenario yOLOTrainingScenario;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="YOLOTrainingOptionsWindow"/> class.
+        /// </summary>
+        /// <param name="yOLOTrainingScenario">The scenario the dialog opens with.</param>
+        /// <param name="yOLOTrainingRunOptions">The options the controls are filled from - the previous run's, which are copied rather than changed. When null the defaults of <paramref name="yOLOTrainingScenario"/> are used.</param>
+        /// <param name="administrativeAreal2DReferences">The counties to choose from. A county whose territory is in several pieces is one entry per piece, each with its own identifier, and each has to be selectable on its own.</param>
+        /// <param name="consoleAppPath">The full path of the runner, which the default weights are named relative to.</param>
+        public YOLOTrainingOptionsWindow(YOLOTrainingScenario yOLOTrainingScenario, YOLOTrainingRunOptions? yOLOTrainingRunOptions, IEnumerable<AdministrativeAreal2DReference>? administrativeAreal2DReferences, string? consoleAppPath)
+        {
+            InitializeComponent();
+
+            this.consoleAppPath = consoleAppPath;
+            this.yOLOTrainingScenario = yOLOTrainingScenario;
+
+            // An earlier run's options are copied as they are - applying the scenario's defaults to them here would
+            // throw away the start weights and epochs the operator chose last time. Only a first run is defaulted.
+            this.yOLOTrainingRunOptions = yOLOTrainingRunOptions is null ? Create.YOLOTrainingRunOptions(yOLOTrainingScenario, consoleAppPath) : new YOLOTrainingRunOptions(yOLOTrainingRunOptions);
+
+            YOLOTrainingDatasetOptions? yOLOTrainingDatasetOptions = this.yOLOTrainingRunOptions.DatasetOptions;
+
+            // Selected before the handler is attached, so opening the dialog is not taken for a switch.
+            ComboBox_Scenario.SelectedIndex = yOLOTrainingScenario == YOLOTrainingScenario.Fresh ? 1 : 0;
+            ComboBox_Scenario.SelectionChanged += ComboBox_Scenario_SelectionChanged;
+
+            TextBoxControl_DatasetDirectory.Value = yOLOTrainingDatasetOptions?.OutputDirectory;
+            TextBoxControl_StartWeightsPath.Value = this.yOLOTrainingRunOptions.StartWeightsPath;
+            TextBoxControl_Epochs.Value = this.yOLOTrainingRunOptions.Epochs.ToString(CultureInfo.InvariantCulture);
+            TextBoxControl_Patience.Value = this.yOLOTrainingRunOptions.Patience.ToString(CultureInfo.InvariantCulture);
+            TextBoxControl_ImageSize.Value = this.yOLOTrainingRunOptions.ImageSize.ToString(CultureInfo.InvariantCulture);
+            TextBoxControl_Batch.Value = this.yOLOTrainingRunOptions.Batch.ToString(CultureInfo.InvariantCulture);
+            TextBoxControl_Seed.Value = this.yOLOTrainingRunOptions.Seed.ToString(CultureInfo.InvariantCulture);
+            TextBoxControl_Device.Value = this.yOLOTrainingRunOptions.Device;
+            TextBoxControl_RunName.Value = this.yOLOTrainingRunOptions.RunName;
+            TextBoxControl_ProjectDirectory.Value = this.yOLOTrainingRunOptions.ProjectDirectory;
+            TextBoxControl_PythonPath.Value = this.yOLOTrainingRunOptions.PythonPath ?? yOLOTrainingDatasetOptions?.PythonPath;
+            TextBoxControl_WorkingDirectory.Value = this.yOLOTrainingRunOptions.WorkingDirectory ?? yOLOTrainingDatasetOptions?.WorkingDirectory;
+            TextBoxControl_WeightsPaths.Value = yOLOTrainingDatasetOptions?.WeightsPaths is List<string> weightsPaths ? string.Join("; ", weightsPaths) : null;
+
+            // The runner reads an empty list as every step, and so does the dialog.
+            List<YOLOTrainingStep>? yOLOTrainingSteps = this.yOLOTrainingRunOptions.Steps;
+            bool Checked(YOLOTrainingStep yOLOTrainingStep)
+            {
+                return yOLOTrainingSteps is null || yOLOTrainingSteps.Count == 0 || yOLOTrainingSteps.Contains(yOLOTrainingStep);
+            }
+
+            CheckBox_Dataset.IsChecked = Checked(YOLOTrainingStep.Dataset);
+            CheckBox_LabelCheck.IsChecked = Checked(YOLOTrainingStep.LabelCheck);
+            CheckBox_Train.IsChecked = Checked(YOLOTrainingStep.Train);
+            CheckBox_Validate.IsChecked = Checked(YOLOTrainingStep.Validate);
+            CheckBox_Evaluate.IsChecked = Checked(YOLOTrainingStep.Evaluate);
+
+            // Subscribed before the list is filled - the text of an item is decided as it is added.
+            ListBoxControl_Counties.ItemAdding += ListBoxControl_Counties_ItemAdding;
+
+            SetCounties(administrativeAreal2DReferences);
+        }
+
+        /// <summary>
+        /// Gets the scenario the window holds. It is the one chosen only once the dialog has been closed with OK; until then, and after a cancellation, it is the one it was opened with.
+        /// </summary>
+        public YOLOTrainingScenario YOLOTrainingScenario
+        {
+            get
+            {
+                return yOLOTrainingScenario;
+            }
+        }
+
+        /// <summary>
+        /// Gets the options the window holds. They carry the values of the controls only once the dialog has been closed with OK; until then, and after a cancellation, they are the values it was opened with.
+        /// </summary>
+        public YOLOTrainingRunOptions YOLOTrainingRunOptions
+        {
+            get
+            {
+                return yOLOTrainingRunOptions;
+            }
+        }
+
+        private YOLOTrainingScenario SelectedScenario()
+        {
+            return ComboBox_Scenario.SelectedIndex == 1 ? YOLOTrainingScenario.Fresh : YOLOTrainingScenario.Retrain;
+        }
+
+        private void Button_Cancel_Click(object sender, RoutedEventArgs e)
+        {
+            DialogResult = false;
+            Close();
+        }
+
+        private void Button_OK_Click(object sender, RoutedEventArgs e)
+        {
+            string title = Title ?? string.Empty;
+
+            void Warn(string message)
+            {
+                MessageBox.Show(message, title, MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+
+            List<AdministrativeAreal2DReference>? administrativeAreal2DReferences = ListBoxControl_Counties.GetItems<AdministrativeAreal2DReference>();
+
+            List<YOLOTrainingStep> yOLOTrainingSteps = [];
+            if (CheckBox_Dataset.IsChecked == true)
+            {
+                yOLOTrainingSteps.Add(YOLOTrainingStep.Dataset);
+            }
+
+            if (CheckBox_LabelCheck.IsChecked == true)
+            {
+                yOLOTrainingSteps.Add(YOLOTrainingStep.LabelCheck);
+            }
+
+            if (CheckBox_Train.IsChecked == true)
+            {
+                yOLOTrainingSteps.Add(YOLOTrainingStep.Train);
+            }
+
+            if (CheckBox_Validate.IsChecked == true)
+            {
+                yOLOTrainingSteps.Add(YOLOTrainingStep.Validate);
+            }
+
+            if (CheckBox_Evaluate.IsChecked == true)
+            {
+                yOLOTrainingSteps.Add(YOLOTrainingStep.Evaluate);
+            }
+
+            // The runner reads an empty list as every step, so no step ticked would start the whole run.
+            if (yOLOTrainingSteps.Count == 0)
+            {
+                Warn("At least one step has to be selected.");
+                return;
+            }
+
+            // The counties are what the dataset step builds from; without it they scope nothing, but they are still
+            // what the confirmation names back, so a run with none is refused rather than guessed at.
+            if (administrativeAreal2DReferences is null || administrativeAreal2DReferences.Count == 0)
+            {
+                Warn("At least one county has to be selected.");
+                return;
+            }
+
+            if (!TextBoxControl_Epochs.TryGetValue(out int epochs) || epochs < 1)
+            {
+                Warn("Epochs has to be a whole number of at least one.");
+                return;
+            }
+
+            if (!TextBoxControl_Patience.TryGetValue(out int patience) || patience < 0)
+            {
+                Warn("Patience has to be a whole number of at least zero.");
+                return;
+            }
+
+            if (!TextBoxControl_ImageSize.TryGetValue(out int imageSize) || imageSize < 32)
+            {
+                Warn("Image size has to be a whole number of at least 32.");
+                return;
+            }
+
+            if (!TextBoxControl_Batch.TryGetValue(out int batch) || batch < 1)
+            {
+                Warn("Batch has to be a whole number of at least one.");
+                return;
+            }
+
+            if (!TextBoxControl_Seed.TryGetValue(out int seed) || seed < 0)
+            {
+                Warn("Seed has to be a whole number of at least zero.");
+                return;
+            }
+
+            string? datasetDirectory = Value(TextBoxControl_DatasetDirectory.Value);
+            if (datasetDirectory is null)
+            {
+                // Every step reads or writes the dataset folder, so it is asked for whichever steps are ticked.
+                Warn("A dataset directory has to be given.");
+                return;
+            }
+
+            bool train = yOLOTrainingSteps.Contains(YOLOTrainingStep.Train);
+
+            string? startWeightsPath = Value(TextBoxControl_StartWeightsPath.Value);
+            if (startWeightsPath is null && (train || yOLOTrainingSteps.Contains(YOLOTrainingStep.Validate)))
+            {
+                Warn("Start weights have to be given for training or validation.");
+                return;
+            }
+
+            string? runName = Value(TextBoxControl_RunName.Value);
+            string? projectDirectory = Value(TextBoxControl_ProjectDirectory.Value);
+            if (train && (runName is null || projectDirectory is null))
+            {
+                Warn("A run name and a project directory have to be given for training.");
+                return;
+            }
+
+            HashSet<int> countyIds = [];
+            foreach (AdministrativeAreal2DReference administrativeAreal2DReference in administrativeAreal2DReferences)
+            {
+                countyIds.Add(administrativeAreal2DReference.Id);
+            }
+
+            List<string> weightsPaths = [];
+            foreach (string weightsPath in (TextBoxControl_WeightsPaths.Value ?? string.Empty).Split(';'))
+            {
+                if (Value(weightsPath) is string weightsPath_Trimmed)
+                {
+                    weightsPaths.Add(weightsPath_Trimmed);
+                }
+            }
+
+            YOLOTrainingScenario yOLOTrainingScenario_Selected = SelectedScenario();
+
+            // The scenario is applied to the copy first - it is what decides whether the dataset folder is appended
+            // to - and the controls then overwrite the defaults it set, so what was typed is what runs.
+            YOLOTrainingRunOptions yOLOTrainingRunOptions_Result = Create.YOLOTrainingRunOptions(yOLOTrainingScenario_Selected, consoleAppPath, yOLOTrainingRunOptions);
+            YOLOTrainingDatasetOptions yOLOTrainingDatasetOptions = yOLOTrainingRunOptions_Result.DatasetOptions ?? new YOLOTrainingDatasetOptions();
+            yOLOTrainingRunOptions_Result.DatasetOptions = yOLOTrainingDatasetOptions;
+
+            string? pythonPath = Value(TextBoxControl_PythonPath.Value);
+            string? workingDirectory = Value(TextBoxControl_WorkingDirectory.Value);
+
+            yOLOTrainingRunOptions_Result.StartWeightsPath = startWeightsPath;
+            yOLOTrainingRunOptions_Result.Epochs = epochs;
+            yOLOTrainingRunOptions_Result.Patience = patience;
+            yOLOTrainingRunOptions_Result.ImageSize = imageSize;
+            yOLOTrainingRunOptions_Result.Batch = batch;
+            yOLOTrainingRunOptions_Result.Seed = seed;
+            yOLOTrainingRunOptions_Result.Device = Value(TextBoxControl_Device.Value);
+            yOLOTrainingRunOptions_Result.RunName = runName;
+            yOLOTrainingRunOptions_Result.ProjectDirectory = projectDirectory;
+            yOLOTrainingRunOptions_Result.Steps = yOLOTrainingSteps;
+
+            // Written at both levels: the run-level value overrides for training, and the dataset-level one is
+            // what the label check and the evaluation are handed, so one box means one interpreter everywhere.
+            yOLOTrainingRunOptions_Result.PythonPath = pythonPath;
+            yOLOTrainingRunOptions_Result.WorkingDirectory = workingDirectory;
+            yOLOTrainingDatasetOptions.PythonPath = pythonPath;
+            yOLOTrainingDatasetOptions.WorkingDirectory = workingDirectory;
+
+            yOLOTrainingDatasetOptions.OutputDirectory = datasetDirectory;
+            yOLOTrainingDatasetOptions.CountyIds = countyIds;
+            yOLOTrainingDatasetOptions.WeightsPaths = weightsPaths.Count == 0 ? null : weightsPaths;
+
+            yOLOTrainingRunOptions = yOLOTrainingRunOptions_Result;
+            yOLOTrainingScenario = yOLOTrainingScenario_Selected;
+
+            DialogResult = true;
+            Close();
+
+            static string? Value(string? text)
+            {
+                return string.IsNullOrWhiteSpace(text) ? null : text!.Trim();
+            }
+        }
+
+        private void ComboBox_Scenario_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            // Only the two controls the scenario decides are reset; the counties, the folders and everything else
+            // the operator typed stay. The dataset folder's resume flag follows the scenario on OK.
+            YOLOTrainingRunOptions yOLOTrainingRunOptions_Default = Create.YOLOTrainingRunOptions(SelectedScenario(), consoleAppPath);
+
+            TextBoxControl_StartWeightsPath.Value = yOLOTrainingRunOptions_Default.StartWeightsPath;
+            TextBoxControl_Epochs.Value = yOLOTrainingRunOptions_Default.Epochs.ToString(CultureInfo.InvariantCulture);
+        }
+
+        private void ListBoxControl_Counties_ItemAdding(object sender, ListBoxItemAddingEventArgs e)
+        {
+            if (e.Item is not AdministrativeAreal2DReference administrativeAreal2DReference)
+            {
+                return;
+            }
+
+            // The identifier is shown because it is what the dataset is keyed by, and because two pieces of the
+            // same county are told apart by nothing else - they share their code and their name.
+            e.Name = string.Format(CultureInfo.InvariantCulture, "{0} {1} (id {2})", administrativeAreal2DReference.Code, administrativeAreal2DReference.Name, administrativeAreal2DReference.Id);
+        }
+
+        private void SetCounties(IEnumerable<AdministrativeAreal2DReference>? administrativeAreal2DReferences)
+        {
+            if (administrativeAreal2DReferences is null)
+            {
+                ListBoxControl_Counties.ClearItems();
+                return;
+            }
+
+            List<AdministrativeAreal2DReference> administrativeAreal2DReferences_Sorted = [];
+            foreach (AdministrativeAreal2DReference administrativeAreal2DReference in administrativeAreal2DReferences)
+            {
+                if (administrativeAreal2DReference is null)
+                {
+                    continue;
+                }
+
+                administrativeAreal2DReferences_Sorted.Add(administrativeAreal2DReference);
+            }
+
+            // By code, so the counties of one voivodeship sit together; by identifier within a code, because the
+            // pieces of a multi-part county share their code and their name.
+            administrativeAreal2DReferences_Sorted.Sort((x, y) =>
+            {
+                int result = string.CompareOrdinal(x.Code ?? string.Empty, y.Code ?? string.Empty);
+
+                return result != 0 ? result : x.Id.CompareTo(y.Id);
+            });
+
+            ListBoxControl_Counties.SetItems(administrativeAreal2DReferences_Sorted);
+
+            HashSet<int>? countyIds = yOLOTrainingRunOptions.DatasetOptions?.CountyIds;
+            if (countyIds is null || countyIds.Count == 0)
+            {
+                return;
+            }
+
+            ListBoxControl_Counties.SelectItems<AdministrativeAreal2DReference>(x => countyIds.Contains(x.Id));
+        }
+    }
+}

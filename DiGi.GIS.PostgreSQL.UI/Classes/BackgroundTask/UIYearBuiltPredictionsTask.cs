@@ -9,7 +9,6 @@ using DiGi.GIS.YOLO.UI.Enums;
 using DiGi.WebAPI.Classes;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
 using System.Text.Json.Nodes;
@@ -128,8 +127,8 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
             // reads them, and written back, so the dialog says next time where the run actually went.
             // ModelPath is deliberately left alone: the weights sit beside the runner, and resolving them against
             // this application would be resolving them against the wrong thing.
-            yearBuiltPredictionPipelineOptions.ScratchDirectory = FullPath(yearBuiltPredictionPipelineOptions.ScratchDirectory);
-            yearBuiltPredictionPipelineOptions.WorkingDirectory = FullPath(yearBuiltPredictionPipelineOptions.WorkingDirectory);
+            yearBuiltPredictionPipelineOptions.ScratchDirectory = Query.FullPath(yearBuiltPredictionPipelineOptions.ScratchDirectory);
+            yearBuiltPredictionPipelineOptions.WorkingDirectory = Query.FullPath(yearBuiltPredictionPipelineOptions.WorkingDirectory);
 
             YearBuiltPredictionPipelineOptions = yearBuiltPredictionPipelineOptions;
 
@@ -141,7 +140,7 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
                 // not to run at all, so passing a path this process simply cannot see would refuse a run that would
                 // have worked. Not finding it here says nothing about the run - the runner repeats the preflight
                 // with its own resolution, which is the one that decides.
-                string? modelPath = ModelPath(path_ConsoleApp!, yearBuiltPredictionPipelineOptions.ModelPath);
+                string? modelPath = Query.ConsoleAppFilePath(path_ConsoleApp, yearBuiltPredictionPipelineOptions.ModelPath);
                 if (modelPath is null && !string.IsNullOrWhiteSpace(yearBuiltPredictionPipelineOptions.ModelPath))
                 {
                     Serilog.Modify.Log("The weights at {ModelPath} could not be found from here, so only the interpreter was checked - the runner checks the model itself", yearBuiltPredictionPipelineOptions.ModelPath);
@@ -164,7 +163,11 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
                 return false;
             }
 
-            return await RunAsync(path_ConsoleApp!, path_Options!, progress, cancellationToken);
+            // The whole tree is killed when the task is stopped - the detector is a grandchild - so a batch that was
+            // being written may be half written; every step is idempotent and a stopped run is re-runnable.
+            YearBuiltPredictionExitCode? yearBuiltPredictionExitCode = await Query.ConsoleAppExitCodeAsync(path_ConsoleApp!, [path_Options!], "Year built prediction", progress, cancellationToken);
+
+            return yearBuiltPredictionExitCode == YearBuiltPredictionExitCode.Succeeded;
         }
 
         private static bool Confirmed(YearBuiltPredictionPipelineOptions yearBuiltPredictionPipelineOptions, List<AdministrativeAreal2DReference> administrativeAreal2DReferences)
@@ -203,77 +206,6 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
             return System.Windows.MessageBox.Show(message, "Predict year built", System.Windows.MessageBoxButton.OKCancel, System.Windows.MessageBoxImage.Warning) == System.Windows.MessageBoxResult.OK;
         }
 
-        private static string? FullPath(string? path)
-        {
-            if (string.IsNullOrWhiteSpace(path))
-            {
-                return null;
-            }
-
-            try
-            {
-                return System.IO.Path.GetFullPath(path!);
-            }
-            catch
-            {
-                // A path this machine cannot even form is left exactly as it was typed, so that the run fails
-                // naming what the operator wrote rather than something this method invented from it.
-                return path;
-            }
-        }
-
-        private static string? ModelPath(string path_ConsoleApp, string? modelPath)
-        {
-            if (string.IsNullOrWhiteSpace(modelPath))
-            {
-                return null;
-            }
-
-            string? Existing(string? candidate)
-            {
-                if (string.IsNullOrWhiteSpace(candidate))
-                {
-                    return null;
-                }
-
-                try
-                {
-                    return File.Exists(candidate) ? System.IO.Path.GetFullPath(candidate!) : null;
-                }
-                catch
-                {
-                    return null;
-                }
-            }
-
-            if (Existing(modelPath) is string path_Given)
-            {
-                return path_Given;
-            }
-
-            string? directory = System.IO.Path.GetDirectoryName(path_ConsoleApp);
-            if (string.IsNullOrWhiteSpace(directory))
-            {
-                return null;
-            }
-
-            if (Existing(System.IO.Path.Combine(directory!, modelPath!)) is string path_Runner)
-            {
-                return path_Runner;
-            }
-
-            // CopyUserFiles flattens the git-ignored "user files" folder into the output root, so weights named
-            // through it sit one segment shallower once deployed. The runner's own resolver strips the segment the
-            // same way; this mirrors it rather than guessing.
-            const string prefix = "user files";
-            if (modelPath!.StartsWith(prefix + "/", StringComparison.OrdinalIgnoreCase) || modelPath.StartsWith(prefix + "\\", StringComparison.OrdinalIgnoreCase))
-            {
-                return Existing(System.IO.Path.Combine(directory!, modelPath[(prefix.Length + 1)..]));
-            }
-
-            return null;
-        }
-
         private static string? WriteOptions(YearBuiltPredictionPipelineOptions yearBuiltPredictionPipelineOptions)
         {
             // Beside the run's own imagery rather than in a temporary folder: it is the only record of what a run
@@ -308,132 +240,6 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
             {
                 Serilog.Modify.Log(exception, "The Year Built prediction options could not be written into {Directory}", directory);
                 return null;
-            }
-        }
-
-        private static async Task<bool> RunAsync(string path_ConsoleApp, string path_Options, IProgress<long> progress, CancellationToken cancellationToken)
-        {
-            ProcessStartInfo processStartInfo = new()
-            {
-                FileName = path_ConsoleApp,
-                WorkingDirectory = System.IO.Path.GetDirectoryName(path_ConsoleApp) ?? string.Empty,
-                UseShellExecute = false,
-                CreateNoWindow = true,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true
-            };
-
-            // Through ArgumentList rather than a quoted string: a scratch path ending in a separator would
-            // otherwise escape its own closing quote and hand the runner an argument nobody typed.
-            processStartInfo.ArgumentList.Add(path_Options);
-
-            using Process process = new() { StartInfo = processStartInfo, EnableRaisingEvents = true };
-
-            // Both streams are read as they arrive. A child whose output nobody drains blocks on a full pipe, and
-            // this one talks for hours.
-            process.OutputDataReceived += (sender, args) =>
-            {
-                if (args.Data is not string line)
-                {
-                    return;
-                }
-
-                Serilog.Modify.Log("{Line}", line);
-
-                // Through the shared reader rather than a format literal. A progress format that ever drifts costs
-                // the progress reporting and nothing else - every line is logged above either way.
-                if (DiGi.GIS.YOLO.UI.Query.ProgressCount(line) is long count)
-                {
-                    progress?.Report(count);
-                }
-            };
-
-            process.ErrorDataReceived += (sender, args) =>
-            {
-                if (args.Data is string line)
-                {
-                    Serilog.Modify.Log(Serilog.Enums.LogEventLevel.Warning, "{Line}", line);
-                }
-            };
-
-            Serilog.Modify.Log("Year built prediction run started - {FileName} {Options}", path_ConsoleApp, path_Options);
-
-            // Starting is separated from waiting so that a runner which never started is not also reported as one
-            // that could not be killed - Process.HasExited throws on an instance no process was ever attached to,
-            // and a failure to start is the likeliest failure of the two.
-            try
-            {
-                process.Start();
-            }
-            catch (Exception exception)
-            {
-                Serilog.Modify.Log(exception, "Year built prediction run could not be started - {FileName}", path_ConsoleApp);
-                return false;
-            }
-
-            try
-            {
-                process.BeginOutputReadLine();
-                process.BeginErrorReadLine();
-
-                await process.WaitForExitAsync(cancellationToken);
-            }
-            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-            {
-                // The whole tree, because the interpreter is a grandchild: killing only the runner leaves the
-                // detector holding a graphics card and a county of imagery with nothing waiting for it.
-                Kill(process);
-
-                Serilog.Modify.Log(Serilog.Enums.LogEventLevel.Warning, "Year built prediction run was stopped - the run was killed, so a batch it was writing may be half written");
-                return false;
-            }
-            catch (Exception exception)
-            {
-                Kill(process);
-
-                Serilog.Modify.Log(exception, "Year built prediction run failed while it was being watched - {FileName}", path_ConsoleApp);
-                return false;
-            }
-
-            YearBuiltPredictionExitCode yearBuiltPredictionExitCode = (YearBuiltPredictionExitCode)process.ExitCode;
-
-            // Named rather than numbered, and read off the runner's own enumeration - an exit code this application
-            // does not recognise is reported as the number it is rather than as a failure of a known kind.
-            string description = Enum.IsDefined(typeof(YearBuiltPredictionExitCode), yearBuiltPredictionExitCode)
-                ? Core.Query.Description(yearBuiltPredictionExitCode) ?? yearBuiltPredictionExitCode.ToString()
-                : string.Format(System.Globalization.CultureInfo.InvariantCulture, "Unrecognised exit code {0}", process.ExitCode);
-
-            if (yearBuiltPredictionExitCode == YearBuiltPredictionExitCode.Succeeded)
-            {
-                Serilog.Modify.Log("Year built prediction run finished - {Description}", description);
-                return true;
-            }
-
-            Serilog.Modify.Log(
-                yearBuiltPredictionExitCode == YearBuiltPredictionExitCode.Cancelled ? Serilog.Enums.LogEventLevel.Warning : Serilog.Enums.LogEventLevel.Error,
-                "Year built prediction run did not finish - {Description}",
-                description);
-
-            return false;
-
-            static void Kill(Process process)
-            {
-                try
-                {
-                    if (!process.HasExited)
-                    {
-                        process.Kill(entireProcessTree: true);
-
-                        // Bounded, because the point is to be able to say the run has actually stopped rather than
-                        // that stopping it has been asked for - and an unbounded wait would hand a hung detector the
-                        // power to hold the task row open indefinitely.
-                        process.WaitForExit(5000);
-                    }
-                }
-                catch (Exception exception)
-                {
-                    Serilog.Modify.Log(exception, "The Year Built prediction run could not be killed");
-                }
             }
         }
     }

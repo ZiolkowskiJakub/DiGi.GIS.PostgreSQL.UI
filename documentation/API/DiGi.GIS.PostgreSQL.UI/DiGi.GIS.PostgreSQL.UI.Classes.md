@@ -2675,3 +2675,85 @@ public DiGi.GIS.YOLO.UI.Classes.YearBuiltPredictionPipelineOptions? YearBuiltPre
 
 #### Property Value
 [DiGi\.GIS\.YOLO\.UI\.Classes\.YearBuiltPredictionPipelineOptions](https://learn.microsoft.com/en-us/dotnet/api/digi.gis.yolo.ui.classes.yearbuiltpredictionpipelineoptions 'DiGi\.GIS\.YOLO\.UI\.Classes\.YearBuiltPredictionPipelineOptions')
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIYOLOTrainingTask'></a>
+
+## UIYOLOTrainingTask Class
+
+A YOLO detector training run started from the tray: dataset build, label check, training, validation on the Test split and the detector evaluation that gates the new weights, with the inputs asked for through [YOLOTrainingOptionsWindow](DiGi.GIS.PostgreSQL.UI.Windows.md#DiGi.GIS.PostgreSQL.UI.Windows.YOLOTrainingOptionsWindow 'DiGi\.GIS\.PostgreSQL\.UI\.Windows\.YOLOTrainingOptionsWindow') each time the task is started\.
+
+<b>Two scenarios.</b>[Retrain](DiGi.GIS.PostgreSQL.UI.Enums.md#DiGi.GIS.PostgreSQL.UI.Enums.YOLOTrainingScenario.Retrain 'DiGi\.GIS\.PostgreSQL\.UI\.Enums\.YOLOTrainingScenario\.Retrain') continues from the deployed model.pt and appends the chosen counties to the existing dataset folder; [Fresh](DiGi.GIS.PostgreSQL.UI.Enums.md#DiGi.GIS.PostgreSQL.UI.Enums.YOLOTrainingScenario.Fresh 'DiGi\.GIS\.PostgreSQL\.UI\.Enums\.YOLOTrainingScenario\.Fresh') starts from the pretrained yolo26x.pt and builds the dataset fresh into a new folder. The scenario sets defaults only ([YOLOTrainingRunOptions\(YOLOTrainingScenario, string, YOLOTrainingRunOptions\)](DiGi.GIS.PostgreSQL.UI.md#DiGi.GIS.PostgreSQL.UI.Create.YOLOTrainingRunOptions(DiGi.GIS.PostgreSQL.UI.Enums.YOLOTrainingScenario,string,DiGi.GIS.YOLO.UI.Classes.YOLOTrainingRunOptions) 'DiGi\.GIS\.PostgreSQL\.UI\.Create\.YOLOTrainingRunOptions\(DiGi\.GIS\.PostgreSQL\.UI\.Enums\.YOLOTrainingScenario, string, DiGi\.GIS\.YOLO\.UI\.Classes\.YOLOTrainingRunOptions\)')).
+
+<b>The run happens in another process</b>, `DiGi.GIS.YOLO.UI.ConsoleApp --train`, for the same reason as [UIYearBuiltPredictionsTask](DiGi.GIS.PostgreSQL.UI.Classes.md#DiGi.GIS.PostgreSQL.UI.Classes.UIYearBuiltPredictionsTask 'DiGi\.GIS\.PostgreSQL\.UI\.Classes\.UIYearBuiltPredictionsTask'): this application publishes self-contained and single-file and does not carry the runner's closure. The options are written beside the run folder as `<RunName>.YOLOTrainingRunOptions.json` - not inside it, because the runner refuses a run whose folder already exists - and that file is the record of what the run was asked to do.
+
+<b>Every path is made absolute here</b>, against the runner for the files its defaults name (the weights, the legacy references, the reports folder) and against this process for the folders the operator typed, so the file the runner reads names what this application checked and named back.
+
+<b>The run never overwrites model.pt.</b> The trained weights stay under the run folder and are copied to `<ProjectDirectory>\<RunName>\<RunName>.pt`; shipping or holding them is a manual decision from the evaluation table (ZiolkowskiJakub/DiGi.GIS.YOLO.UI#12).
+
+The dataset step authorizes with <b>the runner's own key</b>, read from the `GIS_WebAPI_Client.conf` beside its executable - a run that ends in [DiGi\.GIS\.YOLO\.UI\.Enums\.YearBuiltPredictionExitCode\.Authorization](https://learn.microsoft.com/en-us/dotnet/api/digi.gis.yolo.ui.enums.yearbuiltpredictionexitcode.authorization 'DiGi\.GIS\.YOLO\.UI\.Enums\.YearBuiltPredictionExitCode\.Authorization') is usually that file. <b>Stopping the task kills the process tree</b>, the interpreter included; the dataset manifest lets a re-run continue, but a stopped training run is not resumable and its run folder has to be renamed or removed before its name is used again.
+
+```csharp
+public class UIYOLOTrainingTask : DiGi.Core.Classes.ReportableBackgroundTask<long>, DiGi.GIS.PostgreSQL.UI.Interfaces.IGISPostgreSQLUIObject
+```
+
+Inheritance [System\.Object](https://learn.microsoft.com/en-us/dotnet/api/system.object 'System\.Object') → [DiGi\.Core\.Classes\.BackgroundTask](https://learn.microsoft.com/en-us/dotnet/api/digi.core.classes.backgroundtask 'DiGi\.Core\.Classes\.BackgroundTask') → [DiGi\.Core\.Classes\.CancelableBackgroundTask](https://learn.microsoft.com/en-us/dotnet/api/digi.core.classes.cancelablebackgroundtask 'DiGi\.Core\.Classes\.CancelableBackgroundTask') → [DiGi\.Core\.Classes\.ReportableBackgroundTask&lt;](https://learn.microsoft.com/en-us/dotnet/api/digi.core.classes.reportablebackgroundtask-1 'DiGi\.Core\.Classes\.ReportableBackgroundTask\`1')[System\.Int64](https://learn.microsoft.com/en-us/dotnet/api/system.int64 'System\.Int64')[&gt;](https://learn.microsoft.com/en-us/dotnet/api/digi.core.classes.reportablebackgroundtask-1 'DiGi\.Core\.Classes\.ReportableBackgroundTask\`1') → UIYOLOTrainingTask
+
+Implements [IGISPostgreSQLUIObject](DiGi.GIS.PostgreSQL.UI.Interfaces.md#DiGi.GIS.PostgreSQL.UI.Interfaces.IGISPostgreSQLUIObject 'DiGi\.GIS\.PostgreSQL\.UI\.Interfaces\.IGISPostgreSQLUIObject')
+### Constructors
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIYOLOTrainingTask.UIYOLOTrainingTask(DiGi.GIS.WebAPI.Classes.GISWebAPIManager)'></a>
+
+## UIYOLOTrainingTask\(GISWebAPIManager\) Constructor
+
+Initializes a new instance of the [UIYOLOTrainingTask](DiGi.GIS.PostgreSQL.UI.Classes.md#DiGi.GIS.PostgreSQL.UI.Classes.UIYOLOTrainingTask 'DiGi\.GIS\.PostgreSQL\.UI\.Classes\.UIYOLOTrainingTask') class\.
+
+```csharp
+public UIYOLOTrainingTask(DiGi.GIS.WebAPI.Classes.GISWebAPIManager GISWebAPIManager);
+```
+#### Parameters
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIYOLOTrainingTask.UIYOLOTrainingTask(DiGi.GIS.WebAPI.Classes.GISWebAPIManager).GISWebAPIManager'></a>
+
+`GISWebAPIManager` [DiGi\.GIS\.WebAPI\.Classes\.GISWebAPIManager](https://learn.microsoft.com/en-us/dotnet/api/digi.gis.webapi.classes.giswebapimanager 'DiGi\.GIS\.WebAPI\.Classes\.GISWebAPIManager')
+
+The [DiGi\.GIS\.WebAPI\.Classes\.GISWebAPIManager](https://learn.microsoft.com/en-us/dotnet/api/digi.gis.webapi.classes.giswebapimanager 'DiGi\.GIS\.WebAPI\.Classes\.GISWebAPIManager') instance the county rows behind the dialog are read with\. The run itself authorizes with the runner's own key, not with this one\.
+### Properties
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIYOLOTrainingTask.ConsoleAppPath'></a>
+
+## UIYOLOTrainingTask\.ConsoleAppPath Property
+
+Gets or sets the path of the headless runner\. When null it is resolved by [YearBuiltPredictionConsoleAppPath\(string, string\)](DiGi.GIS.PostgreSQL.UI.md#DiGi.GIS.PostgreSQL.UI.Query.YearBuiltPredictionConsoleAppPath(string,string) 'DiGi\.GIS\.PostgreSQL\.UI\.Query\.YearBuiltPredictionConsoleAppPath\(string, string\)') \- the training mode is hosted by the same executable as the Year Built prediction\.
+
+```csharp
+public string? ConsoleAppPath { get; set; }
+```
+
+#### Property Value
+[System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIYOLOTrainingTask.YOLOTrainingRunOptions'></a>
+
+## UIYOLOTrainingTask\.YOLOTrainingRunOptions Property
+
+Gets or sets the options the dialog opens with, and which it writes back to \- with every path made absolute \- when a run is confirmed\. When null the defaults of [YOLOTrainingScenario](DiGi.GIS.PostgreSQL.UI.Classes.md#DiGi.GIS.PostgreSQL.UI.Classes.UIYOLOTrainingTask.YOLOTrainingScenario 'DiGi\.GIS\.PostgreSQL\.UI\.Classes\.UIYOLOTrainingTask\.YOLOTrainingScenario') are used, which name no county and no folder and therefore ask for them\.
+
+```csharp
+public DiGi.GIS.YOLO.UI.Classes.YOLOTrainingRunOptions? YOLOTrainingRunOptions { get; set; }
+```
+
+#### Property Value
+[DiGi\.GIS\.YOLO\.UI\.Classes\.YOLOTrainingRunOptions](https://learn.microsoft.com/en-us/dotnet/api/digi.gis.yolo.ui.classes.yolotrainingrunoptions 'DiGi\.GIS\.YOLO\.UI\.Classes\.YOLOTrainingRunOptions')
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIYOLOTrainingTask.YOLOTrainingScenario'></a>
+
+## UIYOLOTrainingTask\.YOLOTrainingScenario Property
+
+Gets or sets the scenario the dialog opens with, and which it writes back to when it is closed with OK\.
+
+```csharp
+public DiGi.GIS.PostgreSQL.UI.Enums.YOLOTrainingScenario YOLOTrainingScenario { get; set; }
+```
+
+#### Property Value
+[YOLOTrainingScenario](DiGi.GIS.PostgreSQL.UI.Enums.md#DiGi.GIS.PostgreSQL.UI.Enums.YOLOTrainingScenario 'DiGi\.GIS\.PostgreSQL\.UI\.Enums\.YOLOTrainingScenario')

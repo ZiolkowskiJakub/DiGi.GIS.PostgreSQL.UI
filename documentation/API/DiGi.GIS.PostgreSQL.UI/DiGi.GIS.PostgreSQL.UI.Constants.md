@@ -44,6 +44,19 @@ public static class DirectoryName
 Inheritance [System\.Object](https://learn.microsoft.com/en-us/dotnet/api/system.object 'System\.Object') → DirectoryName
 ### Fields
 
+<a name='DiGi.GIS.PostgreSQL.UI.Constants.DirectoryName.BaseModels'></a>
+
+## DirectoryName\.BaseModels Field
+
+Gets the name of the folder, inside the YOLO models folder, that holds the pretrained base checkpoints such as [BaseModel](DiGi.GIS.PostgreSQL.UI.Constants.md#DiGi.GIS.PostgreSQL.UI.Constants.FileName.BaseModel 'DiGi\.GIS\.PostgreSQL\.UI\.Constants\.FileName\.BaseModel')\.
+
+```csharp
+public const string BaseModels = "base";
+```
+
+#### Field Value
+[System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
+
 <a name='DiGi.GIS.PostgreSQL.UI.Constants.DirectoryName.Extensions'></a>
 
 ## DirectoryName\.Extensions Field
@@ -72,6 +85,22 @@ public const string PredictionImages = "images";
 
 #### Field Value
 [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
+
+<a name='DiGi.GIS.PostgreSQL.UI.Constants.DirectoryName.UserFiles'></a>
+
+## DirectoryName\.UserFiles Field
+
+Gets the name of the git\-ignored folder the runner's defaults name their files through \(for example `user files/YOLO/models/model.pt`\)\.
+
+```csharp
+public const string UserFiles = "user files";
+```
+
+#### Field Value
+[System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
+
+### Remarks
+The build flattens it into the output root, so once deployed a file named through it sits one segment shallower; [ConsoleAppFilePath\(string, string\)](DiGi.GIS.PostgreSQL.UI.md#DiGi.GIS.PostgreSQL.UI.Query.ConsoleAppFilePath(string,string) 'DiGi\.GIS\.PostgreSQL\.UI\.Query\.ConsoleAppFilePath\(string, string\)') and [ConsoleAppDeployedPath\(string, string\)](DiGi.GIS.PostgreSQL.UI.md#DiGi.GIS.PostgreSQL.UI.Query.ConsoleAppDeployedPath(string,string) 'DiGi\.GIS\.PostgreSQL\.UI\.Query\.ConsoleAppDeployedPath\(string, string\)') strip it the same way the runner does\.
 
 <a name='DiGi.GIS.PostgreSQL.UI.Constants.DirectoryName.YearBuiltPredictionExtension'></a>
 
@@ -102,6 +131,19 @@ public static class FileName
 Inheritance [System\.Object](https://learn.microsoft.com/en-us/dotnet/api/system.object 'System\.Object') → FileName
 ### Fields
 
+<a name='DiGi.GIS.PostgreSQL.UI.Constants.FileName.BaseModel'></a>
+
+## FileName\.BaseModel Field
+
+Gets the file name of the pretrained YOLO base checkpoint a fresh training run starts from\. Its SHA\-256 is recorded in the DiGi\.YOLO README\.
+
+```csharp
+public const string BaseModel = "yolo26x.pt";
+```
+
+#### Field Value
+[System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
+
 <a name='DiGi.GIS.PostgreSQL.UI.Constants.FileName.GISWebAPIClientConfigurationFile'></a>
 
 ## FileName\.GISWebAPIClientConfigurationFile Field
@@ -110,6 +152,19 @@ Gets the default filename of the configuration file for the Web API client\.
 
 ```csharp
 public const string GISWebAPIClientConfigurationFile = "GIS_WebAPI_Client.conf";
+```
+
+#### Field Value
+[System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
+
+<a name='DiGi.GIS.PostgreSQL.UI.Constants.FileName.Model'></a>
+
+## FileName\.Model Field
+
+Gets the file name of the deployed YOLO detector \- the weights a Re\-train run starts from and the incumbent a training run is gated against\. No training run ever writes it\.
+
+```csharp
+public const string Model = "model.pt";
 ```
 
 #### Field Value
@@ -130,6 +185,22 @@ public const string YearBuiltPredictionConsoleApp = "DiGi.GIS.YOLO.UI.ConsoleApp
 
 ### Remarks
 The pipeline itself is not hosted in this application \- it carries the machine learning closure, which is about a gigabyte of native libraries against an application that publishes self\-contained and single\-file\. The run is handed to this executable instead, and [YearBuiltPredictionConsoleAppPath\(string, string\)](DiGi.GIS.PostgreSQL.UI.md#DiGi.GIS.PostgreSQL.UI.Query.YearBuiltPredictionConsoleAppPath(string,string) 'DiGi\.GIS\.PostgreSQL\.UI\.Query\.YearBuiltPredictionConsoleAppPath\(string, string\)') is what finds it\.
+
+<a name='DiGi.GIS.PostgreSQL.UI.Constants.FileName.YOLOTrainingRunOptionsSuffix'></a>
+
+## FileName\.YOLOTrainingRunOptionsSuffix Field
+
+Gets the suffix of the file a tray training run's options are written to, beside the run folder as `<RunName>.YOLOTrainingRunOptions.json`\.
+
+```csharp
+public const string YOLOTrainingRunOptionsSuffix = ".YOLOTrainingRunOptions.json";
+```
+
+#### Field Value
+[System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
+
+### Remarks
+Beside the run folder rather than inside it: the runner refuses a run whose folder already exists, so writing into it first would refuse every run\.
 
 <a name='DiGi.GIS.PostgreSQL.UI.Constants.Names'></a>
 

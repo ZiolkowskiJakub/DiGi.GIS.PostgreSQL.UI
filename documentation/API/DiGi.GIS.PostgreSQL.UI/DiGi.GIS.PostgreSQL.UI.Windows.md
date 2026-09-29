@@ -811,7 +811,7 @@ Asks for the scope of one Year Built prediction run and nothing else: the counti
 
 <b>A tray run has one shape - the full six step flow - and it writes.</b> The steps are not offered because they are not a choice here: ZiolkowskiJakub/DiGi.GIS.YOLO.UI#8 made export, detector, detection write, score, history write and column write a single run per county precisely so that no step could be left out of sequence, and it decided that the granular flags stay on the options class and the console app for hand-driven diagnostics while the tray driven flow collapses them. Eight checkboxes offered two hundred and fifty six combinations, of which three were real - and the rest failed late, after the half hour of export and the hour and a half of inference had already been paid for. The OK handler writes all six on, so the run the operator gets is the run the standing recipe describes.
 
-<b>What settles the model is deliberately not here either.</b> The weights, the confidence threshold, the year range and the radiuses all decide what the regressor is handed, and a value that disagrees with what it was trained on scores without failing - the predictions are worse by an amount nothing measures (ZiolkowskiJakub/DiGi.GIS.ML#6). They belong to the deployment and to the options file rather than to a dialog opened before every run. The working directory and the two batch sizes are out for a different reason: none of the three is a choice - see the comment in the OK handler.
+<b>What settles the model is deliberately not here either.</b> The weights, the confidence threshold, the year range and the radiuses all decide what the regressor is handed, and a value that disagrees with what it was trained on is, for the year range and the radiuses, checked against the model's stated trained contract before the run reads a county - narrower is refused, wider is warned (ZiolkowskiJakub/DiGi.GIS.ML#6) - while the weights and the confidence threshold still score without failing. They belong to the deployment and to the options file rather than to a dialog opened before every run. The working directory and the two batch sizes are out for a different reason: none of the three is a choice - see the comment in the OK handler.
 
 The scratch cleanup is the one flag that survives, because its reason is about this run rather than about the sequence: a cancelled county is cleaned, so a run that is meant to be interrupted has to be able to say so beforehand.
 
@@ -867,6 +867,104 @@ public DiGi.GIS.YOLO.UI.Classes.YearBuiltPredictionPipelineOptions YearBuiltPred
 <a name='DiGi.GIS.PostgreSQL.UI.Windows.YearBuiltPredictionsOptionsWindow.InitializeComponent()'></a>
 
 ## YearBuiltPredictionsOptionsWindow\.InitializeComponent\(\) Method
+
+InitializeComponent
+
+```csharp
+public void InitializeComponent();
+```
+
+Implements [InitializeComponent\(\)](https://learn.microsoft.com/en-us/dotnet/api/system.windows.markup.icomponentconnector.initializecomponent 'System\.Windows\.Markup\.IComponentConnector\.InitializeComponent')
+
+<a name='DiGi.GIS.PostgreSQL.UI.Windows.YOLOTrainingOptionsWindow'></a>
+
+## YOLOTrainingOptionsWindow Class
+
+Interaction logic for YOLOTrainingOptionsWindow\.xaml
+
+Asks for the inputs of one YOLO detector training run: the scenario, the counties, the dataset folder, the start weights, the training hyperparameters, where the run is written, the interpreter, the steps and the weights the new detector is gated against.
+
+<b>The scenario sets defaults, not rules.</b> Switching it resets the start weights and the epoch ceiling to that scenario's defaults ([YOLOTrainingRunOptions\(YOLOTrainingScenario, string, YOLOTrainingRunOptions\)](DiGi.GIS.PostgreSQL.UI.md#DiGi.GIS.PostgreSQL.UI.Create.YOLOTrainingRunOptions(DiGi.GIS.PostgreSQL.UI.Enums.YOLOTrainingScenario,string,DiGi.GIS.YOLO.UI.Classes.YOLOTrainingRunOptions) 'DiGi\.GIS\.PostgreSQL\.UI\.Create\.YOLOTrainingRunOptions\(DiGi\.GIS\.PostgreSQL\.UI\.Enums\.YOLOTrainingScenario, string, DiGi\.GIS\.YOLO\.UI\.Classes\.YOLOTrainingRunOptions\)')) and leaves every other control as it is; on OK it also decides whether the dataset folder is appended to (Re-train) or must be new (Start from yolo26x.pt).
+
+<b>What is not offered is the runner's to decide.</b> The dataset's confidence threshold, split, label check sizes, legacy cut-off and request sizes carry through the copy untouched at the values its README describes; they shape what the detector is trained on, and a control opened before every run invites changing them between runs that are then compared.
+
+The window works on a copy, so a cancelled dialog leaves the settings of an earlier run exactly as they were, and every member the window has no control for carries through untouched.
+
+```csharp
+public class YOLOTrainingOptionsWindow : System.Windows.Window, System.Windows.Markup.IComponentConnector
+```
+
+Inheritance [System\.Object](https://learn.microsoft.com/en-us/dotnet/api/system.object 'System\.Object') → [System\.Windows\.Threading\.DispatcherObject](https://learn.microsoft.com/en-us/dotnet/api/system.windows.threading.dispatcherobject 'System\.Windows\.Threading\.DispatcherObject') → [System\.Windows\.DependencyObject](https://learn.microsoft.com/en-us/dotnet/api/system.windows.dependencyobject 'System\.Windows\.DependencyObject') → [System\.Windows\.Media\.Visual](https://learn.microsoft.com/en-us/dotnet/api/system.windows.media.visual 'System\.Windows\.Media\.Visual') → [System\.Windows\.UIElement](https://learn.microsoft.com/en-us/dotnet/api/system.windows.uielement 'System\.Windows\.UIElement') → [System\.Windows\.FrameworkElement](https://learn.microsoft.com/en-us/dotnet/api/system.windows.frameworkelement 'System\.Windows\.FrameworkElement') → [System\.Windows\.Controls\.Control](https://learn.microsoft.com/en-us/dotnet/api/system.windows.controls.control 'System\.Windows\.Controls\.Control') → [System\.Windows\.Controls\.ContentControl](https://learn.microsoft.com/en-us/dotnet/api/system.windows.controls.contentcontrol 'System\.Windows\.Controls\.ContentControl') → [System\.Windows\.Window](https://learn.microsoft.com/en-us/dotnet/api/system.windows.window 'System\.Windows\.Window') → YOLOTrainingOptionsWindow
+
+Implements [System\.Windows\.Markup\.IComponentConnector](https://learn.microsoft.com/en-us/dotnet/api/system.windows.markup.icomponentconnector 'System\.Windows\.Markup\.IComponentConnector')
+### Constructors
+
+<a name='DiGi.GIS.PostgreSQL.UI.Windows.YOLOTrainingOptionsWindow.YOLOTrainingOptionsWindow(DiGi.GIS.PostgreSQL.UI.Enums.YOLOTrainingScenario,DiGi.GIS.YOLO.UI.Classes.YOLOTrainingRunOptions,System.Collections.Generic.IEnumerable_DiGi.GIS.PostgreSQL.Classes.AdministrativeAreal2DReference_,string)'></a>
+
+## YOLOTrainingOptionsWindow\(YOLOTrainingScenario, YOLOTrainingRunOptions, IEnumerable\<AdministrativeAreal2DReference\>, string\) Constructor
+
+Initializes a new instance of the [YOLOTrainingOptionsWindow](DiGi.GIS.PostgreSQL.UI.Windows.md#DiGi.GIS.PostgreSQL.UI.Windows.YOLOTrainingOptionsWindow 'DiGi\.GIS\.PostgreSQL\.UI\.Windows\.YOLOTrainingOptionsWindow') class\.
+
+```csharp
+public YOLOTrainingOptionsWindow(DiGi.GIS.PostgreSQL.UI.Enums.YOLOTrainingScenario yOLOTrainingScenario, DiGi.GIS.YOLO.UI.Classes.YOLOTrainingRunOptions? yOLOTrainingRunOptions, System.Collections.Generic.IEnumerable<DiGi.GIS.PostgreSQL.Classes.AdministrativeAreal2DReference>? administrativeAreal2DReferences, string? consoleAppPath);
+```
+#### Parameters
+
+<a name='DiGi.GIS.PostgreSQL.UI.Windows.YOLOTrainingOptionsWindow.YOLOTrainingOptionsWindow(DiGi.GIS.PostgreSQL.UI.Enums.YOLOTrainingScenario,DiGi.GIS.YOLO.UI.Classes.YOLOTrainingRunOptions,System.Collections.Generic.IEnumerable_DiGi.GIS.PostgreSQL.Classes.AdministrativeAreal2DReference_,string).yOLOTrainingScenario'></a>
+
+`yOLOTrainingScenario` [YOLOTrainingScenario](DiGi.GIS.PostgreSQL.UI.Enums.md#DiGi.GIS.PostgreSQL.UI.Enums.YOLOTrainingScenario 'DiGi\.GIS\.PostgreSQL\.UI\.Enums\.YOLOTrainingScenario')
+
+The scenario the dialog opens with\.
+
+<a name='DiGi.GIS.PostgreSQL.UI.Windows.YOLOTrainingOptionsWindow.YOLOTrainingOptionsWindow(DiGi.GIS.PostgreSQL.UI.Enums.YOLOTrainingScenario,DiGi.GIS.YOLO.UI.Classes.YOLOTrainingRunOptions,System.Collections.Generic.IEnumerable_DiGi.GIS.PostgreSQL.Classes.AdministrativeAreal2DReference_,string).yOLOTrainingRunOptions'></a>
+
+`yOLOTrainingRunOptions` [DiGi\.GIS\.YOLO\.UI\.Classes\.YOLOTrainingRunOptions](https://learn.microsoft.com/en-us/dotnet/api/digi.gis.yolo.ui.classes.yolotrainingrunoptions 'DiGi\.GIS\.YOLO\.UI\.Classes\.YOLOTrainingRunOptions')
+
+The options the controls are filled from \- the previous run's, which are copied rather than changed\. When null the defaults of [yOLOTrainingScenario](DiGi.GIS.PostgreSQL.UI.Windows.md#DiGi.GIS.PostgreSQL.UI.Windows.YOLOTrainingOptionsWindow.YOLOTrainingOptionsWindow(DiGi.GIS.PostgreSQL.UI.Enums.YOLOTrainingScenario,DiGi.GIS.YOLO.UI.Classes.YOLOTrainingRunOptions,System.Collections.Generic.IEnumerable_DiGi.GIS.PostgreSQL.Classes.AdministrativeAreal2DReference_,string).yOLOTrainingScenario 'DiGi\.GIS\.PostgreSQL\.UI\.Windows\.YOLOTrainingOptionsWindow\.YOLOTrainingOptionsWindow\(DiGi\.GIS\.PostgreSQL\.UI\.Enums\.YOLOTrainingScenario, DiGi\.GIS\.YOLO\.UI\.Classes\.YOLOTrainingRunOptions, System\.Collections\.Generic\.IEnumerable\<DiGi\.GIS\.PostgreSQL\.Classes\.AdministrativeAreal2DReference\>, string\)\.yOLOTrainingScenario') are used\.
+
+<a name='DiGi.GIS.PostgreSQL.UI.Windows.YOLOTrainingOptionsWindow.YOLOTrainingOptionsWindow(DiGi.GIS.PostgreSQL.UI.Enums.YOLOTrainingScenario,DiGi.GIS.YOLO.UI.Classes.YOLOTrainingRunOptions,System.Collections.Generic.IEnumerable_DiGi.GIS.PostgreSQL.Classes.AdministrativeAreal2DReference_,string).administrativeAreal2DReferences'></a>
+
+`administrativeAreal2DReferences` [System\.Collections\.Generic\.IEnumerable&lt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.ienumerable-1 'System\.Collections\.Generic\.IEnumerable\`1')[DiGi\.GIS\.PostgreSQL\.Classes\.AdministrativeAreal2DReference](https://learn.microsoft.com/en-us/dotnet/api/digi.gis.postgresql.classes.administrativeareal2dreference 'DiGi\.GIS\.PostgreSQL\.Classes\.AdministrativeAreal2DReference')[&gt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.ienumerable-1 'System\.Collections\.Generic\.IEnumerable\`1')
+
+The counties to choose from\. A county whose territory is in several pieces is one entry per piece, each with its own identifier, and each has to be selectable on its own\.
+
+<a name='DiGi.GIS.PostgreSQL.UI.Windows.YOLOTrainingOptionsWindow.YOLOTrainingOptionsWindow(DiGi.GIS.PostgreSQL.UI.Enums.YOLOTrainingScenario,DiGi.GIS.YOLO.UI.Classes.YOLOTrainingRunOptions,System.Collections.Generic.IEnumerable_DiGi.GIS.PostgreSQL.Classes.AdministrativeAreal2DReference_,string).consoleAppPath'></a>
+
+`consoleAppPath` [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
+
+The full path of the runner, which the default weights are named relative to\.
+### Properties
+
+<a name='DiGi.GIS.PostgreSQL.UI.Windows.YOLOTrainingOptionsWindow.YOLOTrainingRunOptions'></a>
+
+## YOLOTrainingOptionsWindow\.YOLOTrainingRunOptions Property
+
+Gets the options the window holds\. They carry the values of the controls only once the dialog has been closed with OK; until then, and after a cancellation, they are the values it was opened with\.
+
+```csharp
+public DiGi.GIS.YOLO.UI.Classes.YOLOTrainingRunOptions YOLOTrainingRunOptions { get; }
+```
+
+#### Property Value
+[DiGi\.GIS\.YOLO\.UI\.Classes\.YOLOTrainingRunOptions](https://learn.microsoft.com/en-us/dotnet/api/digi.gis.yolo.ui.classes.yolotrainingrunoptions 'DiGi\.GIS\.YOLO\.UI\.Classes\.YOLOTrainingRunOptions')
+
+<a name='DiGi.GIS.PostgreSQL.UI.Windows.YOLOTrainingOptionsWindow.YOLOTrainingScenario'></a>
+
+## YOLOTrainingOptionsWindow\.YOLOTrainingScenario Property
+
+Gets the scenario the window holds\. It is the one chosen only once the dialog has been closed with OK; until then, and after a cancellation, it is the one it was opened with\.
+
+```csharp
+public DiGi.GIS.PostgreSQL.UI.Enums.YOLOTrainingScenario YOLOTrainingScenario { get; }
+```
+
+#### Property Value
+[YOLOTrainingScenario](DiGi.GIS.PostgreSQL.UI.Enums.md#DiGi.GIS.PostgreSQL.UI.Enums.YOLOTrainingScenario 'DiGi\.GIS\.PostgreSQL\.UI\.Enums\.YOLOTrainingScenario')
+### Methods
+
+<a name='DiGi.GIS.PostgreSQL.UI.Windows.YOLOTrainingOptionsWindow.InitializeComponent()'></a>
+
+## YOLOTrainingOptionsWindow\.InitializeComponent\(\) Method
 
 InitializeComponent
 

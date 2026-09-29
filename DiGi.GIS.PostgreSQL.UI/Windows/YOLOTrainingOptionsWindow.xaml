@@ -1,0 +1,115 @@
+<Window x:Class="DiGi.GIS.PostgreSQL.UI.Windows.YOLOTrainingOptionsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:DiGi.GIS.PostgreSQL.UI.Windows"
+        xmlns:controls="clr-namespace:DiGi.UI.WPF.Controls;assembly=DiGi.UI.WPF"
+        mc:Ignorable="d"
+        Title="Train YOLO detector" Height="760" Width="640" MinHeight="440" MinWidth="500" MaxHeight="{Binding Source={x:Static SystemParameters.WorkArea}, Path=Height}"
+        WindowStartupLocation="CenterScreen"
+        WindowStyle="SingleBorderWindow"
+        Icon="pack://application:,,,/DiGi.GIS.PostgreSQL.UI;component/Resources/DiGi.GIS.ico">
+    <Grid Margin="5,5,5,5">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="33" />
+        </Grid.RowDefinitions>
+
+        <!-- Everything above the buttons scrolls and the buttons stay pinned, as in the Year Built dialog: a
+             dialog whose OK can be pushed off the bottom of the work area is one whose only exit is the close box. -->
+        <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="60" />
+                    <RowDefinition Height="60" />
+                    <RowDefinition Height="60" />
+                    <RowDefinition Height="60" />
+                    <RowDefinition Height="60" />
+                    <RowDefinition Height="60" />
+                    <RowDefinition Height="60" />
+                    <RowDefinition Height="60" />
+                    <RowDefinition Height="60" />
+                    <RowDefinition Height="60" />
+                    <RowDefinition Height="60" />
+                    <RowDefinition Height="26" />
+                    <RowDefinition Height="28" />
+                    <RowDefinition Height="28" />
+                    <RowDefinition Height="200" />
+                </Grid.RowDefinitions>
+
+                <Grid Grid.Row="0" Margin="5,0,5,0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="28" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <Label x:Name="Label_Scenario" Grid.Row="0" Content="Scenario - switching it resets the start weights and the epochs to its defaults" HorizontalAlignment="Stretch" VerticalAlignment="Center" />
+                    <ComboBox x:Name="ComboBox_Scenario" Grid.Row="1" VerticalAlignment="Center" SelectedIndex="0">
+                        <ComboBoxItem Content="Re-train - continue from model.pt, append the counties to the existing dataset" />
+                        <ComboBoxItem Content="Start from yolo26x.pt - build the dataset fresh into a new folder" />
+                    </ComboBox>
+                </Grid>
+
+                <controls:TextBoxControl x:Name="TextBoxControl_DatasetDirectory" Grid.Row="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Text="Dataset directory - absolute; conf.yaml, images, labels and the manifest are written here" Value="" />
+
+                <controls:TextBoxControl x:Name="TextBoxControl_StartWeightsPath" Grid.Row="2" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Text="Start weights - a local .pt file; nothing is downloaded by name" Value="" />
+
+                <Grid Grid.Row="3">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <controls:TextBoxControl x:Name="TextBoxControl_Epochs" Grid.Column="0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Text="Epochs - the ceiling" Value="" />
+                    <controls:TextBoxControl x:Name="TextBoxControl_Patience" Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Text="Patience - epochs without improvement" Value="" />
+                </Grid>
+
+                <Grid Grid.Row="4">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <controls:TextBoxControl x:Name="TextBoxControl_ImageSize" Grid.Column="0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Text="Image size - pixels" Value="" />
+                    <controls:TextBoxControl x:Name="TextBoxControl_Batch" Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Text="Batch" Value="" />
+                </Grid>
+
+                <Grid Grid.Row="5">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <controls:TextBoxControl x:Name="TextBoxControl_Seed" Grid.Column="0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Text="Seed" Value="" />
+                    <controls:TextBoxControl x:Name="TextBoxControl_Device" Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Text="Device - 0, cpu; empty lets ultralytics choose" Value="" />
+                </Grid>
+
+                <controls:TextBoxControl x:Name="TextBoxControl_RunName" Grid.Row="6" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Text="Run name - a new plain file name, not model; the weights are copied to &lt;name&gt;.pt" Value="" />
+
+                <controls:TextBoxControl x:Name="TextBoxControl_ProjectDirectory" Grid.Row="7" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Text="Project directory - absolute, and never inside a YOLO\models folder" Value="" />
+
+                <controls:TextBoxControl x:Name="TextBoxControl_PythonPath" Grid.Row="8" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Text="Python interpreter - a path, or a name on PATH; empty tries python then python3" Value="" />
+
+                <controls:TextBoxControl x:Name="TextBoxControl_WorkingDirectory" Grid.Row="9" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Text="Working directory - where the scripts are written; empty uses the dataset directory" Value="" />
+
+                <controls:TextBoxControl x:Name="TextBoxControl_WeightsPaths" Grid.Row="10" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Text="Gate weights - the incumbents compared with the new weights, separated by ;" Value="" />
+
+                <Label x:Name="Label_Steps" Grid.Row="11" Content="Steps - they run in this order and stop at the first failure" Margin="5,0,5,0" HorizontalAlignment="Stretch" VerticalAlignment="Center" />
+
+                <WrapPanel Grid.Row="12" Orientation="Horizontal" Margin="10,0,10,0" VerticalAlignment="Center">
+                    <CheckBox x:Name="CheckBox_Dataset" Content="Dataset build" Margin="0,0,15,0" />
+                    <CheckBox x:Name="CheckBox_LabelCheck" Content="Label check" Margin="0,0,15,0" />
+                    <CheckBox x:Name="CheckBox_Train" Content="Training" Margin="0,0,15,0" />
+                    <CheckBox x:Name="CheckBox_Validate" Content="Validation on Test" Margin="0,0,15,0" />
+                    <CheckBox x:Name="CheckBox_Evaluate" Content="Detector evaluation" Margin="0,0,15,0" />
+                </WrapPanel>
+
+                <Label x:Name="Label_Counties" Grid.Row="13" Content="Counties - a multi-part county is one entry per piece; select them all" Margin="5,0,5,0" HorizontalAlignment="Stretch" VerticalAlignment="Center" />
+
+                <controls:ListBoxControl x:Name="ListBoxControl_Counties" Grid.Row="14" SelectionMode="Extended" Margin="10,0,10,0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
+            </Grid>
+        </ScrollViewer>
+
+        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="5,5,5,5">
+            <Button x:Name="Button_OK" Content="OK" Width="70" Height="23" Margin="5,0,5,0" IsDefault="True" Click="Button_OK_Click" />
+            <Button x:Name="Button_Cancel" Content="Cancel" Width="70" Height="23" Margin="5,0,5,0" IsCancel="True" Click="Button_Cancel_Click" />
+        </StackPanel>
+    </Grid>
+</Window>

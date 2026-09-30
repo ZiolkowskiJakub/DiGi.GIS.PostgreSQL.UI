@@ -22,7 +22,7 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
     /// <summary>
     /// A YOLO detector training run started from the tray: dataset build, label check, training, validation on the Test split and the detector evaluation that gates the new weights, with the inputs asked for through <see cref="YOLOTrainingOptionsWindow"/> each time the task is started.
     /// <para><b>Two scenarios.</b> <see cref="YOLOTrainingScenario.Retrain"/> continues from the deployed model.pt and appends the chosen counties to the existing dataset folder; <see cref="YOLOTrainingScenario.Fresh"/> starts from the pretrained yolo26x.pt and builds the dataset fresh into a new folder. The scenario sets defaults only (<see cref="Create.YOLOTrainingRunOptions(YOLOTrainingScenario, string?, YOLOTrainingRunOptions?)"/>).</para>
-    /// <para><b>The run happens in another process</b>, <c>DiGi.GIS.YOLO.UI.ConsoleApp --train</c>, for the same reason as <see cref="UIYearBuiltPredictionsTask"/>: this application publishes self-contained and single-file and does not carry the runner's closure. The options are written beside the run folder as <c>&lt;RunName&gt;.YOLOTrainingRunOptions.json</c> - not inside it, because the runner refuses a run whose folder already exists. If a file with that name already exists, a counter is appended (e.g., <c>&lt;RunName&gt;_2.YOLOTrainingRunOptions.json</c>) to prevent overwriting. That file is the record of what the run was asked to do.</para>
+    /// <para><b>The run happens in another process</b>, <c>DiGi.GIS.YOLO.UI.ConsoleApp --train</c>, for the same reason as <see cref="UIYearBuiltPredictionsTask"/>: this application publishes self-contained and single-file and does not carry the runner's closure. The options are written beside the run folder - not inside it, because the runner refuses a run whose folder already exists - and that file is the record of what the run was asked to do, so it is never overwritten: a run with the Training step writes <c>&lt;RunName&gt;.YOLOTrainingRunOptions.json</c> (a taken run name is refused before launch), and a run without it always writes <c>yyyyMMdd_HHmmss.YOLOTrainingRunOptions.json</c>, whatever the run name box says (<see cref="Create.YOLOTrainingRunOptionsFile(string, string?, bool, string, DateTimeOffset)"/>).</para>
     /// <para><b>Every path is made absolute here</b>, against the runner for the files its defaults name (the weights, the legacy references, the reports folder) and against this process for the folders the operator typed, so the file the runner reads names what this application checked and named back.</para>
     /// <para><b>The run never overwrites model.pt.</b> The trained weights stay under the run folder and are copied to <c>&lt;ProjectDirectory&gt;\&lt;RunName&gt;\&lt;RunName&gt;.pt</c>; shipping or holding them is a manual decision from the evaluation table (ZiolkowskiJakub/DiGi.GIS.YOLO.UI#12).</para>
     /// <para>The dataset step authorizes with <b>the runner's own key</b>, read from the <c>GIS_WebAPI_Client.conf</c> beside its executable - a run that ends in <see cref="YearBuiltPredictionExitCode.Authorization"/> is usually that file. <b>Stopping the task kills the process tree</b>, the interpreter included; the dataset manifest lets a Re-train run continue an interrupted build (a Start from yolo26x.pt run does not resume, so a fresh build that was stopped is continued as Re-train with the start weights set back to yolo26x.pt), but a stopped training run is not resumable and its run folder has to be renamed or removed before its name is used again.</para>
@@ -370,9 +370,8 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
                 return null;
             }
 
-            string name = string.IsNullOrWhiteSpace(yOLOTrainingRunOptions.RunName)
-                ? DateTimeOffset.Now.ToString("yyyyMMdd_HHmmss", CultureInfo.InvariantCulture)
-                : yOLOTrainingRunOptions.RunName!;
+            List<YOLOTrainingStep> yOLOTrainingSteps = yOLOTrainingRunOptions.Steps ?? [];
+            bool train = yOLOTrainingSteps.Count == 0 || yOLOTrainingSteps.Contains(YOLOTrainingStep.Train);
 
             try
             {
@@ -387,21 +386,7 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
                     return null;
                 }
 
-                string baseName = name + Constants.FileName.YOLOTrainingRunOptionsSuffix;
-                string path = System.IO.Path.Combine(directory, baseName);
-                
-                // If the file already exists, generate a unique name by appending a counter
-                int counter = 2;
-                while (File.Exists(path))
-                {
-                    string nameWithCounter = $"{name}_{counter}";
-                    path = System.IO.Path.Combine(directory, nameWithCounter + Constants.FileName.YOLOTrainingRunOptionsSuffix);
-                    counter++;
-                }
-
-                File.WriteAllText(path, jsonObject.ToString());
-
-                return path;
+                return Create.YOLOTrainingRunOptionsFile(directory, yOLOTrainingRunOptions.RunName, train, jsonObject.ToString(), DateTimeOffset.Now);
             }
             catch (Exception exception)
             {

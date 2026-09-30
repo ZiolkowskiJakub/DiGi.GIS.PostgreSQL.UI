@@ -29,7 +29,7 @@ The defaults for patience, image size, batch and seed are 50, 640, 16 and 0.
 
 - **Place `yolo26x.pt` in the runner's `user files/YOLO/models/base/`.** It is git-ignored and deployed flattened as `YOLO/models/base/yolo26x.pt`. Its SHA-256 is recorded in the DiGi.YOLO README. Without it, a fresh run is refused before launch, and the refusal names the path.
 - **Every path is made absolute in the tray before the options are written.** The runner's relative defaults are resolved against the runner's own folder.
-- **The options are written beside the run folder** as `<ProjectDirectory>\<RunName>.YOLOTrainingRunOptions.json`, not inside it, because the runner refuses a run whose folder already exists. This file is the record of the run's inputs.
+- **The options are written beside the run folder** as `<ProjectDirectory>\<RunName>.YOLOTrainingRunOptions.json`, not inside it, because the runner refuses a run whose folder already exists. If a file with that name already exists, a counter is appended (e.g., `<RunName>_2.YOLOTrainingRunOptions.json`) to prevent overwriting. This file is the record of the run's inputs.
 - **Refused before launch:**
   - a project directory inside a `YOLO\models` folder (`DiGi.YOLO.Query.IsInsideModelsDirectory`)
   - a run name that is already taken, or is `model`

@@ -123,6 +123,57 @@ The options to start from, which are copied rather than changed; or null to star
 [DiGi\.GIS\.YOLO\.UI\.Classes\.YOLOTrainingRunOptions](https://learn.microsoft.com/en-us/dotnet/api/digi.gis.yolo.ui.classes.yolotrainingrunoptions 'DiGi\.GIS\.YOLO\.UI\.Classes\.YOLOTrainingRunOptions')  
 A new options instance carrying the scenario's defaults\.
 
+<a name='DiGi.GIS.PostgreSQL.UI.Create.YOLOTrainingRunOptionsFile(string,string,bool,string,System.DateTimeOffset)'></a>
+
+## Create\.YOLOTrainingRunOptionsFile\(string, string, bool, string, DateTimeOffset\) Method
+
+Writes a tray training run's options into a new file beside the run folder and never overwrites an existing one \- the file is the record of what a run was asked to do \(ZiolkowskiJakub/DiGi\.GIS\.PostgreSQL\.UI\#20\)\.
+
+<b>A run with the Training step</b> writes `<RunName>.YOLOTrainingRunOptions.json`. The preflight has already refused a taken run name, so that file cannot exist; if it does anyway, the run is refused here, naming the path, rather than written under another name.
+
+<b>A run without the Training step</b> always writes `yyyyMMdd_HHmmss.YOLOTrainingRunOptions.json`, whatever the run name box says, because its run name describes nothing it creates. Should two such runs start within the same second, `_2`, `_3` ... is appended to the later one.
+
+The file is opened with [System\.IO\.FileMode\.CreateNew](https://learn.microsoft.com/en-us/dotnet/api/system.io.filemode.createnew 'System\.IO\.FileMode\.CreateNew'), so a file that appears between the check and the write is not overwritten either.
+
+```csharp
+public static string? YOLOTrainingRunOptionsFile(string directory, string? runName, bool train, string contents, System.DateTimeOffset dateTimeOffset);
+```
+#### Parameters
+
+<a name='DiGi.GIS.PostgreSQL.UI.Create.YOLOTrainingRunOptionsFile(string,string,bool,string,System.DateTimeOffset).directory'></a>
+
+`directory` [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
+
+The existing directory the file is written into\.
+
+<a name='DiGi.GIS.PostgreSQL.UI.Create.YOLOTrainingRunOptionsFile(string,string,bool,string,System.DateTimeOffset).runName'></a>
+
+`runName` [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
+
+The run name; used only when [train](DiGi.GIS.PostgreSQL.UI.md#DiGi.GIS.PostgreSQL.UI.Create.YOLOTrainingRunOptionsFile(string,string,bool,string,System.DateTimeOffset).train 'DiGi\.GIS\.PostgreSQL\.UI\.Create\.YOLOTrainingRunOptionsFile\(string, string, bool, string, System\.DateTimeOffset\)\.train') is true\.
+
+<a name='DiGi.GIS.PostgreSQL.UI.Create.YOLOTrainingRunOptionsFile(string,string,bool,string,System.DateTimeOffset).train'></a>
+
+`train` [System\.Boolean](https://learn.microsoft.com/en-us/dotnet/api/system.boolean 'System\.Boolean')
+
+Whether the run includes the Training step\.
+
+<a name='DiGi.GIS.PostgreSQL.UI.Create.YOLOTrainingRunOptionsFile(string,string,bool,string,System.DateTimeOffset).contents'></a>
+
+`contents` [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
+
+The serialized options\.
+
+<a name='DiGi.GIS.PostgreSQL.UI.Create.YOLOTrainingRunOptionsFile(string,string,bool,string,System.DateTimeOffset).dateTimeOffset'></a>
+
+`dateTimeOffset` [System\.DateTimeOffset](https://learn.microsoft.com/en-us/dotnet/api/system.datetimeoffset 'System\.DateTimeOffset')
+
+The time a run without training is named after\.
+
+#### Returns
+[System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')  
+The path of the written file, or null when a training run's file already exists or no free name was found\.
+
 <a name='DiGi.GIS.PostgreSQL.UI.Query'></a>
 
 ## Query Class

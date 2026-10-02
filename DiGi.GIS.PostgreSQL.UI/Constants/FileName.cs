@@ -31,5 +31,11 @@ namespace DiGi.GIS.PostgreSQL.UI.Constants
         /// </summary>
         /// <remarks>Beside the run folder rather than inside it: the runner refuses a run whose folder already exists, so writing into it first would refuse every run.</remarks>
         public const string YOLOTrainingRunOptionsSuffix = "." + DiGi.GIS.YOLO.UI.Constants.FileName.YOLOTrainingRunOptions;
+
+        /// <summary>
+        /// Gets the infix of the file a tray resume's options are written to, beside the run folder as <c>&lt;RunName&gt;.resume-&lt;yyyyMMdd_HHmmss&gt;.YOLOTrainingRunOptions.json</c>.
+        /// </summary>
+        /// <remarks>The original run's <c>&lt;RunName&gt;.YOLOTrainingRunOptions.json</c> is the record of what that run was asked to do, so a resume never overwrites it - the resume gets a file of its own.</remarks>
+        public const string YOLOTrainingRunOptionsResumeInfix = ".resume-";
     }
 }

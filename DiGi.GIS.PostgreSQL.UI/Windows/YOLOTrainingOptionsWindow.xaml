@@ -27,7 +27,7 @@
                     <RowDefinition Height="60" />
                     <RowDefinition Height="60" />
                     <RowDefinition Height="60" />
-                    <RowDefinition Height="60" />
+                    <RowDefinition Height="88" />
                     <RowDefinition Height="60" />
                     <RowDefinition Height="60" />
                     <RowDefinition Height="60" />
@@ -81,7 +81,17 @@
                     <controls:TextBoxControl x:Name="TextBoxControl_Device" Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Text="Device - 0, cpu; empty lets ultralytics choose" Value="" />
                 </Grid>
 
-                <controls:TextBoxControl x:Name="TextBoxControl_RunName" Grid.Row="6" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Text="Run name - a new plain file name, not model; the weights are copied to &lt;name&gt;.pt" Value="" />
+                <Grid Grid.Row="6">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="28" />
+                    </Grid.RowDefinitions>
+                    <controls:TextBoxControl x:Name="TextBoxControl_RunName" Grid.Row="0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Text="Run name - a new plain file name, not model; the weights are copied to &lt;name&gt;.pt" Value="" />
+                    <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="10,0,10,0" VerticalAlignment="Center">
+                        <TextBlock x:Name="TextBlock_InterruptedRun" VerticalAlignment="Center" Foreground="DarkOrange" Text="" />
+                        <CheckBox x:Name="CheckBox_ResumeInterruptedRun" Content="Resume interrupted run" Margin="10,0,0,0" VerticalAlignment="Center" Visibility="Collapsed" Checked="CheckBox_ResumeInterruptedRun_Changed" Unchecked="CheckBox_ResumeInterruptedRun_Changed" />
+                    </StackPanel>
+                </Grid>
 
                 <controls:TextBoxControl x:Name="TextBoxControl_ProjectDirectory" Grid.Row="7" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Text="Project directory - absolute, and never inside a YOLO\models folder" Value="" />
 

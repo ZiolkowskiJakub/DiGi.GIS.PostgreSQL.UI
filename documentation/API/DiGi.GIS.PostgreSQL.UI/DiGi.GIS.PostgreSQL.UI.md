@@ -123,11 +123,13 @@ The options to start from, which are copied rather than changed; or null to star
 [DiGi\.GIS\.YOLO\.UI\.Classes\.YOLOTrainingRunOptions](https://learn.microsoft.com/en-us/dotnet/api/digi.gis.yolo.ui.classes.yolotrainingrunoptions 'DiGi\.GIS\.YOLO\.UI\.Classes\.YOLOTrainingRunOptions')  
 A new options instance carrying the scenario's defaults\.
 
-<a name='DiGi.GIS.PostgreSQL.UI.Create.YOLOTrainingRunOptionsFile(string,string,bool,string,System.DateTimeOffset)'></a>
+<a name='DiGi.GIS.PostgreSQL.UI.Create.YOLOTrainingRunOptionsFile(string,string,bool,string,System.DateTimeOffset,bool)'></a>
 
-## Create\.YOLOTrainingRunOptionsFile\(string, string, bool, string, DateTimeOffset\) Method
+## Create\.YOLOTrainingRunOptionsFile\(string, string, bool, string, DateTimeOffset, bool\) Method
 
 Writes a tray training run's options into a new file beside the run folder and never overwrites an existing one \- the file is the record of what a run was asked to do \(ZiolkowskiJakub/DiGi\.GIS\.PostgreSQL\.UI\#20\)\.
+
+<b>A resume</b> writes `<RunName>.resume-<yyyyMMdd_HHmmss>.YOLOTrainingRunOptions.json`, so the original run's `<RunName>.YOLOTrainingRunOptions.json` is left untouched. Should two resumes start within the same second, `_2`, `_3` ... is appended to the later one.
 
 <b>A run with the Training step</b> writes `<RunName>.YOLOTrainingRunOptions.json`. The preflight has already refused a taken run name, so that file cannot exist; if it does anyway, the run is refused here, naming the path, rather than written under another name.
 
@@ -136,39 +138,45 @@ Writes a tray training run's options into a new file beside the run folder and n
 The file is opened with [System\.IO\.FileMode\.CreateNew](https://learn.microsoft.com/en-us/dotnet/api/system.io.filemode.createnew 'System\.IO\.FileMode\.CreateNew'), so a file that appears between the check and the write is not overwritten either.
 
 ```csharp
-public static string? YOLOTrainingRunOptionsFile(string directory, string? runName, bool train, string contents, System.DateTimeOffset dateTimeOffset);
+public static string? YOLOTrainingRunOptionsFile(string directory, string? runName, bool train, string contents, System.DateTimeOffset dateTimeOffset, bool resume=false);
 ```
 #### Parameters
 
-<a name='DiGi.GIS.PostgreSQL.UI.Create.YOLOTrainingRunOptionsFile(string,string,bool,string,System.DateTimeOffset).directory'></a>
+<a name='DiGi.GIS.PostgreSQL.UI.Create.YOLOTrainingRunOptionsFile(string,string,bool,string,System.DateTimeOffset,bool).directory'></a>
 
 `directory` [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
 
 The existing directory the file is written into\.
 
-<a name='DiGi.GIS.PostgreSQL.UI.Create.YOLOTrainingRunOptionsFile(string,string,bool,string,System.DateTimeOffset).runName'></a>
+<a name='DiGi.GIS.PostgreSQL.UI.Create.YOLOTrainingRunOptionsFile(string,string,bool,string,System.DateTimeOffset,bool).runName'></a>
 
 `runName` [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
 
-The run name; used only when [train](DiGi.GIS.PostgreSQL.UI.md#DiGi.GIS.PostgreSQL.UI.Create.YOLOTrainingRunOptionsFile(string,string,bool,string,System.DateTimeOffset).train 'DiGi\.GIS\.PostgreSQL\.UI\.Create\.YOLOTrainingRunOptionsFile\(string, string, bool, string, System\.DateTimeOffset\)\.train') is true\.
+The run name; used when [train](DiGi.GIS.PostgreSQL.UI.md#DiGi.GIS.PostgreSQL.UI.Create.YOLOTrainingRunOptionsFile(string,string,bool,string,System.DateTimeOffset,bool).train 'DiGi\.GIS\.PostgreSQL\.UI\.Create\.YOLOTrainingRunOptionsFile\(string, string, bool, string, System\.DateTimeOffset, bool\)\.train') or [resume](DiGi.GIS.PostgreSQL.UI.md#DiGi.GIS.PostgreSQL.UI.Create.YOLOTrainingRunOptionsFile(string,string,bool,string,System.DateTimeOffset,bool).resume 'DiGi\.GIS\.PostgreSQL\.UI\.Create\.YOLOTrainingRunOptionsFile\(string, string, bool, string, System\.DateTimeOffset, bool\)\.resume') is true\.
 
-<a name='DiGi.GIS.PostgreSQL.UI.Create.YOLOTrainingRunOptionsFile(string,string,bool,string,System.DateTimeOffset).train'></a>
+<a name='DiGi.GIS.PostgreSQL.UI.Create.YOLOTrainingRunOptionsFile(string,string,bool,string,System.DateTimeOffset,bool).train'></a>
 
 `train` [System\.Boolean](https://learn.microsoft.com/en-us/dotnet/api/system.boolean 'System\.Boolean')
 
 Whether the run includes the Training step\.
 
-<a name='DiGi.GIS.PostgreSQL.UI.Create.YOLOTrainingRunOptionsFile(string,string,bool,string,System.DateTimeOffset).contents'></a>
+<a name='DiGi.GIS.PostgreSQL.UI.Create.YOLOTrainingRunOptionsFile(string,string,bool,string,System.DateTimeOffset,bool).contents'></a>
 
 `contents` [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
 
 The serialized options\.
 
-<a name='DiGi.GIS.PostgreSQL.UI.Create.YOLOTrainingRunOptionsFile(string,string,bool,string,System.DateTimeOffset).dateTimeOffset'></a>
+<a name='DiGi.GIS.PostgreSQL.UI.Create.YOLOTrainingRunOptionsFile(string,string,bool,string,System.DateTimeOffset,bool).dateTimeOffset'></a>
 
 `dateTimeOffset` [System\.DateTimeOffset](https://learn.microsoft.com/en-us/dotnet/api/system.datetimeoffset 'System\.DateTimeOffset')
 
-The time a run without training is named after\.
+The time a run without training, or a resume, is named after\.
+
+<a name='DiGi.GIS.PostgreSQL.UI.Create.YOLOTrainingRunOptionsFile(string,string,bool,string,System.DateTimeOffset,bool).resume'></a>
+
+`resume` [System\.Boolean](https://learn.microsoft.com/en-us/dotnet/api/system.boolean 'System\.Boolean')
+
+Whether the run continues an interrupted one; a resume's own file is named after it and the original is never touched\.
 
 #### Returns
 [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')  
@@ -324,6 +332,55 @@ The path to resolve against this process's current directory\.
 #### Returns
 [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')  
 The absolute path; the path unchanged when it cannot be formed; or null when it is null or blank\.
+
+<a name='DiGi.GIS.PostgreSQL.UI.Query.InterruptedYOLOTrainingRun(string,string,string,string,System.Threading.CancellationToken)'></a>
+
+## Query\.InterruptedYOLOTrainingRun\(string, string, string, string, CancellationToken\) Method
+
+Returns what an interrupted training run named by [projectDirectory](DiGi.GIS.PostgreSQL.UI.md#DiGi.GIS.PostgreSQL.UI.Query.InterruptedYOLOTrainingRun(string,string,string,string,System.Threading.CancellationToken).projectDirectory 'DiGi\.GIS\.PostgreSQL\.UI\.Query\.InterruptedYOLOTrainingRun\(string, string, string, string, System\.Threading\.CancellationToken\)\.projectDirectory') and [runName](DiGi.GIS.PostgreSQL.UI.md#DiGi.GIS.PostgreSQL.UI.Query.InterruptedYOLOTrainingRun(string,string,string,string,System.Threading.CancellationToken).runName 'DiGi\.GIS\.PostgreSQL\.UI\.Query\.InterruptedYOLOTrainingRun\(string, string, string, string, System\.Threading\.CancellationToken\)\.runName') holds when it can be resumed, or `null` when there is nothing to offer\.
+
+A run is interruptible when its folder exists, holds `weights\last.pt`, has no completed `<RunName>.pt`, and the checkpoint can be read and is unfinished. [DiGi\.YOLO\.Query\.YOLOCheckpointInformation\(System\.String,System\.String,System\.String,System\.Threading\.CancellationToken\)](https://learn.microsoft.com/en-us/dotnet/api/digi.yolo.query.yolocheckpointinformation#digi-yolo-query-yolocheckpointinformation(system-string-system-string-system-string-system-threading-cancellationtoken) 'DiGi\.YOLO\.Query\.YOLOCheckpointInformation\(System\.String,System\.String,System\.String,System\.Threading\.CancellationToken\)') reads the epoch, the ceiling and the recorded arguments; the caller decides what to do with them.
+
+This is the detection [YOLOTrainingOptionsWindow](DiGi.GIS.PostgreSQL.UI.Windows.md#DiGi.GIS.PostgreSQL.UI.Windows.YOLOTrainingOptionsWindow 'DiGi\.GIS\.PostgreSQL\.UI\.Windows\.YOLOTrainingOptionsWindow') offers and the task's preflight repeats, so both agree on which folders are interruptible. It runs the interpreter, so a machine that cannot read a checkpoint simply offers nothing.
+
+```csharp
+public static DiGi.YOLO.Classes.YOLOCheckpointInformation? InterruptedYOLOTrainingRun(string? projectDirectory, string? runName, string? pythonPath, string? workingDirectory, System.Threading.CancellationToken cancellationToken=default(System.Threading.CancellationToken));
+```
+#### Parameters
+
+<a name='DiGi.GIS.PostgreSQL.UI.Query.InterruptedYOLOTrainingRun(string,string,string,string,System.Threading.CancellationToken).projectDirectory'></a>
+
+`projectDirectory` [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
+
+The absolute directory the run folder is created in\.
+
+<a name='DiGi.GIS.PostgreSQL.UI.Query.InterruptedYOLOTrainingRun(string,string,string,string,System.Threading.CancellationToken).runName'></a>
+
+`runName` [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
+
+The run name: the name of its folder under [projectDirectory](DiGi.GIS.PostgreSQL.UI.md#DiGi.GIS.PostgreSQL.UI.Query.InterruptedYOLOTrainingRun(string,string,string,string,System.Threading.CancellationToken).projectDirectory 'DiGi\.GIS\.PostgreSQL\.UI\.Query\.InterruptedYOLOTrainingRun\(string, string, string, string, System\.Threading\.CancellationToken\)\.projectDirectory')\.
+
+<a name='DiGi.GIS.PostgreSQL.UI.Query.InterruptedYOLOTrainingRun(string,string,string,string,System.Threading.CancellationToken).pythonPath'></a>
+
+`pythonPath` [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
+
+The path of the CPython interpreter, a command name on PATH, or `null` to search PATH\.
+
+<a name='DiGi.GIS.PostgreSQL.UI.Query.InterruptedYOLOTrainingRun(string,string,string,string,System.Threading.CancellationToken).workingDirectory'></a>
+
+`workingDirectory` [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
+
+The directory the checkpoint script is written to and run in, or `null` to use [projectDirectory](DiGi.GIS.PostgreSQL.UI.md#DiGi.GIS.PostgreSQL.UI.Query.InterruptedYOLOTrainingRun(string,string,string,string,System.Threading.CancellationToken).projectDirectory 'DiGi\.GIS\.PostgreSQL\.UI\.Query\.InterruptedYOLOTrainingRun\(string, string, string, string, System\.Threading\.CancellationToken\)\.projectDirectory')\.
+
+<a name='DiGi.GIS.PostgreSQL.UI.Query.InterruptedYOLOTrainingRun(string,string,string,string,System.Threading.CancellationToken).cancellationToken'></a>
+
+`cancellationToken` [System\.Threading\.CancellationToken](https://learn.microsoft.com/en-us/dotnet/api/system.threading.cancellationtoken 'System\.Threading\.CancellationToken')
+
+The [System\.Threading\.CancellationToken](https://learn.microsoft.com/en-us/dotnet/api/system.threading.cancellationtoken 'System\.Threading\.CancellationToken') to observe\.
+
+#### Returns
+[DiGi\.YOLO\.Classes\.YOLOCheckpointInformation](https://learn.microsoft.com/en-us/dotnet/api/digi.yolo.classes.yolocheckpointinformation 'DiGi\.YOLO\.Classes\.YOLOCheckpointInformation')  
+The checkpoint information of the interrupted run, or `null` when it is not one\.
 
 <a name='DiGi.GIS.PostgreSQL.UI.Query.YearBuiltPredictionConsoleAppPath(string,string)'></a>
 

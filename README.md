@@ -31,6 +31,7 @@ The defaults for patience, image size, batch and seed are 50, 640, 16 and 0.
 - **Every path is made absolute in the tray before the options are written.** The runner's relative defaults are resolved against the runner's own folder.
 - **The options are written beside the run folder**, not inside it, because the runner refuses a run whose folder already exists. This file is the record of the run's inputs, so it is never overwritten:
   - a run with the Training step writes `<ProjectDirectory>\<RunName>.YOLOTrainingRunOptions.json` (a taken run name is refused before launch, and an existing file refuses the run)
+  - a resume writes `<ProjectDirectory>\<RunName>.resume-<yyyyMMdd_HHmmss>.YOLOTrainingRunOptions.json`, so the original run's file is left untouched
   - a run without it always writes `<ProjectDirectory>\yyyyMMdd_HHmmss.YOLOTrainingRunOptions.json`, whatever the run name box says; `_2`, `_3` ... is appended if that name is taken
 - **Refused before launch:**
   - a project directory inside a `YOLO\models` folder (`DiGi.YOLO.Query.IsInsideModelsDirectory`)
@@ -44,6 +45,12 @@ The defaults for patience, image size, batch and seed are 50, 640, 16 and 0.
 - **The dataset step authorizes with the runner's own `GIS_WebAPI_Client.conf`**, not with this application's.
 - **Stopping the task kills the whole process tree.**
 - **Keep the runner in `bin\extensions\DiGi.GIS.YOLO.UI.ConsoleApp` current.** The tray resolves that copy before the workspace build, and a runner older than the `--train` mode ends the run with a configuration exit code.
+
+### Resuming an interrupted run
+
+When the run name and project directory name a run whose folder holds an unfinished `weights\last.pt` and no completed `<RunName>.pt`, the dialog shows `Interrupted at epoch N of M - resume it?` under the run name and offers **Resume interrupted run**. Ticking it locks what a resume cannot change — the start weights, epochs, patience, image size, batch and seed come from the checkpoint, and the dataset build is switched off — because `DiGi.YOLO` restores them and refuses a resume that rebuilds the dataset. Device, interpreter, working directory, gate weights and the steps after training stay editable; the Training step is still required.
+
+The run continues `weights\last.pt` at the next epoch in the same folder, then copies, re-checks, validates and evaluates exactly as a fresh run. A resumed run is **not bit-identical** to an uninterrupted one. The preflight repeats every refusal the runner makes, before launch: the training step not selected, the dataset step selected, the folder or `last.pt` missing, `<RunName>.pt` present, the checkpoint unreadable, finished, recording a missing dataset, or recording a project or name that was moved or renamed. **Closing the application or a power cut still stops the run** — resume shortens the recovery, it does not prevent the interruption.
 
 ---
 

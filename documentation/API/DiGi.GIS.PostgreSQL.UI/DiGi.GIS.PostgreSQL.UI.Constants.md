@@ -186,6 +186,22 @@ public const string YearBuiltPredictionConsoleApp = "DiGi.GIS.YOLO.UI.ConsoleApp
 ### Remarks
 The pipeline itself is not hosted in this application \- it carries the machine learning closure, which is about a gigabyte of native libraries against an application that publishes self\-contained and single\-file\. The run is handed to this executable instead, and [YearBuiltPredictionConsoleAppPath\(string, string\)](DiGi.GIS.PostgreSQL.UI.md#DiGi.GIS.PostgreSQL.UI.Query.YearBuiltPredictionConsoleAppPath(string,string) 'DiGi\.GIS\.PostgreSQL\.UI\.Query\.YearBuiltPredictionConsoleAppPath\(string, string\)') is what finds it\.
 
+<a name='DiGi.GIS.PostgreSQL.UI.Constants.FileName.YOLOTrainingRunOptionsResumeInfix'></a>
+
+## FileName\.YOLOTrainingRunOptionsResumeInfix Field
+
+Gets the infix of the file a tray resume's options are written to, beside the run folder as `<RunName>.resume-<yyyyMMdd_HHmmss>.YOLOTrainingRunOptions.json`\.
+
+```csharp
+public const string YOLOTrainingRunOptionsResumeInfix = ".resume-";
+```
+
+#### Field Value
+[System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
+
+### Remarks
+The original run's `<RunName>.YOLOTrainingRunOptions.json` is the record of what that run was asked to do, so a resume never overwrites it \- the resume gets a file of its own\.
+
 <a name='DiGi.GIS.PostgreSQL.UI.Constants.FileName.YOLOTrainingRunOptionsSuffix'></a>
 
 ## FileName\.YOLOTrainingRunOptionsSuffix Field

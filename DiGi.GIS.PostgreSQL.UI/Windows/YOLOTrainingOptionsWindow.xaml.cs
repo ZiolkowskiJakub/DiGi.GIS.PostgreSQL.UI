@@ -5,6 +5,8 @@ using DiGi.GIS.YOLO.UI.Enums;
 using DiGi.UI.WPF.Classes;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
+using System.Text.Json.Nodes;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -14,6 +16,7 @@ namespace DiGi.GIS.PostgreSQL.UI.Windows
     /// Interaction logic for YOLOTrainingOptionsWindow.xaml
     /// <para>Asks for the inputs of one YOLO detector training run: the scenario, the counties, the dataset folder, the start weights, the training hyperparameters, where the run is written, the interpreter, the steps and the weights the new detector is gated against.</para>
     /// <para><b>The scenario sets defaults, not rules.</b> Switching it resets the start weights and the epoch ceiling to that scenario's defaults (<see cref="Create.YOLOTrainingRunOptions(YOLOTrainingScenario, string?, YOLOTrainingRunOptions?)"/>) and leaves every other control as it is; on OK it also decides whether the dataset folder is appended to (Re-train) or must be new (Start from yolo26x.pt).</para>
+    /// <para><b>An interrupted run is offered for resume.</b> When the run name and project directory name a run whose folder holds an unfinished <c>weights\last.pt</c> and no completed <c>&lt;RunName&gt;.pt</c>, the dialog shows the checkpoint's epoch and ceiling and offers to resume it. Ticking <see cref="YOLOTrainingStep.Train"/> is still required; the box locks what a resume cannot change - the hyperparameters, the start weights and the dataset build - because the checkpoint restores them, and the epoch ceiling is fixed by the checkpoint.</para>
     /// <para><b>What is not offered is the runner's to decide.</b> The dataset's confidence threshold, split, label check sizes, legacy cut-off and request sizes carry through the copy untouched at the values its README describes; they shape what the detector is trained on, and a control opened before every run invites changing them between runs that are then compared.</para>
     /// <para>The window works on a copy, so a cancelled dialog leaves the settings of an earlier run exactly as they were, and every member the window has no control for carries through untouched.</para>
     /// </summary>
@@ -22,6 +25,19 @@ namespace DiGi.GIS.PostgreSQL.UI.Windows
         private readonly string? consoleAppPath;
         private YOLOTrainingRunOptions yOLOTrainingRunOptions;
         private YOLOTrainingScenario yOLOTrainingScenario;
+
+        // The interrupted run the name boxes currently point at, and the hyperparameter values the resume replaces
+        // while its box is ticked - kept so unticking the box puts the operator's own values back.
+        private DiGi.YOLO.Classes.YOLOCheckpointInformation? yOLOCheckpointInformation;
+        private string? path_InterruptedRun;
+        private bool resumeState;
+        private string? startWeightsPath_Resume;
+        private string? epochs_Resume;
+        private string? patience_Resume;
+        private string? imageSize_Resume;
+        private string? batch_Resume;
+        private string? seed_Resume;
+        private bool dataset_Resume;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="YOLOTrainingOptionsWindow"/> class.
@@ -78,6 +94,13 @@ namespace DiGi.GIS.PostgreSQL.UI.Windows
             ListBoxControl_Counties.ItemAdding += ListBoxControl_Counties_ItemAdding;
 
             SetCounties(administrativeAreal2DReferences);
+
+            // A run that is already interrupted is offered as soon as the dialog opens with its name; a change to
+            // either name re-evaluates it, so a name typed by hand is offered before OK is pressed.
+            TextBoxControl_RunName.LostFocus += TextBoxControl_RunNameOrProjectDirectory_LostFocus;
+            TextBoxControl_ProjectDirectory.LostFocus += TextBoxControl_RunNameOrProjectDirectory_LostFocus;
+
+            EvaluateInterruptedRun();
         }
 
         /// <summary>
@@ -205,6 +228,19 @@ namespace DiGi.GIS.PostgreSQL.UI.Windows
 
             bool train = yOLOTrainingSteps.Contains(YOLOTrainingStep.Train);
 
+            bool resume = yOLOCheckpointInformation is not null && CheckBox_ResumeInterruptedRun.IsChecked == true;
+            if (resume && !train)
+            {
+                Warn("A resume needs the Training step - the training is the step it continues.");
+                return;
+            }
+
+            if (resume && yOLOTrainingSteps.Contains(YOLOTrainingStep.Dataset))
+            {
+                Warn("A resume never rebuilds the dataset it was trained on.");
+                return;
+            }
+
             string? startWeightsPath = Value(TextBoxControl_StartWeightsPath.Value);
             if (startWeightsPath is null && (train || yOLOTrainingSteps.Contains(YOLOTrainingStep.Validate)))
             {
@@ -255,6 +291,7 @@ namespace DiGi.GIS.PostgreSQL.UI.Windows
             yOLOTrainingRunOptions_Result.Device = Value(TextBoxControl_Device.Value);
             yOLOTrainingRunOptions_Result.RunName = runName;
             yOLOTrainingRunOptions_Result.ProjectDirectory = projectDirectory;
+            yOLOTrainingRunOptions_Result.ResumeTraining = resume;
             yOLOTrainingRunOptions_Result.Steps = yOLOTrainingSteps;
 
             // Written at both levels: the run-level value overrides for training, and the dataset-level one is
@@ -273,11 +310,126 @@ namespace DiGi.GIS.PostgreSQL.UI.Windows
 
             DialogResult = true;
             Close();
+        }
 
-            static string? Value(string? text)
+        private static string? Value(string? text)
+        {
+            return string.IsNullOrWhiteSpace(text) ? null : text!.Trim();
+        }
+
+        private static string? JsonInt(JsonObject? jsonObject, string name)
+        {
+            if (jsonObject is not null && jsonObject[name] is JsonValue jsonValue && jsonValue.TryGetValue(out int value))
             {
-                return string.IsNullOrWhiteSpace(text) ? null : text!.Trim();
+                return value.ToString(CultureInfo.InvariantCulture);
             }
+
+            return null;
+        }
+
+        private void TextBoxControl_RunNameOrProjectDirectory_LostFocus(object sender, RoutedEventArgs e)
+        {
+            EvaluateInterruptedRun();
+        }
+
+        private void CheckBox_ResumeInterruptedRun_Changed(object sender, RoutedEventArgs e)
+        {
+            ApplyResumeMode();
+        }
+
+        /// <summary>
+        /// Re-reads whether the run named by the run name and project directory boxes is an interrupted one, and shows or hides the resume offer accordingly. The checkpoint is read through <see cref="Query.InterruptedYOLOTrainingRun(string?, string?, string?, string?, System.Threading.CancellationToken)"/>, so the offer names the epoch and ceiling the checkpoint holds.
+        /// </summary>
+        private void EvaluateInterruptedRun()
+        {
+            string? projectDirectory = Value(TextBoxControl_ProjectDirectory.Value);
+            string? runName = Value(TextBoxControl_RunName.Value);
+            string? pythonPath = Value(TextBoxControl_PythonPath.Value);
+            string? workingDirectory = Value(TextBoxControl_WorkingDirectory.Value);
+
+            DiGi.YOLO.Classes.YOLOCheckpointInformation? yOLOCheckpointInformation_Evaluated = null;
+            if (projectDirectory is not null && runName is not null)
+            {
+                yOLOCheckpointInformation_Evaluated = Query.InterruptedYOLOTrainingRun(projectDirectory, runName, pythonPath, workingDirectory);
+            }
+
+            yOLOCheckpointInformation = yOLOCheckpointInformation_Evaluated;
+            path_InterruptedRun = yOLOCheckpointInformation_Evaluated is null || projectDirectory is null || runName is null
+                ? null
+                : Path.Combine(projectDirectory, runName, DiGi.GIS.YOLO.UI.Constants.DirectoryName.Weights, DiGi.GIS.YOLO.UI.Constants.FileName.LastWeights);
+
+            if (yOLOCheckpointInformation_Evaluated is null)
+            {
+                TextBlock_InterruptedRun.Text = string.Empty;
+                CheckBox_ResumeInterruptedRun.Visibility = Visibility.Collapsed;
+                CheckBox_ResumeInterruptedRun.IsChecked = false;
+            }
+            else
+            {
+                TextBlock_InterruptedRun.Text = string.Format(CultureInfo.InvariantCulture, "Interrupted at epoch {0} of {1} - resume it?", yOLOCheckpointInformation_Evaluated.Epoch ?? 0, yOLOCheckpointInformation_Evaluated.Epochs ?? 0);
+                CheckBox_ResumeInterruptedRun.Visibility = Visibility.Visible;
+
+                // Reopened after a resume that was not started yet: the choice is kept rather than made again.
+                CheckBox_ResumeInterruptedRun.IsChecked = yOLOTrainingRunOptions.ResumeTraining;
+            }
+
+            ApplyResumeMode();
+        }
+
+        /// <summary>
+        /// Locks what a resume cannot change - the hyperparameters, the start weights and the dataset build - and shows the checkpoint's values while the resume box is ticked; unticking it puts the operator's own values back. Device, interpreter, working directory, gate weights and the steps after training stay editable.
+        /// </summary>
+        private void ApplyResumeMode()
+        {
+            bool resume = yOLOCheckpointInformation is not null && CheckBox_ResumeInterruptedRun.IsChecked == true;
+
+            if (resume && !resumeState)
+            {
+                startWeightsPath_Resume = TextBoxControl_StartWeightsPath.Value;
+                epochs_Resume = TextBoxControl_Epochs.Value;
+                patience_Resume = TextBoxControl_Patience.Value;
+                imageSize_Resume = TextBoxControl_ImageSize.Value;
+                batch_Resume = TextBoxControl_Batch.Value;
+                seed_Resume = TextBoxControl_Seed.Value;
+                dataset_Resume = CheckBox_Dataset.IsChecked == true;
+                resumeState = true;
+            }
+            else if (!resume && resumeState)
+            {
+                TextBoxControl_StartWeightsPath.Value = startWeightsPath_Resume;
+                TextBoxControl_Epochs.Value = epochs_Resume;
+                TextBoxControl_Patience.Value = patience_Resume;
+                TextBoxControl_ImageSize.Value = imageSize_Resume;
+                TextBoxControl_Batch.Value = batch_Resume;
+                TextBoxControl_Seed.Value = seed_Resume;
+                CheckBox_Dataset.IsChecked = dataset_Resume;
+                resumeState = false;
+            }
+
+            TextBoxControl_StartWeightsPath.IsEnabled = !resume;
+            TextBoxControl_Epochs.IsEnabled = !resume;
+            TextBoxControl_Patience.IsEnabled = !resume;
+            TextBoxControl_ImageSize.IsEnabled = !resume;
+            TextBoxControl_Batch.IsEnabled = !resume;
+            TextBoxControl_Seed.IsEnabled = !resume;
+            CheckBox_Dataset.IsEnabled = !resume;
+
+            if (!resume || yOLOCheckpointInformation is null)
+            {
+                return;
+            }
+
+            TextBoxControl_StartWeightsPath.Value = path_InterruptedRun;
+            TextBoxControl_Epochs.Value = (yOLOCheckpointInformation.Epochs ?? 0).ToString(CultureInfo.InvariantCulture);
+
+            JsonObject? trainArguments = yOLOCheckpointInformation.TrainArguments;
+            TextBoxControl_Patience.Value = JsonInt(trainArguments, "patience") ?? TextBoxControl_Patience.Value;
+            TextBoxControl_ImageSize.Value = JsonInt(trainArguments, "imgsz") ?? TextBoxControl_ImageSize.Value;
+            TextBoxControl_Batch.Value = JsonInt(trainArguments, "batch") ?? TextBoxControl_Batch.Value;
+            TextBoxControl_Seed.Value = JsonInt(trainArguments, "seed") ?? TextBoxControl_Seed.Value;
+
+            // A resume never rebuilds the dataset the checkpoint was trained on.
+            CheckBox_Dataset.IsChecked = false;
         }
 
         private void ComboBox_Scenario_SelectionChanged(object sender, SelectionChangedEventArgs e)

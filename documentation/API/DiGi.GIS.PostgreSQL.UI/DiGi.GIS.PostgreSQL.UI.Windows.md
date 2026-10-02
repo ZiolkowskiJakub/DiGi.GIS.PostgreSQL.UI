@@ -886,6 +886,8 @@ Asks for the inputs of one YOLO detector training run: the scenario, the countie
 
 <b>The scenario sets defaults, not rules.</b> Switching it resets the start weights and the epoch ceiling to that scenario's defaults ([YOLOTrainingRunOptions\(YOLOTrainingScenario, string, YOLOTrainingRunOptions\)](DiGi.GIS.PostgreSQL.UI.md#DiGi.GIS.PostgreSQL.UI.Create.YOLOTrainingRunOptions(DiGi.GIS.PostgreSQL.UI.Enums.YOLOTrainingScenario,string,DiGi.GIS.YOLO.UI.Classes.YOLOTrainingRunOptions) 'DiGi\.GIS\.PostgreSQL\.UI\.Create\.YOLOTrainingRunOptions\(DiGi\.GIS\.PostgreSQL\.UI\.Enums\.YOLOTrainingScenario, string, DiGi\.GIS\.YOLO\.UI\.Classes\.YOLOTrainingRunOptions\)')) and leaves every other control as it is; on OK it also decides whether the dataset folder is appended to (Re-train) or must be new (Start from yolo26x.pt).
 
+<b>An interrupted run is offered for resume.</b> When the run name and project directory name a run whose folder holds an unfinished `weights\last.pt` and no completed `<RunName>.pt`, the dialog shows the checkpoint's epoch and ceiling and offers to resume it. Ticking [DiGi\.GIS\.YOLO\.UI\.Enums\.YOLOTrainingStep\.Train](https://learn.microsoft.com/en-us/dotnet/api/digi.gis.yolo.ui.enums.yolotrainingstep.train 'DiGi\.GIS\.YOLO\.UI\.Enums\.YOLOTrainingStep\.Train') is still required; the box locks what a resume cannot change - the hyperparameters, the start weights and the dataset build - because the checkpoint restores them, and the epoch ceiling is fixed by the checkpoint.
+
 <b>What is not offered is the runner's to decide.</b> The dataset's confidence threshold, split, label check sizes, legacy cut-off and request sizes carry through the copy untouched at the values its README describes; they shape what the detector is trained on, and a control opened before every run invites changing them between runs that are then compared.
 
 The window works on a copy, so a cancelled dialog leaves the settings of an earlier run exactly as they were, and every member the window has no control for carries through untouched.
@@ -961,6 +963,26 @@ public DiGi.GIS.PostgreSQL.UI.Enums.YOLOTrainingScenario YOLOTrainingScenario { 
 #### Property Value
 [YOLOTrainingScenario](DiGi.GIS.PostgreSQL.UI.Enums.md#DiGi.GIS.PostgreSQL.UI.Enums.YOLOTrainingScenario 'DiGi\.GIS\.PostgreSQL\.UI\.Enums\.YOLOTrainingScenario')
 ### Methods
+
+<a name='DiGi.GIS.PostgreSQL.UI.Windows.YOLOTrainingOptionsWindow.ApplyResumeMode()'></a>
+
+## YOLOTrainingOptionsWindow\.ApplyResumeMode\(\) Method
+
+Locks what a resume cannot change \- the hyperparameters, the start weights and the dataset build \- and shows the checkpoint's values while the resume box is ticked; unticking it puts the operator's own values back\. Device, interpreter, working directory, gate weights and the steps after training stay editable\.
+
+```csharp
+private void ApplyResumeMode();
+```
+
+<a name='DiGi.GIS.PostgreSQL.UI.Windows.YOLOTrainingOptionsWindow.EvaluateInterruptedRun()'></a>
+
+## YOLOTrainingOptionsWindow\.EvaluateInterruptedRun\(\) Method
+
+Re\-reads whether the run named by the run name and project directory boxes is an interrupted one, and shows or hides the resume offer accordingly\. The checkpoint is read through [InterruptedYOLOTrainingRun\(string, string, string, string, CancellationToken\)](DiGi.GIS.PostgreSQL.UI.md#DiGi.GIS.PostgreSQL.UI.Query.InterruptedYOLOTrainingRun(string,string,string,string,System.Threading.CancellationToken) 'DiGi\.GIS\.PostgreSQL\.UI\.Query\.InterruptedYOLOTrainingRun\(string, string, string, string, System\.Threading\.CancellationToken\)'), so the offer names the epoch and ceiling the checkpoint holds\.
+
+```csharp
+private void EvaluateInterruptedRun();
+```
 
 <a name='DiGi.GIS.PostgreSQL.UI.Windows.YOLOTrainingOptionsWindow.InitializeComponent()'></a>
 

@@ -52,6 +52,14 @@ When the run name and project directory name a run whose folder holds an unfinis
 
 The run continues `weights\last.pt` at the next epoch in the same folder, then copies, re-checks, validates and evaluates exactly as a fresh run. A resumed run is **not bit-identical** to an uninterrupted one. The preflight repeats every refusal the runner makes, before launch: the training step not selected, the dataset step selected, the folder or `last.pt` missing, `<RunName>.pt` present, the checkpoint unreadable, finished, recording a missing dataset, or recording a project or name that was moved or renamed. **Closing the application or a power cut still stops the run** — resume shortens the recovery, it does not prevent the interruption.
 
+### Stalls and automatic resumes
+
+A training can stop producing output while staying alive — a data-loader deadlock holds the GPU with every process at 0 % CPU — or its process can die with a driver fault. `Automatic resumes` (default 3) sets `YOLOTrainingRunOptions.AutoResumeCount`; `Stall limit` (minutes, empty for the runner's 15) sets `InactivityTimeout`. Both are enabled only with the Training step.
+
+- A run that stalls or crashes is continued from its own `weights\last.pt`, up to the count, each time after copying the checkpoint to `weights\last_autoresume<N>_<yyyyMMdd_HHmmss>.pt`. A stop from the tray is never resumed, and neither is a refusal before the process started or a finished checkpoint.
+- The runner logs `Training stalled at epoch E (last output hh:mm:ss) - automatic resume N of M`, or `Training exited with code X - automatic resume N of M`, and prints `Resumed automatically N time(s): …` at the end; the tray logs every line.
+- A run that exhausts the count fails with the last reason named, not the generic "reported failure without an exception" text. A power cut, a reboot or closing the application still stops the run — that recovery is the operator resume above.
+
 ---
 
 ## 📐 Core Architectural Pattern (DiGi.Core Pattern)

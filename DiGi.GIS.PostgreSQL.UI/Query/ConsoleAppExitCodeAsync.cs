@@ -19,9 +19,10 @@ namespace DiGi.GIS.PostgreSQL.UI
         /// <param name="arguments">The arguments, each passed through <see cref="ProcessStartInfo.ArgumentList"/> rather than a quoted string, so a path ending in a separator cannot escape its own closing quote.</param>
         /// <param name="name">The name of the run the log lines are headed with, for example "Year built prediction".</param>
         /// <param name="progress">The receiver of the processed item counts the runner reports, or null.</param>
+        /// <param name="information">The receiver of every standard output line, in order, or null. It is called on the output pump, not on the caller's thread.</param>
         /// <param name="cancellationToken">The token that stops the run by killing its process tree.</param>
         /// <returns>The exit code the runner ended with; <see cref="YearBuiltPredictionExitCode.Cancelled"/> when the token stopped it; or null when it could not be started, or failed while it was being watched.</returns>
-        public static async Task<YearBuiltPredictionExitCode?> ConsoleAppExitCodeAsync(string consoleAppPath, IEnumerable<string>? arguments, string name, IProgress<long>? progress = null, CancellationToken cancellationToken = default)
+        public static async Task<YearBuiltPredictionExitCode?> ConsoleAppExitCodeAsync(string consoleAppPath, IEnumerable<string>? arguments, string name, IProgress<long>? progress = null, Action<string>? information = null, CancellationToken cancellationToken = default)
         {
             ProcessStartInfo processStartInfo = new()
             {
@@ -51,6 +52,8 @@ namespace DiGi.GIS.PostgreSQL.UI
                 }
 
                 Serilog.Modify.Log("{Line}", line);
+
+                information?.Invoke(line);
 
                 if (GIS.YOLO.UI.Query.ProgressCount(line) is long count)
                 {
@@ -87,6 +90,10 @@ namespace DiGi.GIS.PostgreSQL.UI
                 process.BeginErrorReadLine();
 
                 await process.WaitForExitAsync(cancellationToken);
+
+                // The parameterless wait is the one that also waits for the asynchronous output handlers to drain,
+                // so the last line the runner printed is delivered to the line sink before the exit code is read.
+                process.WaitForExit();
             }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
             {

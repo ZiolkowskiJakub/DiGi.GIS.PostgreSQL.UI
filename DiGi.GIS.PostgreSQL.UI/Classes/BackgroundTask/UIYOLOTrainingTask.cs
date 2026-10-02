@@ -9,6 +9,7 @@ using DiGi.GIS.YOLO.UI.Classes;
 using DiGi.GIS.YOLO.UI.Enums;
 using DiGi.WebAPI.Classes;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -25,7 +26,7 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
     /// <para><b>The run happens in another process</b>, <c>DiGi.GIS.YOLO.UI.ConsoleApp --train</c>, for the same reason as <see cref="UIYearBuiltPredictionsTask"/>: this application publishes self-contained and single-file and does not carry the runner's closure. The options are written beside the run folder - not inside it, because the runner refuses a run whose folder already exists - and that file is the record of what the run was asked to do, so it is never overwritten: a run with the Training step writes <c>&lt;RunName&gt;.YOLOTrainingRunOptions.json</c> (a taken run name is refused before launch), a resume writes <c>&lt;RunName&gt;.resume-&lt;yyyyMMdd_HHmmss&gt;.YOLOTrainingRunOptions.json</c> so the original run's file is untouched, and a run without training always writes <c>yyyyMMdd_HHmmss.YOLOTrainingRunOptions.json</c>, whatever the run name box says (<see cref="Create.YOLOTrainingRunOptionsFile(string, string?, bool, string, DateTimeOffset, bool)"/>).</para>
     /// <para><b>Every path is made absolute here</b>, against the runner for the files its defaults name (the weights, the legacy references, the reports folder) and against this process for the folders the operator typed, so the file the runner reads names what this application checked and named back.</para>
     /// <para><b>The run never overwrites model.pt.</b> The trained weights stay under the run folder and are copied to <c>&lt;ProjectDirectory&gt;\&lt;RunName&gt;\&lt;RunName&gt;.pt</c>; shipping or holding them is a manual decision from the evaluation table (ZiolkowskiJakub/DiGi.GIS.YOLO.UI#12).</para>
-    /// <para>The dataset step authorizes with <b>the runner's own key</b>, read from the <c>GIS_WebAPI_Client.conf</c> beside its executable - a run that ends in <see cref="YearBuiltPredictionExitCode.Authorization"/> is usually that file. <b>Stopping the task kills the process tree</b>, the interpreter included; the dataset manifest lets a Re-train run continue an interrupted build (a Start from yolo26x.pt run does not resume, so a fresh build that was stopped is continued as Re-train with the start weights set back to yolo26x.pt), and a training that was stopped or crashed is <b>offered for resume</b>: the dialog names its epoch and ceiling, the preflight repeats the runner's refusals before launch, and the resume continues <c>weights\last.pt</c> at the next epoch in the same folder. Closing this application or a power cut still stops the run - resume shortens the recovery, it does not prevent the interruption.</para>
+    /// <para>The dataset step authorizes with <b>the runner's own key</b>, read from the <c>GIS_WebAPI_Client.conf</c> beside its executable - a run that ends in <see cref="YearBuiltPredictionExitCode.Authorization"/> is usually that file. <b>Stopping the task kills the process tree</b>, the interpreter included; the dataset manifest lets a Re-train run continue an interrupted build (a Start from yolo26x.pt run does not resume, so a fresh build that was stopped is continued as Re-train with the start weights set back to yolo26x.pt), and a training that was stopped or crashed is <b>offered for resume</b>: the dialog names its epoch and ceiling, the preflight repeats the runner's refusals before launch, and the resume continues <c>weights\last.pt</c> at the next epoch in the same folder. Closing this application or a power cut still stops the run - resume shortens the recovery, it does not prevent the interruption. A training that stalls while its runner is alive is also <b>resumed automatically</b>, up to <see cref="YOLOTrainingRunOptions.AutoResumeCount"/> times (the dialog offers 3) and after <see cref="YOLOTrainingRunOptions.InactivityTimeout"/> without output (15 minutes by default); a run that exhausts them fails with the last reason named, and a stop from the tray is never resumed.</para>
     /// </summary>
     public class UIYOLOTrainingTask : ReportableBackgroundTask<long>, IGISPostgreSQLUIObject
     {
@@ -140,9 +141,68 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
                 return false;
             }
 
-            YearBuiltPredictionExitCode? yearBuiltPredictionExitCode = await Query.ConsoleAppExitCodeAsync(path_ConsoleApp!, ["--train", path_Options!], "YOLO training", progress, cancellationToken);
+            // Every line the runner prints is logged already; the automatic-resume lines are also kept so a run that
+            // fails after exhausting its retries names the last reason on the task row, rather than the generic
+            // "reported failure without an exception" text a bare false return produces.
+            ConcurrentQueue<string> lines = new();
 
-            return yearBuiltPredictionExitCode == YearBuiltPredictionExitCode.Succeeded;
+            YearBuiltPredictionExitCode? yearBuiltPredictionExitCode = await Query.ConsoleAppExitCodeAsync(path_ConsoleApp!, ["--train", path_Options!], "YOLO training", progress, lines.Enqueue, cancellationToken);
+
+            if (yearBuiltPredictionExitCode == YearBuiltPredictionExitCode.Succeeded)
+            {
+                return true;
+            }
+
+            // A cancellation is not a failure with a reason to state: the operator asked for it, and the base wraps
+            // it as a cancellation rather than a failure.
+            if (yearBuiltPredictionExitCode == YearBuiltPredictionExitCode.Cancelled)
+            {
+                return false;
+            }
+
+            throw new BackgroundTaskFailureException(FailureMessage(yearBuiltPredictionExitCode, lines));
+        }
+
+        /// <summary>
+        /// Builds the message a failed YOLO training run is reported with, so the task row names the last reason instead of the generic "reported failure without an exception" text.
+        /// <para>The runner prints one line per automatic resume (<c>... - automatic resume N of M</c>) and a closing summary (<c>[NOTE] Resumed automatically N time(s) ...</c>); when either is present it is named with the exit code, and otherwise the exit code alone is.</para>
+        /// </summary>
+        /// <param name="yearBuiltPredictionExitCode">The exit code the runner ended with.</param>
+        /// <param name="lines">The standard output lines the runner printed.</param>
+        /// <returns>The failure message for the task row.</returns>
+        private static string FailureMessage(YearBuiltPredictionExitCode? yearBuiltPredictionExitCode, ConcurrentQueue<string> lines)
+        {
+            string? description = yearBuiltPredictionExitCode is YearBuiltPredictionExitCode yearBuiltPredictionExitCode_Value
+                ? Core.Query.Description(yearBuiltPredictionExitCode_Value) ?? yearBuiltPredictionExitCode_Value.ToString()
+                : null;
+
+            string? summary = null;
+            List<string> resumes = [];
+            foreach (string line in lines)
+            {
+                if (line.StartsWith("[NOTE] Resumed automatically", StringComparison.Ordinal))
+                {
+                    summary = line;
+                }
+                else if (line.Contains("- automatic resume ", StringComparison.OrdinalIgnoreCase))
+                {
+                    resumes.Add(line);
+                }
+            }
+
+            string reason = description is null ? "unknown exit code" : description;
+
+            if (!string.IsNullOrWhiteSpace(summary))
+            {
+                return string.Format(CultureInfo.InvariantCulture, "The YOLO training run did not finish - {0} - {1}. See the log beside this application.", summary, reason);
+            }
+
+            if (resumes.Count != 0)
+            {
+                return string.Format(CultureInfo.InvariantCulture, "The YOLO training run did not finish after {0} automatic resume(s): {1} - {2}. See the log beside this application.", resumes.Count, resumes[^1], reason);
+            }
+
+            return string.Format(CultureInfo.InvariantCulture, "The YOLO training run did not finish - {0}. See the log beside this application.", reason);
         }
 
         private static YOLOTrainingRunOptions AbsolutePaths(YOLOTrainingRunOptions yOLOTrainingRunOptions, string path_ConsoleApp)
@@ -329,6 +389,17 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
             if (yOLOTrainingDatasetOptions is null || string.IsNullOrWhiteSpace(yOLOTrainingDatasetOptions.OutputDirectory) || !System.IO.Path.IsPathRooted(yOLOTrainingDatasetOptions.OutputDirectory))
             {
                 return Refuse(nameof(YOLOTrainingDatasetOptions.OutputDirectory), "the dataset directory has to be an absolute path");
+            }
+
+            if (!Query.IsYOLOTrainingStallOptionsValid(yOLOTrainingRunOptions.AutoResumeCount, yOLOTrainingRunOptions.InactivityTimeout, out string? stallReason))
+            {
+                // The limit is the only value checked here that can be null, so a non-null limit is the field to name
+                // when one of the two is out of range.
+                string name_Option = yOLOTrainingRunOptions.InactivityTimeout is null
+                    ? nameof(YOLOTrainingRunOptions.AutoResumeCount)
+                    : nameof(YOLOTrainingRunOptions.InactivityTimeout);
+
+                return Refuse(name_Option, stallReason!);
             }
 
             string? startWeightsPath = yOLOTrainingRunOptions.StartWeightsPath;

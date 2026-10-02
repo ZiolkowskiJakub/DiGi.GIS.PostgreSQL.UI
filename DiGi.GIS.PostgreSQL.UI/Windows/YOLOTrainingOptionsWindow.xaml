@@ -27,6 +27,7 @@
                     <RowDefinition Height="60" />
                     <RowDefinition Height="60" />
                     <RowDefinition Height="60" />
+                    <RowDefinition Height="60" />
                     <RowDefinition Height="88" />
                     <RowDefinition Height="60" />
                     <RowDefinition Height="60" />
@@ -82,6 +83,14 @@
                 </Grid>
 
                 <Grid Grid.Row="6">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <controls:TextBoxControl x:Name="TextBoxControl_AutoResumeCount" Grid.Column="0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Text="Automatic resumes - after a stall or a crash; 0 disables" ToolTip="A training that stalls (no output for the stall limit) or a crash whose checkpoint can still be resumed is continued from weights\last.pt this many times, without an operator. A stop from the tray is never resumed. 0 keeps the runner's behaviour of no retries." Value="" />
+                    <controls:TextBoxControl x:Name="TextBoxControl_InactivityTimeout" Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Text="Stall limit - minutes; empty uses 15" ToolTip="Minutes without a line on the training's output before it is treated as stalled and ended, then resumed. Empty uses the runner's default of 15 minutes." Value="" />
+                </Grid>
+                <Grid Grid.Row="7">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="*" />
                         <RowDefinition Height="28" />
@@ -93,27 +102,27 @@
                     </StackPanel>
                 </Grid>
 
-                <controls:TextBoxControl x:Name="TextBoxControl_ProjectDirectory" Grid.Row="7" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Text="Project directory - absolute, and never inside a YOLO\models folder" Value="" />
+                <controls:TextBoxControl x:Name="TextBoxControl_ProjectDirectory" Grid.Row="8" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Text="Project directory - absolute, and never inside a YOLO\models folder" Value="" />
 
-                <controls:TextBoxControl x:Name="TextBoxControl_PythonPath" Grid.Row="8" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Text="Python interpreter - a path, or a name on PATH; empty uses the first one on PATH that can run the detector" Value="" />
+                <controls:TextBoxControl x:Name="TextBoxControl_PythonPath" Grid.Row="9" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Text="Python interpreter - a path, or a name on PATH; empty uses the first one on PATH that can run the detector" Value="" />
 
-                <controls:TextBoxControl x:Name="TextBoxControl_WorkingDirectory" Grid.Row="9" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Text="Working directory - where the scripts are written; empty uses the dataset directory" Value="" />
+                <controls:TextBoxControl x:Name="TextBoxControl_WorkingDirectory" Grid.Row="10" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Text="Working directory - where the scripts are written; empty uses the dataset directory" Value="" />
 
-                <controls:TextBoxControl x:Name="TextBoxControl_WeightsPaths" Grid.Row="10" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Text="Gate weights - the incumbents compared with the new weights, separated by ;" Value="" />
+                <controls:TextBoxControl x:Name="TextBoxControl_WeightsPaths" Grid.Row="11" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Text="Gate weights - the incumbents compared with the new weights, separated by ;" Value="" />
 
-                <Label x:Name="Label_Steps" Grid.Row="11" Content="Steps - they run in this order and stop at the first failure" Margin="5,0,5,0" HorizontalAlignment="Stretch" VerticalAlignment="Center" />
+                <Label x:Name="Label_Steps" Grid.Row="12" Content="Steps - they run in this order and stop at the first failure" Margin="5,0,5,0" HorizontalAlignment="Stretch" VerticalAlignment="Center" />
 
-                <WrapPanel Grid.Row="12" Orientation="Horizontal" Margin="10,0,10,0" VerticalAlignment="Center">
+                <WrapPanel Grid.Row="13" Orientation="Horizontal" Margin="10,0,10,0" VerticalAlignment="Center">
                     <CheckBox x:Name="CheckBox_Dataset" Content="Dataset build" Margin="0,0,15,0" />
                     <CheckBox x:Name="CheckBox_LabelCheck" Content="Label check" Margin="0,0,15,0" />
-                    <CheckBox x:Name="CheckBox_Train" Content="Training" Margin="0,0,15,0" />
+                    <CheckBox x:Name="CheckBox_Train" Content="Training" Margin="0,0,15,0" Checked="CheckBox_Train_Changed" Unchecked="CheckBox_Train_Changed" />
                     <CheckBox x:Name="CheckBox_Validate" Content="Validation on Test" Margin="0,0,15,0" />
                     <CheckBox x:Name="CheckBox_Evaluate" Content="Detector evaluation" Margin="0,0,15,0" />
                 </WrapPanel>
 
-                <Label x:Name="Label_Counties" Grid.Row="13" Content="Counties - a multi-part county is one entry per piece; select them all" Margin="5,0,5,0" HorizontalAlignment="Stretch" VerticalAlignment="Center" />
+                <Label x:Name="Label_Counties" Grid.Row="14" Content="Counties - a multi-part county is one entry per piece; select them all" Margin="5,0,5,0" HorizontalAlignment="Stretch" VerticalAlignment="Center" />
 
-                <controls:ListBoxControl x:Name="ListBoxControl_Counties" Grid.Row="14" SelectionMode="Extended" Margin="10,0,10,0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
+                <controls:ListBoxControl x:Name="ListBoxControl_Counties" Grid.Row="15" SelectionMode="Extended" Margin="10,0,10,0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
             </Grid>
         </ScrollViewer>
 

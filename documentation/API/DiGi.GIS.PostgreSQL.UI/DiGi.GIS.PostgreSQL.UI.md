@@ -191,6 +191,20 @@ public static class Query
 ```
 
 Inheritance [System\.Object](https://learn.microsoft.com/en-us/dotnet/api/system.object 'System\.Object') → Query
+### Fields
+
+<a name='DiGi.GIS.PostgreSQL.UI.Query.Count_AutoResumeMax'></a>
+
+## Query\.Count\_AutoResumeMax Field
+
+Gets the largest number of automatic resumes a tray run may ask for\.
+
+```csharp
+private const int Count_AutoResumeMax = 10;
+```
+
+#### Field Value
+[System\.Int32](https://learn.microsoft.com/en-us/dotnet/api/system.int32 'System\.Int32')
 ### Methods
 
 <a name='DiGi.GIS.PostgreSQL.UI.Query.ConsoleAppDeployedPath(string,string)'></a>
@@ -224,9 +238,9 @@ The path, absolute or relative to the runner\.
 [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')  
 The absolute path; the path as [FullPath\(string\)](DiGi.GIS.PostgreSQL.UI.md#DiGi.GIS.PostgreSQL.UI.Query.FullPath(string) 'DiGi\.GIS\.PostgreSQL\.UI\.Query\.FullPath\(string\)') returns it when there is no runner folder to place it under; or null when it is null or blank\.
 
-<a name='DiGi.GIS.PostgreSQL.UI.Query.ConsoleAppExitCodeAsync(string,System.Collections.Generic.IEnumerable_string_,string,System.IProgress_long_,System.Threading.CancellationToken)'></a>
+<a name='DiGi.GIS.PostgreSQL.UI.Query.ConsoleAppExitCodeAsync(string,System.Collections.Generic.IEnumerable_string_,string,System.IProgress_long_,System.Action_string_,System.Threading.CancellationToken)'></a>
 
-## Query\.ConsoleAppExitCodeAsync\(string, IEnumerable\<string\>, string, IProgress\<long\>, CancellationToken\) Method
+## Query\.ConsoleAppExitCodeAsync\(string, IEnumerable\<string\>, string, IProgress\<long\>, Action\<string\>, CancellationToken\) Method
 
 Runs the headless `DiGi.GIS.YOLO.UI.ConsoleApp` with the given arguments, logs everything it prints, reports its progress lines and returns the exit code it ended with\.
 
@@ -237,35 +251,41 @@ The exit code is named rather than numbered, read off the runner's own [DiGi\.GI
 <b>Cancelling kills the whole process tree</b> rather than winding the run down: the interpreter is a grandchild, and killing only the runner would leave it holding a graphics card with nothing waiting for it. Whatever the run was writing may be half written. A cancelled wait returns [DiGi\.GIS\.YOLO\.UI\.Enums\.YearBuiltPredictionExitCode\.Cancelled](https://learn.microsoft.com/en-us/dotnet/api/digi.gis.yolo.ui.enums.yearbuiltpredictionexitcode.cancelled 'DiGi\.GIS\.YOLO\.UI\.Enums\.YearBuiltPredictionExitCode\.Cancelled').
 
 ```csharp
-public static System.Threading.Tasks.Task<System.Nullable<DiGi.GIS.YOLO.UI.Enums.YearBuiltPredictionExitCode>> ConsoleAppExitCodeAsync(string consoleAppPath, System.Collections.Generic.IEnumerable<string>? arguments, string name, System.IProgress<long>? progress=null, System.Threading.CancellationToken cancellationToken=default(System.Threading.CancellationToken));
+public static System.Threading.Tasks.Task<System.Nullable<DiGi.GIS.YOLO.UI.Enums.YearBuiltPredictionExitCode>> ConsoleAppExitCodeAsync(string consoleAppPath, System.Collections.Generic.IEnumerable<string>? arguments, string name, System.IProgress<long>? progress=null, System.Action<string>? information=null, System.Threading.CancellationToken cancellationToken=default(System.Threading.CancellationToken));
 ```
 #### Parameters
 
-<a name='DiGi.GIS.PostgreSQL.UI.Query.ConsoleAppExitCodeAsync(string,System.Collections.Generic.IEnumerable_string_,string,System.IProgress_long_,System.Threading.CancellationToken).consoleAppPath'></a>
+<a name='DiGi.GIS.PostgreSQL.UI.Query.ConsoleAppExitCodeAsync(string,System.Collections.Generic.IEnumerable_string_,string,System.IProgress_long_,System.Action_string_,System.Threading.CancellationToken).consoleAppPath'></a>
 
 `consoleAppPath` [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
 
 The full path of the runner's executable\. Its folder is the working directory the runner starts in\.
 
-<a name='DiGi.GIS.PostgreSQL.UI.Query.ConsoleAppExitCodeAsync(string,System.Collections.Generic.IEnumerable_string_,string,System.IProgress_long_,System.Threading.CancellationToken).arguments'></a>
+<a name='DiGi.GIS.PostgreSQL.UI.Query.ConsoleAppExitCodeAsync(string,System.Collections.Generic.IEnumerable_string_,string,System.IProgress_long_,System.Action_string_,System.Threading.CancellationToken).arguments'></a>
 
 `arguments` [System\.Collections\.Generic\.IEnumerable&lt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.ienumerable-1 'System\.Collections\.Generic\.IEnumerable\`1')[System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')[&gt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.ienumerable-1 'System\.Collections\.Generic\.IEnumerable\`1')
 
 The arguments, each passed through [System\.Diagnostics\.ProcessStartInfo\.ArgumentList](https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.processstartinfo.argumentlist 'System\.Diagnostics\.ProcessStartInfo\.ArgumentList') rather than a quoted string, so a path ending in a separator cannot escape its own closing quote\.
 
-<a name='DiGi.GIS.PostgreSQL.UI.Query.ConsoleAppExitCodeAsync(string,System.Collections.Generic.IEnumerable_string_,string,System.IProgress_long_,System.Threading.CancellationToken).name'></a>
+<a name='DiGi.GIS.PostgreSQL.UI.Query.ConsoleAppExitCodeAsync(string,System.Collections.Generic.IEnumerable_string_,string,System.IProgress_long_,System.Action_string_,System.Threading.CancellationToken).name'></a>
 
 `name` [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
 
 The name of the run the log lines are headed with, for example "Year built prediction"\.
 
-<a name='DiGi.GIS.PostgreSQL.UI.Query.ConsoleAppExitCodeAsync(string,System.Collections.Generic.IEnumerable_string_,string,System.IProgress_long_,System.Threading.CancellationToken).progress'></a>
+<a name='DiGi.GIS.PostgreSQL.UI.Query.ConsoleAppExitCodeAsync(string,System.Collections.Generic.IEnumerable_string_,string,System.IProgress_long_,System.Action_string_,System.Threading.CancellationToken).progress'></a>
 
 `progress` [System\.IProgress&lt;](https://learn.microsoft.com/en-us/dotnet/api/system.iprogress-1 'System\.IProgress\`1')[System\.Int64](https://learn.microsoft.com/en-us/dotnet/api/system.int64 'System\.Int64')[&gt;](https://learn.microsoft.com/en-us/dotnet/api/system.iprogress-1 'System\.IProgress\`1')
 
 The receiver of the processed item counts the runner reports, or null\.
 
-<a name='DiGi.GIS.PostgreSQL.UI.Query.ConsoleAppExitCodeAsync(string,System.Collections.Generic.IEnumerable_string_,string,System.IProgress_long_,System.Threading.CancellationToken).cancellationToken'></a>
+<a name='DiGi.GIS.PostgreSQL.UI.Query.ConsoleAppExitCodeAsync(string,System.Collections.Generic.IEnumerable_string_,string,System.IProgress_long_,System.Action_string_,System.Threading.CancellationToken).information'></a>
+
+`information` [System\.Action&lt;](https://learn.microsoft.com/en-us/dotnet/api/system.action-1 'System\.Action\`1')[System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')[&gt;](https://learn.microsoft.com/en-us/dotnet/api/system.action-1 'System\.Action\`1')
+
+The receiver of every standard output line, in order, or null\. It is called on the output pump, not on the caller's thread\.
+
+<a name='DiGi.GIS.PostgreSQL.UI.Query.ConsoleAppExitCodeAsync(string,System.Collections.Generic.IEnumerable_string_,string,System.IProgress_long_,System.Action_string_,System.Threading.CancellationToken).cancellationToken'></a>
 
 `cancellationToken` [System\.Threading\.CancellationToken](https://learn.microsoft.com/en-us/dotnet/api/system.threading.cancellationtoken 'System\.Threading\.CancellationToken')
 
@@ -381,6 +401,41 @@ The [System\.Threading\.CancellationToken](https://learn.microsoft.com/en-us/dot
 #### Returns
 [DiGi\.YOLO\.Classes\.YOLOCheckpointInformation](https://learn.microsoft.com/en-us/dotnet/api/digi.yolo.classes.yolocheckpointinformation 'DiGi\.YOLO\.Classes\.YOLOCheckpointInformation')  
 The checkpoint information of the interrupted run, or `null` when it is not one\.
+
+<a name='DiGi.GIS.PostgreSQL.UI.Query.IsYOLOTrainingStallOptionsValid(int,System.Nullable_System.TimeSpan_,string)'></a>
+
+## Query\.IsYOLOTrainingStallOptionsValid\(int, Nullable\<TimeSpan\>, string\) Method
+
+Returns whether the automatic\-resume count and the stall limit are usable, and the reason when they are not, so the dialog and the task's preflight refuse with the same words\.
+
+The count has to be 0 to [Count\_AutoResumeMax](DiGi.GIS.PostgreSQL.UI.md#DiGi.GIS.PostgreSQL.UI.Query.Count_AutoResumeMax 'DiGi\.GIS\.PostgreSQL\.UI\.Query\.Count\_AutoResumeMax'): 0 keeps the runner's behaviour of no retries, and above the ceiling a run would retry a fault indefinitely rather than report it. The limit, when given, has to be at least one minute; empty means the runner's default of 15 minutes and is not validated here. A limit of zero would disable the stall detection, which is the opposite of what the box asks for, so it is refused.
+
+```csharp
+public static bool IsYOLOTrainingStallOptionsValid(int autoResumeCount, System.Nullable<System.TimeSpan> inactivityTimeout, out string? reason);
+```
+#### Parameters
+
+<a name='DiGi.GIS.PostgreSQL.UI.Query.IsYOLOTrainingStallOptionsValid(int,System.Nullable_System.TimeSpan_,string).autoResumeCount'></a>
+
+`autoResumeCount` [System\.Int32](https://learn.microsoft.com/en-us/dotnet/api/system.int32 'System\.Int32')
+
+The number of automatic resumes allowed in one run\.
+
+<a name='DiGi.GIS.PostgreSQL.UI.Query.IsYOLOTrainingStallOptionsValid(int,System.Nullable_System.TimeSpan_,string).inactivityTimeout'></a>
+
+`inactivityTimeout` [System\.Nullable&lt;](https://learn.microsoft.com/en-us/dotnet/api/system.nullable-1 'System\.Nullable\`1')[System\.TimeSpan](https://learn.microsoft.com/en-us/dotnet/api/system.timespan 'System\.TimeSpan')[&gt;](https://learn.microsoft.com/en-us/dotnet/api/system.nullable-1 'System\.Nullable\`1')
+
+The span without output after which the training is treated as stalled, or null for the runner's default\.
+
+<a name='DiGi.GIS.PostgreSQL.UI.Query.IsYOLOTrainingStallOptionsValid(int,System.Nullable_System.TimeSpan_,string).reason'></a>
+
+`reason` [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
+
+The reason the pair cannot be used, or null when it can\.
+
+#### Returns
+[System\.Boolean](https://learn.microsoft.com/en-us/dotnet/api/system.boolean 'System\.Boolean')  
+True when the pair can be used; otherwise false\.
 
 <a name='DiGi.GIS.PostgreSQL.UI.Query.YearBuiltPredictionConsoleAppPath(string,string)'></a>
 

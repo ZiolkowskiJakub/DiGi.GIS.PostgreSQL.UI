@@ -28,6 +28,14 @@ namespace DiGi.GIS.PostgreSQL.UI
             YOLOTrainingDatasetOptions yOLOTrainingDatasetOptions = result.DatasetOptions ?? new YOLOTrainingDatasetOptions();
             result.DatasetOptions = yOLOTrainingDatasetOptions;
 
+            // The library's default is 0 - a library must not retry a training unasked - but this surface is the
+            // unattended one: a first run here retries a stall or a crash three times. An operator's own value
+            // survives, because only a run built from the class defaults is defaulted here.
+            if (yOLOTrainingRunOptions is null)
+            {
+                result.AutoResumeCount = 3;
+            }
+
             string path_Models = Path.Combine(Constants.DirectoryName.UserFiles, DiGi.YOLO.Constants.DirectoryName.YOLO, DiGi.YOLO.Constants.DirectoryName.Models);
 
             string? WeightsPath(string path)

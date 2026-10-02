@@ -2690,7 +2690,7 @@ A YOLO detector training run started from the tray: dataset build, label check, 
 
 <b>The run never overwrites model.pt.</b> The trained weights stay under the run folder and are copied to `<ProjectDirectory>\<RunName>\<RunName>.pt`; shipping or holding them is a manual decision from the evaluation table (ZiolkowskiJakub/DiGi.GIS.YOLO.UI#12).
 
-The dataset step authorizes with <b>the runner's own key</b>, read from the `GIS_WebAPI_Client.conf` beside its executable - a run that ends in [DiGi\.GIS\.YOLO\.UI\.Enums\.YearBuiltPredictionExitCode\.Authorization](https://learn.microsoft.com/en-us/dotnet/api/digi.gis.yolo.ui.enums.yearbuiltpredictionexitcode.authorization 'DiGi\.GIS\.YOLO\.UI\.Enums\.YearBuiltPredictionExitCode\.Authorization') is usually that file. <b>Stopping the task kills the process tree</b>, the interpreter included; the dataset manifest lets a Re-train run continue an interrupted build (a Start from yolo26x.pt run does not resume, so a fresh build that was stopped is continued as Re-train with the start weights set back to yolo26x.pt), and a training that was stopped or crashed is <b>offered for resume</b>: the dialog names its epoch and ceiling, the preflight repeats the runner's refusals before launch, and the resume continues `weights\last.pt` at the next epoch in the same folder. Closing this application or a power cut still stops the run - resume shortens the recovery, it does not prevent the interruption.
+The dataset step authorizes with <b>the runner's own key</b>, read from the `GIS_WebAPI_Client.conf` beside its executable - a run that ends in [DiGi\.GIS\.YOLO\.UI\.Enums\.YearBuiltPredictionExitCode\.Authorization](https://learn.microsoft.com/en-us/dotnet/api/digi.gis.yolo.ui.enums.yearbuiltpredictionexitcode.authorization 'DiGi\.GIS\.YOLO\.UI\.Enums\.YearBuiltPredictionExitCode\.Authorization') is usually that file. <b>Stopping the task kills the process tree</b>, the interpreter included; the dataset manifest lets a Re-train run continue an interrupted build (a Start from yolo26x.pt run does not resume, so a fresh build that was stopped is continued as Re-train with the start weights set back to yolo26x.pt), and a training that was stopped or crashed is <b>offered for resume</b>: the dialog names its epoch and ceiling, the preflight repeats the runner's refusals before launch, and the resume continues `weights\last.pt` at the next epoch in the same folder. Closing this application or a power cut still stops the run - resume shortens the recovery, it does not prevent the interruption. A training that stalls while its runner is alive is also <b>resumed automatically</b>, up to [DiGi\.GIS\.YOLO\.UI\.Classes\.YOLOTrainingRunOptions\.AutoResumeCount](https://learn.microsoft.com/en-us/dotnet/api/digi.gis.yolo.ui.classes.yolotrainingrunoptions.autoresumecount 'DiGi\.GIS\.YOLO\.UI\.Classes\.YOLOTrainingRunOptions\.AutoResumeCount') times (the dialog offers 3) and after [DiGi\.GIS\.YOLO\.UI\.Classes\.YOLOTrainingRunOptions\.InactivityTimeout](https://learn.microsoft.com/en-us/dotnet/api/digi.gis.yolo.ui.classes.yolotrainingrunoptions.inactivitytimeout 'DiGi\.GIS\.YOLO\.UI\.Classes\.YOLOTrainingRunOptions\.InactivityTimeout') without output (15 minutes by default); a run that exhausts them fails with the last reason named, and a stop from the tray is never resumed.
 
 ```csharp
 public class UIYOLOTrainingTask : DiGi.Core.Classes.ReportableBackgroundTask<long>, DiGi.GIS.PostgreSQL.UI.Interfaces.IGISPostgreSQLUIObject
@@ -2757,3 +2757,33 @@ public DiGi.GIS.PostgreSQL.UI.Enums.YOLOTrainingScenario YOLOTrainingScenario { 
 
 #### Property Value
 [YOLOTrainingScenario](DiGi.GIS.PostgreSQL.UI.Enums.md#DiGi.GIS.PostgreSQL.UI.Enums.YOLOTrainingScenario 'DiGi\.GIS\.PostgreSQL\.UI\.Enums\.YOLOTrainingScenario')
+### Methods
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIYOLOTrainingTask.FailureMessage(System.Nullable_DiGi.GIS.YOLO.UI.Enums.YearBuiltPredictionExitCode_,System.Collections.Concurrent.ConcurrentQueue_string_)'></a>
+
+## UIYOLOTrainingTask\.FailureMessage\(Nullable\<YearBuiltPredictionExitCode\>, ConcurrentQueue\<string\>\) Method
+
+Builds the message a failed YOLO training run is reported with, so the task row names the last reason instead of the generic "reported failure without an exception" text\.
+
+The runner prints one line per automatic resume (`... - automatic resume N of M`) and a closing summary (`[NOTE] Resumed automatically N time(s) ...`); when either is present it is named with the exit code, and otherwise the exit code alone is.
+
+```csharp
+private static string FailureMessage(System.Nullable<DiGi.GIS.YOLO.UI.Enums.YearBuiltPredictionExitCode> yearBuiltPredictionExitCode, System.Collections.Concurrent.ConcurrentQueue<string> lines);
+```
+#### Parameters
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIYOLOTrainingTask.FailureMessage(System.Nullable_DiGi.GIS.YOLO.UI.Enums.YearBuiltPredictionExitCode_,System.Collections.Concurrent.ConcurrentQueue_string_).yearBuiltPredictionExitCode'></a>
+
+`yearBuiltPredictionExitCode` [System\.Nullable&lt;](https://learn.microsoft.com/en-us/dotnet/api/system.nullable-1 'System\.Nullable\`1')[DiGi\.GIS\.YOLO\.UI\.Enums\.YearBuiltPredictionExitCode](https://learn.microsoft.com/en-us/dotnet/api/digi.gis.yolo.ui.enums.yearbuiltpredictionexitcode 'DiGi\.GIS\.YOLO\.UI\.Enums\.YearBuiltPredictionExitCode')[&gt;](https://learn.microsoft.com/en-us/dotnet/api/system.nullable-1 'System\.Nullable\`1')
+
+The exit code the runner ended with\.
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIYOLOTrainingTask.FailureMessage(System.Nullable_DiGi.GIS.YOLO.UI.Enums.YearBuiltPredictionExitCode_,System.Collections.Concurrent.ConcurrentQueue_string_).lines'></a>
+
+`lines` [System\.Collections\.Concurrent\.ConcurrentQueue&lt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.concurrent.concurrentqueue-1 'System\.Collections\.Concurrent\.ConcurrentQueue\`1')[System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')[&gt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.concurrent.concurrentqueue-1 'System\.Collections\.Concurrent\.ConcurrentQueue\`1')
+
+The standard output lines the runner printed\.
+
+#### Returns
+[System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')  
+The failure message for the task row\.

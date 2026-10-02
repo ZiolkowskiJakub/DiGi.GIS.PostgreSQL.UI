@@ -888,6 +888,8 @@ Asks for the inputs of one YOLO detector training run: the scenario, the countie
 
 <b>An interrupted run is offered for resume.</b> When the run name and project directory name a run whose folder holds an unfinished `weights\last.pt` and no completed `<RunName>.pt`, the dialog shows the checkpoint's epoch and ceiling and offers to resume it. Ticking [DiGi\.GIS\.YOLO\.UI\.Enums\.YOLOTrainingStep\.Train](https://learn.microsoft.com/en-us/dotnet/api/digi.gis.yolo.ui.enums.yolotrainingstep.train 'DiGi\.GIS\.YOLO\.UI\.Enums\.YOLOTrainingStep\.Train') is still required; the box locks what a resume cannot change - the hyperparameters, the start weights and the dataset build - because the checkpoint restores them, and the epoch ceiling is fixed by the checkpoint.
 
+<b>Stalls are handled by the runner.</b>`Automatic resumes` and `Stall limit` set [DiGi\.GIS\.YOLO\.UI\.Classes\.YOLOTrainingRunOptions\.AutoResumeCount](https://learn.microsoft.com/en-us/dotnet/api/digi.gis.yolo.ui.classes.yolotrainingrunoptions.autoresumecount 'DiGi\.GIS\.YOLO\.UI\.Classes\.YOLOTrainingRunOptions\.AutoResumeCount') and [DiGi\.GIS\.YOLO\.UI\.Classes\.YOLOTrainingRunOptions\.InactivityTimeout](https://learn.microsoft.com/en-us/dotnet/api/digi.gis.yolo.ui.classes.yolotrainingrunoptions.inactivitytimeout 'DiGi\.GIS\.YOLO\.UI\.Classes\.YOLOTrainingRunOptions\.InactivityTimeout'): a training that stalls or crashes is continued from its own `last.pt` that many times, and a stall is what a silent training becomes after the limit. Both are enabled only with the Training step, and an empty stall limit keeps the runner's default of 15 minutes.
+
 <b>What is not offered is the runner's to decide.</b> The dataset's confidence threshold, split, label check sizes, legacy cut-off and request sizes carry through the copy untouched at the values its README describes; they shape what the detector is trained on, and a control opened before every run invites changing them between runs that are then compared.
 
 The window works on a copy, so a cancelled dialog leaves the settings of an earlier run exactly as they were, and every member the window has no control for carries through untouched.
@@ -995,3 +997,13 @@ public void InitializeComponent();
 ```
 
 Implements [InitializeComponent\(\)](https://learn.microsoft.com/en-us/dotnet/api/system.windows.markup.icomponentconnector.initializecomponent 'System\.Windows\.Markup\.IComponentConnector\.InitializeComponent')
+
+<a name='DiGi.GIS.PostgreSQL.UI.Windows.YOLOTrainingOptionsWindow.SetStallInputsEnabled()'></a>
+
+## YOLOTrainingOptionsWindow\.SetStallInputsEnabled\(\) Method
+
+Enables the automatic\-resume count and the stall limit only when the training step is ticked: without training there is nothing that can stall or be resumed, and the runner would ignore both\.
+
+```csharp
+private void SetStallInputsEnabled();
+```

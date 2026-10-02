@@ -165,7 +165,7 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
 
             // The whole tree is killed when the task is stopped - the detector is a grandchild - so a batch that was
             // being written may be half written; every step is idempotent and a stopped run is re-runnable.
-            YearBuiltPredictionExitCode? yearBuiltPredictionExitCode = await Query.ConsoleAppExitCodeAsync(path_ConsoleApp!, [path_Options!], "Year built prediction", progress, cancellationToken);
+            YearBuiltPredictionExitCode? yearBuiltPredictionExitCode = await Query.ConsoleAppExitCodeAsync(path_ConsoleApp!, [path_Options!], "Year built prediction", progress, cancellationToken: cancellationToken);
 
             return yearBuiltPredictionExitCode == YearBuiltPredictionExitCode.Succeeded;
         }

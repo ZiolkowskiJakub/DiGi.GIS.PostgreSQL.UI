@@ -3,6 +3,7 @@ using DiGi.GIS.PostgreSQL.UI.Enums;
 using DiGi.GIS.YOLO.UI.Classes;
 using DiGi.GIS.YOLO.UI.Enums;
 using DiGi.UI.WPF.Classes;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -17,6 +18,7 @@ namespace DiGi.GIS.PostgreSQL.UI.Windows
     /// <para>Asks for the inputs of one YOLO detector training run: the scenario, the counties, the dataset folder, the start weights, the training hyperparameters, where the run is written, the interpreter, the steps and the weights the new detector is gated against.</para>
     /// <para><b>The scenario sets defaults, not rules.</b> Switching it resets the start weights and the epoch ceiling to that scenario's defaults (<see cref="Create.YOLOTrainingRunOptions(YOLOTrainingScenario, string?, YOLOTrainingRunOptions?)"/>) and leaves every other control as it is; on OK it also decides whether the dataset folder is appended to (Re-train) or must be new (Start from yolo26x.pt).</para>
     /// <para><b>An interrupted run is offered for resume.</b> When the run name and project directory name a run whose folder holds an unfinished <c>weights\last.pt</c> and no completed <c>&lt;RunName&gt;.pt</c>, the dialog shows the checkpoint's epoch and ceiling and offers to resume it. Ticking <see cref="YOLOTrainingStep.Train"/> is still required; the box locks what a resume cannot change - the hyperparameters, the start weights and the dataset build - because the checkpoint restores them, and the epoch ceiling is fixed by the checkpoint.</para>
+    /// <para><b>Stalls are handled by the runner.</b> <c>Automatic resumes</c> and <c>Stall limit</c> set <see cref="YOLOTrainingRunOptions.AutoResumeCount"/> and <see cref="YOLOTrainingRunOptions.InactivityTimeout"/>: a training that stalls or crashes is continued from its own <c>last.pt</c> that many times, and a stall is what a silent training becomes after the limit. Both are enabled only with the Training step, and an empty stall limit keeps the runner's default of 15 minutes.</para>
     /// <para><b>What is not offered is the runner's to decide.</b> The dataset's confidence threshold, split, label check sizes, legacy cut-off and request sizes carry through the copy untouched at the values its README describes; they shape what the detector is trained on, and a control opened before every run invites changing them between runs that are then compared.</para>
     /// <para>The window works on a copy, so a cancelled dialog leaves the settings of an earlier run exactly as they were, and every member the window has no control for carries through untouched.</para>
     /// </summary>
@@ -71,6 +73,8 @@ namespace DiGi.GIS.PostgreSQL.UI.Windows
             TextBoxControl_Batch.Value = this.yOLOTrainingRunOptions.Batch.ToString(CultureInfo.InvariantCulture);
             TextBoxControl_Seed.Value = this.yOLOTrainingRunOptions.Seed.ToString(CultureInfo.InvariantCulture);
             TextBoxControl_Device.Value = this.yOLOTrainingRunOptions.Device;
+            TextBoxControl_AutoResumeCount.Value = this.yOLOTrainingRunOptions.AutoResumeCount.ToString(CultureInfo.InvariantCulture);
+            TextBoxControl_InactivityTimeout.Value = this.yOLOTrainingRunOptions.InactivityTimeout is TimeSpan inactivityTimeout ? ((int)inactivityTimeout.TotalMinutes).ToString(CultureInfo.InvariantCulture) : null;
             TextBoxControl_RunName.Value = this.yOLOTrainingRunOptions.RunName;
             TextBoxControl_ProjectDirectory.Value = this.yOLOTrainingRunOptions.ProjectDirectory;
             TextBoxControl_PythonPath.Value = this.yOLOTrainingRunOptions.PythonPath ?? yOLOTrainingDatasetOptions?.PythonPath;
@@ -101,6 +105,8 @@ namespace DiGi.GIS.PostgreSQL.UI.Windows
             TextBoxControl_ProjectDirectory.LostFocus += TextBoxControl_RunNameOrProjectDirectory_LostFocus;
 
             EvaluateInterruptedRun();
+
+            SetStallInputsEnabled();
         }
 
         /// <summary>
@@ -218,6 +224,29 @@ namespace DiGi.GIS.PostgreSQL.UI.Windows
                 return;
             }
 
+            if (!TextBoxControl_AutoResumeCount.TryGetValue(out int autoResumeCount))
+            {
+                Warn("Automatic resumes has to be a whole number from 0 to 10.");
+                return;
+            }
+
+            TimeSpan? inactivityTimeout = null;
+            if (TextBoxControl_InactivityTimeout.TryGetValue(out int inactivityTimeoutMinutes))
+            {
+                inactivityTimeout = TimeSpan.FromMinutes(inactivityTimeoutMinutes);
+            }
+            else if (!string.IsNullOrWhiteSpace(TextBoxControl_InactivityTimeout.Value))
+            {
+                Warn("The stall limit has to be a whole number of at least one minute, or empty to use the default.");
+                return;
+            }
+
+            if (!Query.IsYOLOTrainingStallOptionsValid(autoResumeCount, inactivityTimeout, out string? stallReason))
+            {
+                Warn(stallReason!);
+                return;
+            }
+
             string? datasetDirectory = Value(TextBoxControl_DatasetDirectory.Value);
             if (datasetDirectory is null)
             {
@@ -288,6 +317,8 @@ namespace DiGi.GIS.PostgreSQL.UI.Windows
             yOLOTrainingRunOptions_Result.ImageSize = imageSize;
             yOLOTrainingRunOptions_Result.Batch = batch;
             yOLOTrainingRunOptions_Result.Seed = seed;
+            yOLOTrainingRunOptions_Result.AutoResumeCount = autoResumeCount;
+            yOLOTrainingRunOptions_Result.InactivityTimeout = inactivityTimeout;
             yOLOTrainingRunOptions_Result.Device = Value(TextBoxControl_Device.Value);
             yOLOTrainingRunOptions_Result.RunName = runName;
             yOLOTrainingRunOptions_Result.ProjectDirectory = projectDirectory;
@@ -335,6 +366,21 @@ namespace DiGi.GIS.PostgreSQL.UI.Windows
         private void CheckBox_ResumeInterruptedRun_Changed(object sender, RoutedEventArgs e)
         {
             ApplyResumeMode();
+        }
+
+        private void CheckBox_Train_Changed(object sender, RoutedEventArgs e)
+        {
+            SetStallInputsEnabled();
+        }
+
+        /// <summary>
+        /// Enables the automatic-resume count and the stall limit only when the training step is ticked: without training there is nothing that can stall or be resumed, and the runner would ignore both.
+        /// </summary>
+        private void SetStallInputsEnabled()
+        {
+            bool train = CheckBox_Train.IsChecked == true;
+            TextBoxControl_AutoResumeCount.IsEnabled = train;
+            TextBoxControl_InactivityTimeout.IsEnabled = train;
         }
 
         /// <summary>

@@ -300,7 +300,7 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
 
                 message = string.Format(
                     CultureInfo.InvariantCulture,
-                    "This is a RESUME of {1}{0}Steps: {2}{0}{0}Counties:{0}{3}{0}{0}Checkpoint: epoch {4} of {5}, best fitness {6}{0}Dataset: {7}{0}{0}It continues at the next epoch; a resumed run is not bit-identical to an uninterrupted one.{0}A power cut or closing this application still stops the run.{0}{0}Start it?",
+                    "This is a RESUME of {1}{0}Steps: {2}{0}{0}Counties:{0}{3}{0}{0}Checkpoint: epoch {4} of {5} completed, best fitness {6}{0}Dataset: {7}{0}{0}It continues at {8}; a resumed run is not bit-identical to an uninterrupted one.{0}A power cut or closing this application still stops the run.{0}{0}Start it?",
                     Environment.NewLine,
                     runDirectory,
                     string.Join(", ", steps),
@@ -308,7 +308,8 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
                     yOLOCheckpointInformation_Resume?.Epoch?.ToString(CultureInfo.InvariantCulture) ?? "(unknown)",
                     yOLOCheckpointInformation_Resume?.Epochs?.ToString(CultureInfo.InvariantCulture) ?? "(unknown)",
                     yOLOCheckpointInformation_Resume?.BestFitness?.ToString("0.000", CultureInfo.InvariantCulture) ?? "(unknown)",
-                    yOLOCheckpointInformation_Resume?.DataPath ?? yOLOTrainingDatasetOptions?.OutputDirectory ?? "(none)");
+                    yOLOCheckpointInformation_Resume?.DataPath ?? yOLOTrainingDatasetOptions?.OutputDirectory ?? "(none)",
+                    yOLOCheckpointInformation_Resume?.Epoch is int epoch_Completed ? string.Format(CultureInfo.InvariantCulture, "epoch {0}", epoch_Completed + 1) : "the next epoch");
             }
             else
             {

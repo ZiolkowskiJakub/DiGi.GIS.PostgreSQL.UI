@@ -412,7 +412,9 @@ namespace DiGi.GIS.PostgreSQL.UI.Windows
             }
             else
             {
-                TextBlock_InterruptedRun.Text = string.Format(CultureInfo.InvariantCulture, "Interrupted at epoch {0} of {1} - resume it?", yOLOCheckpointInformation_Evaluated.Epoch ?? 0, yOLOCheckpointInformation_Evaluated.Epochs ?? 0);
+                // Epoch counts the completed epochs; the resume enters the next one, the epoch the runner logs as "Resuming ... from epoch N of M".
+                int epoch_Completed = yOLOCheckpointInformation_Evaluated.Epoch ?? 0;
+                TextBlock_InterruptedRun.Text = string.Format(CultureInfo.InvariantCulture, "Interrupted after epoch {0} of {1} - resume at epoch {2}?", epoch_Completed, yOLOCheckpointInformation_Evaluated.Epochs ?? 0, epoch_Completed + 1);
                 CheckBox_ResumeInterruptedRun.Visibility = Visibility.Visible;
 
                 // Reopened after a resume that was not started yet: the choice is kept rather than made again.

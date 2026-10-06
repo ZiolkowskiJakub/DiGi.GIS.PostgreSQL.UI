@@ -116,7 +116,7 @@ public const string YearBuiltPredictionExtension = "DiGi.GIS.YOLO.UI.ConsoleApp"
 [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
 
 ### Remarks
-Assembled by `DiGi.Maintenance/Scripts/SyncDirectories.ps1` when `IncludeYearBuiltPredictionExtension` is set, into this application's own build output, so that the deployment carries it as part of this application rather than as a folder of its own\. A machine that will never score a building is deployed without it and simply does not offer the task\.
+Assembled by `DiGi.Maintenance/Scripts/Deploy.ps1` when `IncludeYearBuiltPredictionExtension` is set, into this application's own build output, so that the deployment carries it as part of this application rather than as a folder of its own\. A machine that will never score a building is deployed without it and simply does not offer the task\.
 
 <a name='DiGi.GIS.PostgreSQL.UI.Constants.FileName'></a>
 

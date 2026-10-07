@@ -56,27 +56,62 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
         /// </summary>
         public YOLOTrainingRunOptions? YOLOTrainingRunOptions { get; set; } = null;
 
+        /// <summary>
+        /// Renders a Serilog message template with its positional values into the plain text the task row shows, the same text Serilog writes to the log, so the refusal reason on the row and in the log stay word-for-word identical.
+        /// </summary>
+        /// <param name="template">The Serilog message template, as it is handed to <c>Serilog.Modify.Log</c>.</param>
+        /// <param name="values">The positional values, in the order the template's property tokens appear.</param>
+        /// <returns>The rendered text.</returns>
+        internal static string RenderRefusal(string template, params object[] values)
+        {
+            // global:: escapes the DiGi.Serilog namespace, which otherwise shadows the root Serilog namespace the
+            // message template and its tokens live in. The property tokens are substituted in the order they appear,
+            // the way Serilog's message formatter renders them - a string value as-is, without the quotes a standalone
+            // value rendering adds - so the result is the log line word for word.
+            global::Serilog.Events.MessageTemplate messageTemplate = new global::Serilog.Parsing.MessageTemplateParser().Parse(template);
+            System.Text.StringBuilder result = new();
+            int index = 0;
+            foreach (global::Serilog.Parsing.MessageTemplateToken token in messageTemplate.Tokens)
+            {
+                if (token is global::Serilog.Parsing.PropertyToken)
+                {
+                    object? value = index < values.Length ? values[index] : null;
+                    result.Append(value?.ToString() ?? string.Empty);
+                    index++;
+                }
+                else if (token is global::Serilog.Parsing.TextToken textToken)
+                {
+                    result.Append(textToken.Text);
+                }
+            }
+
+            return result.ToString();
+        }
+
         /// <inheritdoc />
         protected override async Task<bool> ExecuteAsync(IProgress<long> progress, CancellationToken cancellationToken)
         {
             string? path_ConsoleApp = Query.YearBuiltPredictionConsoleAppPath(ConsoleAppPath);
             if (string.IsNullOrWhiteSpace(path_ConsoleApp))
             {
-                Serilog.Modify.Log(Serilog.Enums.LogEventLevel.Error, "{FileName} was not found beside this application or in the workspace - the YOLO training run cannot be started", Constants.FileName.YearBuiltPredictionConsoleApp);
-                return false;
+                string template = "{FileName} was not found beside this application or in the workspace - the YOLO training run cannot be started";
+                Serilog.Modify.Log(Serilog.Enums.LogEventLevel.Error, template, Constants.FileName.YearBuiltPredictionConsoleApp);
+                throw new BackgroundTaskFailureException(RenderRefusal(template, Constants.FileName.YearBuiltPredictionConsoleApp));
             }
 
             if (System.Windows.Application.Current is not System.Windows.Application application)
             {
-                Serilog.Modify.Log(Serilog.Enums.LogEventLevel.Error, "No WPF application is running - the YOLO training options cannot be asked for");
-                return false;
+                string template = "No WPF application is running - the YOLO training options cannot be asked for";
+                Serilog.Modify.Log(Serilog.Enums.LogEventLevel.Error, template);
+                throw new BackgroundTaskFailureException(template);
             }
 
             HttpClient? httpClient_AdministrativeAreal2D = GISWebAPIManager.CreateHttpClient<AdministrativeAreal2DController>(nameof(AdministrativeAreal2DController.GetAdministrativeAreal2DReferencesByAdministrativeArealTypeAsync), out string? path_AdministrativeAreal2D);
             if (httpClient_AdministrativeAreal2D is null || string.IsNullOrWhiteSpace(path_AdministrativeAreal2D))
             {
-                Serilog.Modify.Log(Serilog.Enums.LogEventLevel.Error, "County references could not be requested - the YOLO training run cannot be scoped");
-                return false;
+                string template = "County references could not be requested - the YOLO training run cannot be scoped";
+                Serilog.Modify.Log(Serilog.Enums.LogEventLevel.Error, template);
+                throw new BackgroundTaskFailureException(template);
             }
 
             PostOptions postOptions = new() { RequestResult = true };
@@ -87,8 +122,9 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
             PostResponse<List<AdministrativeAreal2DReference>?> postResponse_AdministrativeAreal2DReferences = await DiGi.WebAPI.Query.GetAsync<List<AdministrativeAreal2DReference>>(httpClient_AdministrativeAreal2D, requestUri_AdministrativeAreal2D, postOptions);
             if (postResponse_AdministrativeAreal2DReferences is null || !postResponse_AdministrativeAreal2DReferences.Succeeded || postResponse_AdministrativeAreal2DReferences.Result is not List<AdministrativeAreal2DReference> administrativeAreal2DReferences || administrativeAreal2DReferences.Count == 0)
             {
-                Serilog.Modify.Log(Serilog.Enums.LogEventLevel.Error, "County references could not be retrieved - the YOLO training run cannot be scoped");
-                return false;
+                string template = "County references could not be retrieved - the YOLO training run cannot be scoped";
+                Serilog.Modify.Log(Serilog.Enums.LogEventLevel.Error, template);
+                throw new BackgroundTaskFailureException(template);
             }
 
             YOLOTrainingRunOptions? yOLOTrainingRunOptions = null;
@@ -121,24 +157,21 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
             if (yOLOTrainingRunOptions is null)
             {
                 Serilog.Modify.Log("YOLO training options were cancelled - nothing was run");
-                return false;
+                return true;
             }
 
             YOLOTrainingScenario = yOLOTrainingScenario;
             YOLOTrainingRunOptions = yOLOTrainingRunOptions;
 
-            if (!Preflight(yOLOTrainingRunOptions, cancellationToken))
-            {
-                return false;
-            }
+            Preflight(yOLOTrainingRunOptions, cancellationToken);
 
             // The preflight may have settled the interpreter; kept, so the dialog opens with it next time.
             YOLOTrainingRunOptions = yOLOTrainingRunOptions;
 
-            string? path_Options = WriteOptions(yOLOTrainingRunOptions);
+            string? path_Options = WriteOptions(yOLOTrainingRunOptions, out string? writeOptionsReason);
             if (string.IsNullOrWhiteSpace(path_Options))
             {
-                return false;
+                throw new BackgroundTaskFailureException(writeOptionsReason!);
             }
 
             // Every line the runner prints is logged already; the automatic-resume lines are also kept so a run that
@@ -343,7 +376,21 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
             return System.Windows.MessageBox.Show(message, "Train YOLO detector", System.Windows.MessageBoxButton.OKCancel, System.Windows.MessageBoxImage.Warning) == System.Windows.MessageBoxResult.OK;
         }
 
-        private static bool Preflight(YOLOTrainingRunOptions yOLOTrainingRunOptions, CancellationToken cancellationToken)
+        /// <summary>
+        /// Logs a pre-launch refusal the operator is refused with and throws it, so the task row shows the reason instead of the generic "reported failure without an exception" text; it never returns normally.
+        /// </summary>
+        /// <param name="name">The field the refusal is about.</param>
+        /// <param name="message">The reason, with a Serilog property placeholder for the value, when there is one.</param>
+        /// <param name="value">The value the reason names, when there is one.</param>
+        [System.Diagnostics.CodeAnalysis.DoesNotReturn]
+        private static void Refuse(string name, string message, string? value = null)
+        {
+            string template = "YOLO training refused - {Name}: " + message;
+            Serilog.Modify.Log(Serilog.Enums.LogEventLevel.Error, template, name, value ?? "(none)");
+            throw new BackgroundTaskFailureException(RenderRefusal(template, name, value ?? "(none)"));
+        }
+
+        private static void Preflight(YOLOTrainingRunOptions yOLOTrainingRunOptions, CancellationToken cancellationToken)
         {
             // The runner repeats most of these checks; they are made here as well because this application is where
             // the operator is standing, and a refusal said now is worth more than an exit code later. The label check
@@ -359,12 +406,6 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
             bool train = yOLOTrainingSteps.Count == 0 || yOLOTrainingSteps.Contains(YOLOTrainingStep.Train);
             bool validate = yOLOTrainingSteps.Count == 0 || yOLOTrainingSteps.Contains(YOLOTrainingStep.Validate);
             bool evaluate = yOLOTrainingSteps.Count == 0 || yOLOTrainingSteps.Contains(YOLOTrainingStep.Evaluate);
-
-            bool Refuse(string name, string message, string? value = null)
-            {
-                Serilog.Modify.Log(Serilog.Enums.LogEventLevel.Error, "YOLO training refused - {Name}: " + message, name, value ?? "(none)");
-                return false;
-            }
 
             // A checkpoint records its dataset path as ultralytics saw it, which may be relative to the working
             // directory the run executed in; the same directory resolves it here.
@@ -403,7 +444,7 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
             YOLOTrainingDatasetOptions? yOLOTrainingDatasetOptions = yOLOTrainingRunOptions.DatasetOptions;
             if (yOLOTrainingDatasetOptions is null || string.IsNullOrWhiteSpace(yOLOTrainingDatasetOptions.OutputDirectory) || !System.IO.Path.IsPathRooted(yOLOTrainingDatasetOptions.OutputDirectory))
             {
-                return Refuse(nameof(YOLOTrainingDatasetOptions.OutputDirectory), "the dataset directory has to be an absolute path");
+                Refuse(nameof(YOLOTrainingDatasetOptions.OutputDirectory), "the dataset directory has to be an absolute path");
             }
 
             if (!Query.IsYOLOTrainingStallOptionsValid(yOLOTrainingRunOptions.AutoResumeCount, yOLOTrainingRunOptions.InactivityTimeout, out string? stallReason))
@@ -414,7 +455,7 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
                     ? nameof(YOLOTrainingRunOptions.AutoResumeCount)
                     : nameof(YOLOTrainingRunOptions.InactivityTimeout);
 
-                return Refuse(name_Option, stallReason!);
+                Refuse(name_Option, stallReason!);
             }
 
             string? startWeightsPath = yOLOTrainingRunOptions.StartWeightsPath;
@@ -422,7 +463,7 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
             {
                 if (string.IsNullOrWhiteSpace(startWeightsPath) || !startWeightsPath!.EndsWith(".pt", StringComparison.OrdinalIgnoreCase) || !File.Exists(startWeightsPath))
                 {
-                    return Refuse(nameof(YOLOTrainingRunOptions.StartWeightsPath), "the start weights {Path} are not an existing .pt file", startWeightsPath);
+                    Refuse(nameof(YOLOTrainingRunOptions.StartWeightsPath), "the start weights {Path} are not an existing .pt file", startWeightsPath);
                 }
             }
 
@@ -431,18 +472,18 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
                 string? projectDirectory = yOLOTrainingRunOptions.ProjectDirectory;
                 if (string.IsNullOrWhiteSpace(projectDirectory) || !System.IO.Path.IsPathRooted(projectDirectory))
                 {
-                    return Refuse(nameof(YOLOTrainingRunOptions.ProjectDirectory), "the project directory {Path} has to be an absolute path", projectDirectory);
+                    Refuse(nameof(YOLOTrainingRunOptions.ProjectDirectory), "the project directory {Path} has to be an absolute path", projectDirectory);
                 }
 
                 if (DiGi.YOLO.Query.IsInsideModelsDirectory(projectDirectory))
                 {
-                    return Refuse(nameof(YOLOTrainingRunOptions.ProjectDirectory), "the project directory {Path} is inside a YOLO\\models folder, where the frozen weights live", projectDirectory);
+                    Refuse(nameof(YOLOTrainingRunOptions.ProjectDirectory), "the project directory {Path} is inside a YOLO\\models folder, where the frozen weights live", projectDirectory);
                 }
 
                 string? runName = yOLOTrainingRunOptions.RunName;
                 if (string.IsNullOrWhiteSpace(runName) || runName!.IndexOfAny(System.IO.Path.GetInvalidFileNameChars()) >= 0 || string.Equals(runName, System.IO.Path.GetFileNameWithoutExtension(Constants.FileName.Model), StringComparison.OrdinalIgnoreCase))
                 {
-                    return Refuse(nameof(YOLOTrainingRunOptions.RunName), "{RunName} has to be a plain file name other than model", runName);
+                    Refuse(nameof(YOLOTrainingRunOptions.RunName), "{RunName} has to be a plain file name other than model", runName);
                 }
 
                 string runDirectory = System.IO.Path.Combine(projectDirectory!, runName!);
@@ -454,18 +495,18 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
                     // run is written and launched rather than reading an exit code later.
                     if (dataset)
                     {
-                        return Refuse(nameof(YOLOTrainingRunOptions.ResumeTraining), "a resume never rebuilds the dataset it was trained on; remove the Dataset step");
+                        Refuse(nameof(YOLOTrainingRunOptions.ResumeTraining), "a resume never rebuilds the dataset it was trained on; remove the Dataset step");
                     }
 
                     if (File.Exists(path_Completed))
                     {
-                        return Refuse(nameof(YOLOTrainingRunOptions.ResumeTraining), "the run {Path} completed; a completed run is not resumed", path_Completed);
+                        Refuse(nameof(YOLOTrainingRunOptions.ResumeTraining), "the run {Path} completed; a completed run is not resumed", path_Completed);
                     }
 
                     string path_Last = System.IO.Path.Combine(runDirectory, DiGi.GIS.YOLO.UI.Constants.DirectoryName.Weights, DiGi.GIS.YOLO.UI.Constants.FileName.LastWeights);
                     if (!Directory.Exists(runDirectory) || !File.Exists(path_Last))
                     {
-                        return Refuse(nameof(YOLOTrainingRunOptions.ResumeTraining), "nothing to resume - {Path} has no weights\\last.pt", runDirectory);
+                        Refuse(nameof(YOLOTrainingRunOptions.ResumeTraining), "nothing to resume - {Path} has no weights\\last.pt", runDirectory);
                     }
 
                     string? workingDirectory_Checkpoint = yOLOTrainingRunOptions.WorkingDirectory ?? yOLOTrainingDatasetOptions.WorkingDirectory ?? yOLOTrainingDatasetOptions.OutputDirectory;
@@ -473,39 +514,39 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
 
                     if (yOLOCheckpointInformation_Resume is null)
                     {
-                        return Refuse(nameof(DiGi.YOLO.Query.YOLOCheckpointInformation), "the checkpoint {Path} could not be read", path_Last);
+                        Refuse(nameof(DiGi.YOLO.Query.YOLOCheckpointInformation), "the checkpoint {Path} could not be read", path_Last);
                     }
 
                     if (yOLOCheckpointInformation_Resume.Finished)
                     {
-                        return Refuse(nameof(DiGi.YOLO.Query.YOLOCheckpointInformation), "the checkpoint {Path} is finished; nothing to resume", path_Last);
+                        Refuse(nameof(DiGi.YOLO.Query.YOLOCheckpointInformation), "the checkpoint {Path} is finished; nothing to resume", path_Last);
                     }
 
                     string? path_Data = ResolveCheckpointDataPath(yOLOCheckpointInformation_Resume.DataPath, workingDirectory_Checkpoint);
                     if (string.IsNullOrWhiteSpace(path_Data) || !File.Exists(path_Data))
                     {
-                        return Refuse(nameof(DiGi.YOLO.Query.YOLOCheckpointInformation), "the dataset the checkpoint {Path} records is missing or was not named", path_Last);
+                        Refuse(nameof(DiGi.YOLO.Query.YOLOCheckpointInformation), "the dataset the checkpoint {Path} records is missing or was not named", path_Last);
                     }
 
                     if (!string.Equals(yOLOCheckpointInformation_Resume.Name, runName, StringComparison.OrdinalIgnoreCase) || !PathsEqual(yOLOCheckpointInformation_Resume.Project, projectDirectory))
                     {
-                        return Refuse(nameof(DiGi.YOLO.Query.YOLOCheckpointInformation), "the checkpoint {Path} records a different run folder; it was moved or renamed", path_Last);
+                        Refuse(nameof(DiGi.YOLO.Query.YOLOCheckpointInformation), "the checkpoint {Path} records a different run folder; it was moved or renamed", path_Last);
                     }
                 }
                 else if (Directory.Exists(runDirectory) || File.Exists(path_Completed))
                 {
-                    return Refuse(nameof(YOLOTrainingRunOptions.RunName), "the run {Path} already exists; choose a new run name", runDirectory);
+                    Refuse(nameof(YOLOTrainingRunOptions.RunName), "the run {Path} already exists; choose a new run name", runDirectory);
                 }
             }
 
             if (dataset && (string.IsNullOrWhiteSpace(yOLOTrainingDatasetOptions.LegacyReferencesFilePath) || !File.Exists(yOLOTrainingDatasetOptions.LegacyReferencesFilePath)))
             {
-                return Refuse(nameof(YOLOTrainingDatasetOptions.LegacyReferencesFilePath), "the legacy references file {Path} was not found beside the runner", yOLOTrainingDatasetOptions.LegacyReferencesFilePath);
+                Refuse(nameof(YOLOTrainingDatasetOptions.LegacyReferencesFilePath), "the legacy references file {Path} was not found beside the runner", yOLOTrainingDatasetOptions.LegacyReferencesFilePath);
             }
 
             if (labelCheck && (string.IsNullOrWhiteSpace(yOLOTrainingDatasetOptions.ModelPath) || !File.Exists(yOLOTrainingDatasetOptions.ModelPath)))
             {
-                return Refuse(nameof(YOLOTrainingDatasetOptions.ModelPath), "the label check detector {Path} was not found beside the runner", yOLOTrainingDatasetOptions.ModelPath);
+                Refuse(nameof(YOLOTrainingDatasetOptions.ModelPath), "the label check detector {Path} was not found beside the runner", yOLOTrainingDatasetOptions.ModelPath);
             }
 
             if (evaluate)
@@ -515,14 +556,14 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
                 {
                     if (!File.Exists(weightsPath))
                     {
-                        return Refuse(nameof(YOLOTrainingDatasetOptions.WeightsPaths), "the gate weights {Path} were not found", weightsPath);
+                        Refuse(nameof(YOLOTrainingDatasetOptions.WeightsPaths), "the gate weights {Path} were not found", weightsPath);
                     }
                 }
 
                 // Without training there is no new weights file to add, so an empty list would evaluate nothing.
                 if (!train && weightsPaths.Count == 0)
                 {
-                    return Refuse(nameof(YOLOTrainingDatasetOptions.WeightsPaths), "the evaluation without training needs at least one gate weights file");
+                    Refuse(nameof(YOLOTrainingDatasetOptions.WeightsPaths), "the evaluation without training needs at least one gate weights file");
                 }
             }
 
@@ -536,7 +577,7 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
                 DiGi.YOLO.Classes.YOLOEnvironmentResult yOLOEnvironmentResult = DiGi.YOLO.Query.YOLOEnvironmentResult(yOLOTrainingRunOptions.PythonPath ?? yOLOTrainingDatasetOptions.PythonPath, modelPath, workingDirectory, cancellationToken);
                 if (!yOLOEnvironmentResult.Runnable)
                 {
-                    return Refuse(nameof(YOLOTrainingRunOptions.PythonPath), "this machine cannot run the detector - {Messages}", string.Join("; ", yOLOEnvironmentResult.Messages ?? []));
+                    Refuse(nameof(YOLOTrainingRunOptions.PythonPath), "this machine cannot run the detector - {Messages}", string.Join("; ", yOLOEnvironmentResult.Messages ?? []));
                 }
 
                 if (string.IsNullOrWhiteSpace(yOLOTrainingRunOptions.PythonPath) && !string.IsNullOrWhiteSpace(yOLOEnvironmentResult.PythonPath))
@@ -547,16 +588,16 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
                     Serilog.Modify.Log("YOLO training uses the interpreter found on PATH - {PythonPath}", yOLOEnvironmentResult.PythonPath!);
                 }
             }
-
-            return true;
         }
 
-        private static string? WriteOptions(YOLOTrainingRunOptions yOLOTrainingRunOptions)
+        private static string? WriteOptions(YOLOTrainingRunOptions yOLOTrainingRunOptions, out string? reason)
         {
+            reason = null;
             string? directory = yOLOTrainingRunOptions.ProjectDirectory ?? yOLOTrainingRunOptions.DatasetOptions?.OutputDirectory;
             if (string.IsNullOrWhiteSpace(directory))
             {
-                Serilog.Modify.Log(Serilog.Enums.LogEventLevel.Error, "No project or dataset directory - the YOLO training options have nowhere to be written");
+                reason = "No project or dataset directory - the YOLO training options have nowhere to be written";
+                Serilog.Modify.Log(Serilog.Enums.LogEventLevel.Error, reason);
                 return null;
             }
 
@@ -572,7 +613,8 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
 
                 if (yOLOTrainingRunOptions.ToJsonObject() is not JsonObject jsonObject)
                 {
-                    Serilog.Modify.Log(Serilog.Enums.LogEventLevel.Error, "The YOLO training options could not be serialized");
+                    reason = "The YOLO training options could not be serialized";
+                    Serilog.Modify.Log(Serilog.Enums.LogEventLevel.Error, reason);
                     return null;
                 }
 
@@ -580,7 +622,9 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
             }
             catch (Exception exception)
             {
-                Serilog.Modify.Log(exception, "The YOLO training options could not be written into {Directory}", directory);
+                string template = "The YOLO training options could not be written into {Directory}";
+                reason = RenderRefusal(template, directory);
+                Serilog.Modify.Log(exception, template, directory);
                 return null;
             }
         }

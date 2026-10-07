@@ -976,6 +976,39 @@ Locks what a resume cannot change \- the hyperparameters, the start weights and 
 private void ApplyResumeMode();
 ```
 
+<a name='DiGi.GIS.PostgreSQL.UI.Windows.YOLOTrainingOptionsWindow.DirectoryRefusal(string,string,bool)'></a>
+
+## YOLOTrainingOptionsWindow\.DirectoryRefusal\(string, string, bool\) Method
+
+Returns the warning a relative directory is refused with, or null when every directory it names is absolute: the dataset directory always, and the project directory when training is on\.
+
+```csharp
+internal static string? DirectoryRefusal(string? datasetDirectory, string? projectDirectory, bool train);
+```
+#### Parameters
+
+<a name='DiGi.GIS.PostgreSQL.UI.Windows.YOLOTrainingOptionsWindow.DirectoryRefusal(string,string,bool).datasetDirectory'></a>
+
+`datasetDirectory` [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
+
+The dataset directory, when given\.
+
+<a name='DiGi.GIS.PostgreSQL.UI.Windows.YOLOTrainingOptionsWindow.DirectoryRefusal(string,string,bool).projectDirectory'></a>
+
+`projectDirectory` [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
+
+The project directory, when training is on\.
+
+<a name='DiGi.GIS.PostgreSQL.UI.Windows.YOLOTrainingOptionsWindow.DirectoryRefusal(string,string,bool).train'></a>
+
+`train` [System\.Boolean](https://learn.microsoft.com/en-us/dotnet/api/system.boolean 'System\.Boolean')
+
+Whether the run trains, so the project directory is in play\.
+
+#### Returns
+[System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')  
+The warning to show, or null when the directories are absolute\.
+
 <a name='DiGi.GIS.PostgreSQL.UI.Windows.YOLOTrainingOptionsWindow.EvaluateInterruptedRun()'></a>
 
 ## YOLOTrainingOptionsWindow\.EvaluateInterruptedRun\(\) Method

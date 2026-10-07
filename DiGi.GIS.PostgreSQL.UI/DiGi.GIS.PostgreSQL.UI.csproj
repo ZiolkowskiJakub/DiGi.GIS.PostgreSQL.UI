@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net10.0-windows7.0</TargetFramework>
@@ -19,6 +19,10 @@
 
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="DiGi.GIS.PostgreSQL.UI.xUnit" />
   </ItemGroup>
 
   <Target Name="CopyFiles" AfterTargets="Build">
@@ -123,6 +127,11 @@
     </Reference>
     <Reference Include="DiGi.Serilog">
       <HintPath>..\..\DiGi.Serilog\bin\DiGi.Serilog.dll</HintPath>
+    </Reference>
+    <!-- Serilog core is a transitive dependency of DiGi.Serilog (reached by HintPath, so it is not on the compile
+         path on its own); RenderRefusal renders the refusal reason with Serilog's own template engine. -->
+    <Reference Include="Serilog">
+      <HintPath>..\..\DiGi.Serilog\bin\Serilog.dll</HintPath>
     </Reference>
     <Reference Include="DiGi.UI.Windows">
       <HintPath>..\..\DiGi.UI.Windows\bin\DiGi.UI.Windows.dll</HintPath>

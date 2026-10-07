@@ -285,6 +285,14 @@ namespace DiGi.GIS.PostgreSQL.UI.Windows
                 return;
             }
 
+            // A relative directory would otherwise be resolved against this process's current directory, where the
+            // runner would not look for it, so it is refused here rather than silently mis-scoped.
+            if (DirectoryRefusal(datasetDirectory, projectDirectory, train) is string directoryRefusal)
+            {
+                Warn(directoryRefusal);
+                return;
+            }
+
             HashSet<int> countyIds = [];
             foreach (AdministrativeAreal2DReference administrativeAreal2DReference in administrativeAreal2DReferences)
             {
@@ -346,6 +354,28 @@ namespace DiGi.GIS.PostgreSQL.UI.Windows
         private static string? Value(string? text)
         {
             return string.IsNullOrWhiteSpace(text) ? null : text!.Trim();
+        }
+
+        /// <summary>
+        /// Returns the warning a relative directory is refused with, or null when every directory it names is absolute: the dataset directory always, and the project directory when training is on.
+        /// </summary>
+        /// <param name="datasetDirectory">The dataset directory, when given.</param>
+        /// <param name="projectDirectory">The project directory, when training is on.</param>
+        /// <param name="train">Whether the run trains, so the project directory is in play.</param>
+        /// <returns>The warning to show, or null when the directories are absolute.</returns>
+        internal static string? DirectoryRefusal(string? datasetDirectory, string? projectDirectory, bool train)
+        {
+            if (!string.IsNullOrWhiteSpace(datasetDirectory) && !System.IO.Path.IsPathRooted(datasetDirectory))
+            {
+                return "The dataset directory has to be an absolute path.";
+            }
+
+            if (train && !string.IsNullOrWhiteSpace(projectDirectory) && !System.IO.Path.IsPathRooted(projectDirectory))
+            {
+                return "The project directory has to be an absolute path.";
+            }
+
+            return null;
         }
 
         private static string? JsonInt(JsonObject? jsonObject, string name)

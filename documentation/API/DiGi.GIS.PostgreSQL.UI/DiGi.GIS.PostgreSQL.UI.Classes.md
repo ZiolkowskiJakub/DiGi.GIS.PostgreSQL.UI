@@ -2787,3 +2787,59 @@ The standard output lines the runner printed\.
 #### Returns
 [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')  
 The failure message for the task row\.
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIYOLOTrainingTask.Refuse(string,string,string)'></a>
+
+## UIYOLOTrainingTask\.Refuse\(string, string, string\) Method
+
+Logs a pre\-launch refusal the operator is refused with and throws it, so the task row shows the reason instead of the generic "reported failure without an exception" text; it never returns normally\.
+
+```csharp
+private static void Refuse(string name, string message, string? value=null);
+```
+#### Parameters
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIYOLOTrainingTask.Refuse(string,string,string).name'></a>
+
+`name` [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
+
+The field the refusal is about\.
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIYOLOTrainingTask.Refuse(string,string,string).message'></a>
+
+`message` [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
+
+The reason, with a Serilog property placeholder for the value, when there is one\.
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIYOLOTrainingTask.Refuse(string,string,string).value'></a>
+
+`value` [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
+
+The value the reason names, when there is one\.
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIYOLOTrainingTask.RenderRefusal(string,object[])'></a>
+
+## UIYOLOTrainingTask\.RenderRefusal\(string, object\[\]\) Method
+
+Renders a Serilog message template with its positional values into the plain text the task row shows, the same text Serilog writes to the log, so the refusal reason on the row and in the log stay word\-for\-word identical\.
+
+```csharp
+internal static string RenderRefusal(string template, params object[] values);
+```
+#### Parameters
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIYOLOTrainingTask.RenderRefusal(string,object[]).template'></a>
+
+`template` [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
+
+The Serilog message template, as it is handed to `Serilog.Modify.Log`\.
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIYOLOTrainingTask.RenderRefusal(string,object[]).values'></a>
+
+`values` [System\.Object](https://learn.microsoft.com/en-us/dotnet/api/system.object 'System\.Object')[\[\]](https://learn.microsoft.com/en-us/dotnet/api/system.array 'System\.Array')
+
+The positional values, in the order the template's property tokens appear\.
+
+#### Returns
+[System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')  
+The rendered text\.

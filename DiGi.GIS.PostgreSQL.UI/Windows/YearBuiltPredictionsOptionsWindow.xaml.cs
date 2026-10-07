@@ -119,7 +119,7 @@ namespace DiGi.GIS.PostgreSQL.UI.Windows
             // interrupted has to be able to keep what it exported.
             yearBuiltPredictionPipelineOptions.CleanScratchDirectory = CheckBox_CleanScratchDirectory.IsChecked == true;
 
-            // Seven members have no control here on purpose, and unlike the step flags above they are not set
+            // Eight members have no control here on purpose, and unlike the step flags above they are not set
             // either - they carry through the copy untouched, as does anything else this window is not
             // responsible for.
             //
@@ -148,6 +148,10 @@ namespace DiGi.GIS.PostgreSQL.UI.Windows
             // value: above the endpoint's cap is refused server side, below it is the same work in more
             // requests. Max concurrent requests is the one knob that answers a server which has started
             // refusing, and it is the one that is offered.
+            //
+            // ReferencesFilePath narrows a run to the buildings of a training dataset manifest, which only the
+            // labelled-building detection rewrite before a regressor retrain wants (ZiolkowskiJakub/DiGi.GIS.YOLO.UI#22).
+            // The tray's scoring runs cover whole counties, so it is left as the copy carries it.
 
             DialogResult = true;
             Close();

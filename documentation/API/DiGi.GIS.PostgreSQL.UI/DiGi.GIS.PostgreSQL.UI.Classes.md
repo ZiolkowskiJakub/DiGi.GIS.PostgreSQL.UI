@@ -2623,6 +2623,8 @@ Two consequences of that are worth knowing before a run. <b>The runner authorize
 
 The environment preflight runs here, before anything is launched, so a machine with no CPython carrying ultralytics says so in front of whoever opened the dialog instead of an hour later as an exit code. The pipeline repeats the check inside the run; that costs one interpreter start and is what makes the reason legible.
 
+<b>Every refusal before launch names its reason on the task row.</b> Each check below runs before anything is started, logs its reason and throws a [DiGi\.Core\.Classes\.BackgroundTaskFailureException](https://learn.microsoft.com/en-us/dotnet/api/digi.core.classes.backgroundtaskfailureexception 'DiGi\.Core\.Classes\.BackgroundTaskFailureException') worded exactly as the log line ([RenderRefusal\(string, object\[\]\)](DiGi.GIS.PostgreSQL.UI.md#DiGi.GIS.PostgreSQL.UI.Query.RenderRefusal(string,object[]) 'DiGi\.GIS\.PostgreSQL\.UI\.Query\.RenderRefusal\(string, object\[\]\)') renders it), so nobody has to open the logs folder to learn why nothing started. A cancelled dialog or a declined confirmation is not a refusal - nobody scoped a run, so the task reports a completed run that started nothing. A run that fails after launch is reported with its exit code, the last `[ERROR]`/`[FATAL]` line the runner printed and the step that failed ([FailureMessage\(YearBuiltPredictionExitCode, IEnumerable&lt;string&gt;\)](DiGi.GIS.PostgreSQL.UI.Classes.md#DiGi.GIS.PostgreSQL.UI.Classes.UIYearBuiltPredictionsTask.FailureMessage(DiGi.GIS.YOLO.UI.Enums.YearBuiltPredictionExitCode,System.Collections.Generic.IEnumerable_string_) 'DiGi\.GIS\.PostgreSQL\.UI\.Classes\.UIYearBuiltPredictionsTask\.FailureMessage\(DiGi\.GIS\.YOLO\.UI\.Enums\.YearBuiltPredictionExitCode, System\.Collections\.Generic\.IEnumerable\<string\>\)')).
+
 ```csharp
 public class UIYearBuiltPredictionsTask : DiGi.Core.Classes.ReportableBackgroundTask<long>, DiGi.GIS.PostgreSQL.UI.Interfaces.IGISPostgreSQLUIObject
 ```
@@ -2675,6 +2677,63 @@ public DiGi.GIS.YOLO.UI.Classes.YearBuiltPredictionPipelineOptions? YearBuiltPre
 
 #### Property Value
 [DiGi\.GIS\.YOLO\.UI\.Classes\.YearBuiltPredictionPipelineOptions](https://learn.microsoft.com/en-us/dotnet/api/digi.gis.yolo.ui.classes.yearbuiltpredictionpipelineoptions 'DiGi\.GIS\.YOLO\.UI\.Classes\.YearBuiltPredictionPipelineOptions')
+### Methods
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIYearBuiltPredictionsTask.FailureMessage(DiGi.GIS.YOLO.UI.Enums.YearBuiltPredictionExitCode,System.Collections.Generic.IEnumerable_string_)'></a>
+
+## UIYearBuiltPredictionsTask\.FailureMessage\(YearBuiltPredictionExitCode, IEnumerable\<string\>\) Method
+
+Builds the message a failed Year Built prediction run is reported with, so the task row names the last reason instead of the generic "reported failure without an exception" text\.
+
+The runner marks its standard output with prefixes: `[ERROR]` and `[FATAL]` for what went wrong, `[PROGRESS]` for the item counts, `[INFO]`/`[NOTE]` for narration, and two spaces plus a dash for each entry under a `… failed step(s):` header. The last `[ERROR]`/`[FATAL]` line is the cause the run ended with, and the step entries under it - when it is such a header - say which step died; everything else is narration the log already carries. Without a named cause the exit code alone is reported.
+
+```csharp
+internal static string FailureMessage(DiGi.GIS.YOLO.UI.Enums.YearBuiltPredictionExitCode exitCode, System.Collections.Generic.IEnumerable<string> lines);
+```
+#### Parameters
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIYearBuiltPredictionsTask.FailureMessage(DiGi.GIS.YOLO.UI.Enums.YearBuiltPredictionExitCode,System.Collections.Generic.IEnumerable_string_).exitCode'></a>
+
+`exitCode` [DiGi\.GIS\.YOLO\.UI\.Enums\.YearBuiltPredictionExitCode](https://learn.microsoft.com/en-us/dotnet/api/digi.gis.yolo.ui.enums.yearbuiltpredictionexitcode 'DiGi\.GIS\.YOLO\.UI\.Enums\.YearBuiltPredictionExitCode')
+
+The exit code the runner ended with\. It is never [DiGi\.GIS\.YOLO\.UI\.Enums\.YearBuiltPredictionExitCode\.Succeeded](https://learn.microsoft.com/en-us/dotnet/api/digi.gis.yolo.ui.enums.yearbuiltpredictionexitcode.succeeded 'DiGi\.GIS\.YOLO\.UI\.Enums\.YearBuiltPredictionExitCode\.Succeeded') or [DiGi\.GIS\.YOLO\.UI\.Enums\.YearBuiltPredictionExitCode\.Cancelled](https://learn.microsoft.com/en-us/dotnet/api/digi.gis.yolo.ui.enums.yearbuiltpredictionexitcode.cancelled 'DiGi\.GIS\.YOLO\.UI\.Enums\.YearBuiltPredictionExitCode\.Cancelled') here \- both are handled by the caller\.
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIYearBuiltPredictionsTask.FailureMessage(DiGi.GIS.YOLO.UI.Enums.YearBuiltPredictionExitCode,System.Collections.Generic.IEnumerable_string_).lines'></a>
+
+`lines` [System\.Collections\.Generic\.IEnumerable&lt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.ienumerable-1 'System\.Collections\.Generic\.IEnumerable\`1')[System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')[&gt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.ienumerable-1 'System\.Collections\.Generic\.IEnumerable\`1')
+
+The standard output lines the runner printed, in order\.
+
+#### Returns
+[System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')  
+The failure message for the task row\.
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIYearBuiltPredictionsTask.WriteOptions(DiGi.GIS.YOLO.UI.Classes.YearBuiltPredictionPipelineOptions,string)'></a>
+
+## UIYearBuiltPredictionsTask\.WriteOptions\(YearBuiltPredictionPipelineOptions, string\) Method
+
+Writes the options of a scoped run beside its scratch directory \- the record of what the run was asked to do \- and reports why it could not be written when it could not\.
+
+```csharp
+private static string? WriteOptions(DiGi.GIS.YOLO.UI.Classes.YearBuiltPredictionPipelineOptions yearBuiltPredictionPipelineOptions, out string? reason);
+```
+#### Parameters
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIYearBuiltPredictionsTask.WriteOptions(DiGi.GIS.YOLO.UI.Classes.YearBuiltPredictionPipelineOptions,string).yearBuiltPredictionPipelineOptions'></a>
+
+`yearBuiltPredictionPipelineOptions` [DiGi\.GIS\.YOLO\.UI\.Classes\.YearBuiltPredictionPipelineOptions](https://learn.microsoft.com/en-us/dotnet/api/digi.gis.yolo.ui.classes.yearbuiltpredictionpipelineoptions 'DiGi\.GIS\.YOLO\.UI\.Classes\.YearBuiltPredictionPipelineOptions')
+
+The options the run is handed\.
+
+<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIYearBuiltPredictionsTask.WriteOptions(DiGi.GIS.YOLO.UI.Classes.YearBuiltPredictionPipelineOptions,string).reason'></a>
+
+`reason` [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
+
+The refusal to write, worded as it is logged, or null when the options were written\.
+
+#### Returns
+[System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')  
+The path of the written options file; null when it could not be written\.
 
 <a name='DiGi.GIS.PostgreSQL.UI.Classes.UIYOLOTrainingTask'></a>
 
@@ -2816,30 +2875,3 @@ The reason, with a Serilog property placeholder for the value, when there is one
 `value` [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
 
 The value the reason names, when there is one\.
-
-<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIYOLOTrainingTask.RenderRefusal(string,object[])'></a>
-
-## UIYOLOTrainingTask\.RenderRefusal\(string, object\[\]\) Method
-
-Renders a Serilog message template with its positional values into the plain text the task row shows, the same text Serilog writes to the log, so the refusal reason on the row and in the log stay word\-for\-word identical\.
-
-```csharp
-internal static string RenderRefusal(string template, params object[] values);
-```
-#### Parameters
-
-<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIYOLOTrainingTask.RenderRefusal(string,object[]).template'></a>
-
-`template` [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
-
-The Serilog message template, as it is handed to `Serilog.Modify.Log`\.
-
-<a name='DiGi.GIS.PostgreSQL.UI.Classes.UIYOLOTrainingTask.RenderRefusal(string,object[]).values'></a>
-
-`values` [System\.Object](https://learn.microsoft.com/en-us/dotnet/api/system.object 'System\.Object')[\[\]](https://learn.microsoft.com/en-us/dotnet/api/system.array 'System\.Array')
-
-The positional values, in the order the template's property tokens appear\.
-
-#### Returns
-[System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')  
-The rendered text\.

@@ -437,6 +437,35 @@ The reason the pair cannot be used, or null when it can\.
 [System\.Boolean](https://learn.microsoft.com/en-us/dotnet/api/system.boolean 'System\.Boolean')  
 True when the pair can be used; otherwise false\.
 
+<a name='DiGi.GIS.PostgreSQL.UI.Query.RenderRefusal(string,object[])'></a>
+
+## Query\.RenderRefusal\(string, object\[\]\) Method
+
+Renders a Serilog message template with its positional values into the plain text the task row shows, the same text Serilog writes to the log, so the refusal reason on the row and in the log stay word\-for\-word identical\.
+
+The renderer is shared by every task that names a refusal on its row rather than kept per task: two copies of the token walk would be two places for the rendering rule to drift, and a drift costs nothing at compile time - only a row that no longer matches its own log line.
+
+```csharp
+internal static string RenderRefusal(string template, params object[] values);
+```
+#### Parameters
+
+<a name='DiGi.GIS.PostgreSQL.UI.Query.RenderRefusal(string,object[]).template'></a>
+
+`template` [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
+
+The Serilog message template, as it is handed to `Serilog.Modify.Log`\.
+
+<a name='DiGi.GIS.PostgreSQL.UI.Query.RenderRefusal(string,object[]).values'></a>
+
+`values` [System\.Object](https://learn.microsoft.com/en-us/dotnet/api/system.object 'System\.Object')[\[\]](https://learn.microsoft.com/en-us/dotnet/api/system.array 'System\.Array')
+
+The positional values, in the order the template's property tokens appear\.
+
+#### Returns
+[System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')  
+The rendered text\.
+
 <a name='DiGi.GIS.PostgreSQL.UI.Query.YearBuiltPredictionConsoleAppPath(string,string)'></a>
 
 ## Query\.YearBuiltPredictionConsoleAppPath\(string, string\) Method

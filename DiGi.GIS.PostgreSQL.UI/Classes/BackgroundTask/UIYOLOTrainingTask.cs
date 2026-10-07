@@ -56,38 +56,6 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
         /// </summary>
         public YOLOTrainingRunOptions? YOLOTrainingRunOptions { get; set; } = null;
 
-        /// <summary>
-        /// Renders a Serilog message template with its positional values into the plain text the task row shows, the same text Serilog writes to the log, so the refusal reason on the row and in the log stay word-for-word identical.
-        /// </summary>
-        /// <param name="template">The Serilog message template, as it is handed to <c>Serilog.Modify.Log</c>.</param>
-        /// <param name="values">The positional values, in the order the template's property tokens appear.</param>
-        /// <returns>The rendered text.</returns>
-        internal static string RenderRefusal(string template, params object[] values)
-        {
-            // global:: escapes the DiGi.Serilog namespace, which otherwise shadows the root Serilog namespace the
-            // message template and its tokens live in. The property tokens are substituted in the order they appear,
-            // the way Serilog's message formatter renders them - a string value as-is, without the quotes a standalone
-            // value rendering adds - so the result is the log line word for word.
-            global::Serilog.Events.MessageTemplate messageTemplate = new global::Serilog.Parsing.MessageTemplateParser().Parse(template);
-            System.Text.StringBuilder result = new();
-            int index = 0;
-            foreach (global::Serilog.Parsing.MessageTemplateToken token in messageTemplate.Tokens)
-            {
-                if (token is global::Serilog.Parsing.PropertyToken)
-                {
-                    object? value = index < values.Length ? values[index] : null;
-                    result.Append(value?.ToString() ?? string.Empty);
-                    index++;
-                }
-                else if (token is global::Serilog.Parsing.TextToken textToken)
-                {
-                    result.Append(textToken.Text);
-                }
-            }
-
-            return result.ToString();
-        }
-
         /// <inheritdoc />
         protected override async Task<bool> ExecuteAsync(IProgress<long> progress, CancellationToken cancellationToken)
         {
@@ -96,7 +64,7 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
             {
                 string template = "{FileName} was not found beside this application or in the workspace - the YOLO training run cannot be started";
                 Serilog.Modify.Log(Serilog.Enums.LogEventLevel.Error, template, Constants.FileName.YearBuiltPredictionConsoleApp);
-                throw new BackgroundTaskFailureException(RenderRefusal(template, Constants.FileName.YearBuiltPredictionConsoleApp));
+                throw new BackgroundTaskFailureException(Query.RenderRefusal(template, Constants.FileName.YearBuiltPredictionConsoleApp));
             }
 
             if (System.Windows.Application.Current is not System.Windows.Application application)
@@ -387,7 +355,7 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
         {
             string template = "YOLO training refused - {Name}: " + message;
             Serilog.Modify.Log(Serilog.Enums.LogEventLevel.Error, template, name, value ?? "(none)");
-            throw new BackgroundTaskFailureException(RenderRefusal(template, name, value ?? "(none)"));
+            throw new BackgroundTaskFailureException(Query.RenderRefusal(template, name, value ?? "(none)"));
         }
 
         private static void Preflight(YOLOTrainingRunOptions yOLOTrainingRunOptions, CancellationToken cancellationToken)
@@ -623,7 +591,7 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
             catch (Exception exception)
             {
                 string template = "The YOLO training options could not be written into {Directory}";
-                reason = RenderRefusal(template, directory);
+                reason = Query.RenderRefusal(template, directory);
                 Serilog.Modify.Log(exception, template, directory);
                 return null;
             }

@@ -165,7 +165,7 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
 
         /// <summary>
         /// Builds the message a failed YOLO training run is reported with, so the task row names the last reason instead of the generic "reported failure without an exception" text.
-        /// <para>The runner prints one line per automatic resume (<c>... - automatic resume N of M</c>) and a closing summary (<c>[NOTE] Resumed automatically N time(s) ...</c>); when either is present it is named with the exit code, and otherwise the exit code alone is.</para>
+        /// <para>The runner prints one line per automatic resume (<c>... - automatic resume N of M</c>), a closing summary (<c>[NOTE] Resumed automatically N time(s) ...</c>) and, when a stall or a crash ends the run with no resume left, the cause of that last attempt (<c>Training stalled at epoch E ... - no automatic resume left</c>, or <c>- automatic resume is off</c>). That last cause is named first, with the exit code and the summary after it; without it the summary or the last resume line is named with the exit code, and otherwise the exit code alone is.</para>
         /// </summary>
         /// <param name="yearBuiltPredictionExitCode">The exit code the runner ended with.</param>
         /// <param name="lines">The standard output lines the runner printed.</param>
@@ -177,12 +177,17 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
                 : null;
 
             string? summary = null;
+            string? final = null;
             List<string> resumes = [];
             foreach (string line in lines)
             {
                 if (line.StartsWith("[NOTE] Resumed automatically", StringComparison.Ordinal))
                 {
                     summary = line;
+                }
+                else if (line.Contains("- no automatic resume left", StringComparison.OrdinalIgnoreCase) || line.Contains("- automatic resume is off", StringComparison.OrdinalIgnoreCase))
+                {
+                    final = line.StartsWith("[NOTE] ", StringComparison.Ordinal) ? line["[NOTE] ".Length..] : line;
                 }
                 else if (line.Contains("- automatic resume ", StringComparison.OrdinalIgnoreCase))
                 {
@@ -191,6 +196,15 @@ namespace DiGi.GIS.PostgreSQL.UI.Classes
             }
 
             string reason = description is null ? "unknown exit code" : description;
+
+            // The attempt that ended the run is named first: it is the reason the run failed, and the earlier
+            // resumes, when there were any, follow as the summary.
+            if (!string.IsNullOrWhiteSpace(final))
+            {
+                return string.IsNullOrWhiteSpace(summary)
+                    ? string.Format(CultureInfo.InvariantCulture, "The YOLO training run did not finish - {0} - {1}. See the log beside this application.", final, reason)
+                    : string.Format(CultureInfo.InvariantCulture, "The YOLO training run did not finish - {0} - {1}. {2}. See the log beside this application.", final, reason, summary);
+            }
 
             if (!string.IsNullOrWhiteSpace(summary))
             {

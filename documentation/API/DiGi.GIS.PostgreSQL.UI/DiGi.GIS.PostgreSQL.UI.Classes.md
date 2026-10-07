@@ -2765,7 +2765,7 @@ public DiGi.GIS.PostgreSQL.UI.Enums.YOLOTrainingScenario YOLOTrainingScenario { 
 
 Builds the message a failed YOLO training run is reported with, so the task row names the last reason instead of the generic "reported failure without an exception" text\.
 
-The runner prints one line per automatic resume (`... - automatic resume N of M`) and a closing summary (`[NOTE] Resumed automatically N time(s) ...`); when either is present it is named with the exit code, and otherwise the exit code alone is.
+The runner prints one line per automatic resume (`... - automatic resume N of M`), a closing summary (`[NOTE] Resumed automatically N time(s) ...`) and, when a stall or a crash ends the run with no resume left, the cause of that last attempt (`Training stalled at epoch E ... - no automatic resume left`, or `- automatic resume is off`). That last cause is named first, with the exit code and the summary after it; without it the summary or the last resume line is named with the exit code, and otherwise the exit code alone is.
 
 ```csharp
 private static string FailureMessage(System.Nullable<DiGi.GIS.YOLO.UI.Enums.YearBuiltPredictionExitCode> yearBuiltPredictionExitCode, System.Collections.Concurrent.ConcurrentQueue<string> lines);
